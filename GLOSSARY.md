@@ -5,7 +5,7 @@ A Claude Code plugin that lets Claude read, review, edit, and comment on GitLab 
 ## GitLab
 
 **Instance**:
-A single GitLab deployment, either gitlab.com or a self-managed installation, identified by its host.
+A single GitLab deployment, either gitlab.com or a self-managed installation, identified by its base URL (which can include a sub-path).
 _Avoid_: server, host (as a noun for the deployment)
 
 **Work Item**:
@@ -19,7 +19,7 @@ The kind of a Work Item. Issue, Task, and Epic are supported; other types (objec
 A Work Item of type Issue, living in a project.
 
 **Task**:
-A Work Item of type Task, always the child of an Issue.
+A Work Item of type Task, usually the child of an Issue.
 
 **Epic**:
 A Work Item of type Epic, living in a group and parenting Issues or other Epics.
