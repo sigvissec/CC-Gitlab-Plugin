@@ -11,7 +11,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - Domain: GitLab Work Items and Claude Code plugins. Vocabulary lives in `/GLOSSARY.md`; use its terms.
 - Skills every session should consult: `grilling` and `domain-modeling` for grilling tickets; `research` for research tickets; `prototype` for prototype tickets.
 - Tracker: local markdown (this directory). Tickets are `issues/NN-<slug>.md`, with `Type:`, `Status:` (open/claimed/resolved/closed), and `Blocked by:` lines. `closed` means ruled out of scope.
-- Target recent GitLab. The original target was 18.x, but gitlab.com now runs 19.5; the minimum version is open (see [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md)). Degrade gracefully where an Instance's tier lacks a Work Item Type.
+- Minimum GitLab is 18.1 (see [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md)). Degrade gracefully where an Instance's tier lacks a Work Item Type.
 - Test Instance: the user has one, without Premium, and can only test against it by hand. Agents cannot reach it; any check against it is a HITL task with a precise checklist.
 - Built for a team, but v1 auth is a PAT or a reused `glab` login only.
 - Planning only: produce decisions, not plugin code.
@@ -25,6 +25,9 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [What can a Claude Code plugin contain, and how is it configured?](issues/04-claude-code-plugin-format.md): a plugin can bundle an MCP server plus skills and commands, take the Instance host and a sensitive token through `userConfig`, and ship from a git marketplace; cloud sessions don't load plugins except via org managed settings or committed repo files.
 - [What does GitLab's own MCP server offer for Work Items?](issues/02-gitlab-official-mcp-server.md): built into every Instance, but Premium-only on 18.x and Free from 19.2; it can't resolve Threads or read Linked Items even on 19.x, and it takes OAuth or fine-grained PATs, not legacy PATs or a glab login.
 - [How can the plugin Fetch filtered lists of Work Items?](issues/14-work-item-list-filters.md): `namespace.workItems` (18.1+) lists any scope with every needed filter on Free, but group lists must send `includeDescendants: true`, "assigned to me" needs a username lookup before 19.2, and most list fields are still Experiment; neither glab nor GitLab's MCP server exposes the full filter set.
+- [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md): 18.1 minimum, with a clear stop on older Instances; pending confirmation that the test Instance is 18.1 or later.
+- [How do filtered lists behave?](issues/15-list-behaviour.md): group lists always include descendants; 20 items by default, most recently updated first, up to 200 on request; entries are compact summaries, with full detail from a single Fetch.
+- [Which GitLab API does the plugin build on?](issues/16-api-foundation.md): GraphQL Work Items only, no REST fallback, with version check and re-read after writes; GitLab's and glab's MCP servers are ruled out.
 
 ## Not yet specified
 

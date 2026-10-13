@@ -12,7 +12,7 @@ HITL. The user runs a checklist by hand against their test Instance (no Premium)
 
 Written from [What can GitLab's Work Items API do, and where is it gated?](01-gitlab-work-items-api.md). Use a throwaway project you can delete afterwards. Run the GraphQL in your Instance's GraphQL explorer at `<base URL>/-/graphql-explorer` (it runs as you, no token needed), except where a step says curl. Replace `<…>` placeholders with real values, and copy any error text exactly.
 
-1. **Instance basics.** Record the base URL (including any sub-path), whether it's gitlab.com or self-managed, and the tier (self-managed: Admin area > Subscription; gitlab.com: the top-level group's plan). Run:
+1. **Instance basics.** The plugin's minimum is GitLab 18.1, so flag it right away if the version is older. Record the base URL (including any sub-path), whether it's gitlab.com or self-managed, and the tier (self-managed: Admin area > Subscription; gitlab.com: the top-level group's plan). Run:
    ```graphql
    query { metadata { version enterprise } }
    ```
