@@ -16,6 +16,10 @@ _Avoid_: issue (when meaning any type), ticket
 Text that points at one Work Item: its URL, or GitLab's notation such as `group/project#123` (Issue or Task) or `group&45` (Epic), in full or short form.
 _Avoid_: link, ID, ref
 
+**Context**:
+The project or group that a short Reference (such as `#123` or `&45`) is resolved against.
+_Avoid_: default project, scope
+
 **IID**:
 A Work Item's number within its project (Issues and Tasks) or group (Epics), as shown in its Reference.
 _Avoid_: ID, number
