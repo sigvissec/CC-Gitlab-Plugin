@@ -1,6 +1,6 @@
 # GitLab Work Items Plugin
 
-A Claude Code plugin that lets Claude read, review, edit, and comment on GitLab Work Items without leaving the session.
+A Claude Code plugin that brings GitLab Work Items into the session, so Claude can work with them and change them without leaving it.
 
 ## GitLab
 
@@ -44,10 +44,16 @@ _Avoid_: discussion
 
 ## Plugin actions
 
-**Review**:
-Claude's assessment of a Work Item (its description, Threads, Hierarchy, and Linked Items) for clarity, completeness, and gaps.
-_Avoid_: analysis, audit
+**Fetch**:
+Reading one Work Item, or a filtered list of them, live from an Instance into the session.
+_Avoid_: sync, pull, import
 
 **Edit**:
 A change to an existing Work Item's title, description, or fields (labels, assignees, milestone, state, weight, due date, parent).
 _Avoid_: update, modify
+
+## Working with Work Items
+
+**Review**:
+Claude's assessment of a Work Item's clarity, completeness, and gaps, made from its Fetched data when the user asks. It is something Claude does, not a plugin action.
+_Avoid_: analysis, audit

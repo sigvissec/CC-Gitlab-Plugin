@@ -37,6 +37,10 @@ Written from [What can GitLab's Work Items API do, and where is it gated?](01-gi
      } } } }
    ```
    Note which widget `type`s come back.
+4b. **List Work Items.** Copy the result or error exactly:
+   ```graphql
+   query { project(fullPath: "<group/project>") { workItems(first: 5, state: opened) { nodes { iid title workItemType { name } } pageInfo { hasNextPage endCursor } } } }
+   ```
 5. **Create a Task under the Issue** (Task type ID from step 3, Issue `id` from step 4):
    ```graphql
    mutation { workItemCreate(input: { namespacePath: "<group/project>", workItemTypeId: "<Task type id>", title: "Checklist task", hierarchyWidget: { parentId: "<Issue id>" } }) { workItem { id iid webUrl } errors } }

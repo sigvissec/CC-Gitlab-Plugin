@@ -4,13 +4,13 @@ Labels: wayfinder:map
 
 ## Destination
 
-A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that lets Claude Review, Edit, Comment on (including resolving Threads), and create GitLab Issues, Tasks, and Epics on gitlab.com and self-managed Instances, authenticating with a PAT (`GITLAB_TOKEN`) or an existing `glab` login. Building the plugin is a separate effort that starts from this spec.
+A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that bridges GitLab Work Items into the session. It Fetches Issues, Tasks, and Epics live from gitlab.com and self-managed Instances, as single items (with Threads, Hierarchy, and Linked Items) or filtered lists (by project or group, state, assignee, label, parent), and lets Claude Edit, Comment on (including replying to and resolving Threads), and create them. Reviewing is Claude reasoning over Fetched data, not a plugin feature. Auth is a PAT (`GITLAB_TOKEN`) or an existing `glab` login. Building the plugin is a separate effort that starts from this spec.
 
 ## Notes
 
 - Domain: GitLab Work Items and Claude Code plugins. Vocabulary lives in `/GLOSSARY.md`; use its terms.
 - Skills every session should consult: `grilling` and `domain-modeling` for grilling tickets; `research` for research tickets; `prototype` for prototype tickets.
-- Tracker: local markdown (this directory). Tickets are `issues/NN-<slug>.md`, with `Type:`, `Status:` (open/claimed/resolved), and `Blocked by:` lines.
+- Tracker: local markdown (this directory). Tickets are `issues/NN-<slug>.md`, with `Type:`, `Status:` (open/claimed/resolved/closed), and `Blocked by:` lines. `closed` means ruled out of scope.
 - Target recent GitLab. The original target was 18.x, but gitlab.com now runs 19.5; the minimum version is open (see [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md)). Degrade gracefully where an Instance's tier lacks a Work Item Type.
 - Test Instance: the user has one, without Premium, and can only test against it by hand. Agents cannot reach it; any check against it is a HITL task with a precise checklist.
 - Built for a team, but v1 auth is a PAT or a reused `glab` login only.
@@ -34,11 +34,14 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - **Images and attachments** in descriptions and Comments.
 - **Custom fields** (GitLab 18's configurable fields on Work Items).
 - **Bulk operations** across many Work Items at once.
+- **Full-text search** across Work Items, beyond filtered lists.
 - **Token-to-Instance scoping**: `GITLAB_TOKEN` applies to every host in glab, so with more than one Instance configured, a token can reach the wrong one; how the plugin keeps each token on its own Instance.
 - **Distribution**: how teams install and update the plugin (marketplace, versioning).
 
 ## Out of scope
 
+- [What does a Review produce, and where does it go?](issues/07-review-output.md): the plugin is a thin bridge for Fetching and writing; reviewing is Claude reasoning over Fetched data, so there is no Review feature to design.
+- **Local mirroring of Work Items**: data is Fetched live and writes go straight back; a local copy would add sync and conflict problems GitLab gives no protection against.
 - **Merge requests**: the destination is Work Items only.
 - **Other Work Item Types**: objectives, key results, incidents, test cases, and requirements.
 - **Building the plugin**: this map ends at the spec.
