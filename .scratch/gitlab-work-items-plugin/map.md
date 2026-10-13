@@ -21,6 +21,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 <!-- one line per resolved ticket: [title](link): gist -->
 
 - [What can the glab CLI do with Work Items, and can a plugin reuse its login?](issues/03-glab-cli-work-items.md): native Work Item commands are thin, so most actions need `glab api graphql`; reusing a login by shelling out to `glab api --hostname` is practical, and glab also ships an experimental MCP server.
+- [What can a Claude Code plugin contain, and how is it configured?](issues/04-claude-code-plugin-format.md): a plugin can bundle an MCP server plus skills and commands, take the Instance host and a sensitive token through `userConfig`, and ship from a git marketplace; cloud sessions don't load plugins except via org managed settings or committed repo files.
 
 ## Not yet specified
 
