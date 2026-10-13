@@ -1,7 +1,7 @@
 # How does a user refer to a Work Item?
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: none
 
 ## Question

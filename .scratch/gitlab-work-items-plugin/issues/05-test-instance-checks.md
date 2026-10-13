@@ -1,7 +1,7 @@
 # What does our test Instance actually support?
 
 Type: task
-Status: claimed
+Status: open
 Blocked by: 01
 
 ## Question
