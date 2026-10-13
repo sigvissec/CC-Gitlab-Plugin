@@ -20,6 +20,8 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 
 <!-- one line per resolved ticket: [title](link): gist -->
 
+- [What can the glab CLI do with Work Items, and can a plugin reuse its login?](issues/03-glab-cli-work-items.md): native Work Item commands are thin, so most actions need `glab api graphql`; reusing a login by shelling out to `glab api --hostname` is practical, and glab also ships an experimental MCP server.
+
 ## Not yet specified
 
 - **OAuth**: whether and how the plugin supports OAuth sign-in, beyond PAT and `glab`.
@@ -29,6 +31,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - **Images and attachments** in descriptions and Comments.
 - **Custom fields** (GitLab 18's configurable fields on Work Items).
 - **Bulk operations** across many Work Items at once.
+- **Token-to-Instance scoping**: `GITLAB_TOKEN` applies to every host in glab, so with more than one Instance configured, a token can reach the wrong one; how the plugin keeps each token on its own Instance.
 - **Distribution**: how teams install and update the plugin (marketplace, versioning).
 
 ## Out of scope
