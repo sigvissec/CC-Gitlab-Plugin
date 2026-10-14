@@ -17,3 +17,13 @@ Resolved by grilling (term Desktop added to `/GLOSSARY.md`).
 - If someone runs the plugin in a cloud session anyway (for example by committing it into a repo), there is no special handling and no promise it works; the normal "what's missing" errors still apply, and the docs say v1 targets Desktop only.
 - Fact recorded: the user's claude.ai account is not on a Team or Enterprise plan, so organization-wide managed settings aren't available to them.
 - Consequences: [How does the plugin talk to GitLab?](10-integration-architecture.md) no longer has to fit cloud sessions; reusing a `glab` login stays fully in play; cloud network secrets and allowlists drop away.
+
+## Update: Desktop facts
+
+Checked against Claude Code's docs (code.claude.com/docs: `plugins/install`, `desktop`, `vs-code`, `jetbrains`, `mcp`, `plugins/manifest-reference`, `hooks`), 2026-10-14:
+
+- The terminal, the desktop app's local sessions, and the VS Code extension on one machine read the same settings files, so a plugin installed at user scope in one is available in the others. The JetBrains plugin runs the terminal `claude`, so terminal behaviour applies.
+- The desktop app installs plugins through its own plugin UI (+ → Plugins) rather than `/plugin`; VS Code uses `/plugins` and shows a form for unset `userConfig` values. Whether the desktop app prompts for `userConfig` values isn't documented.
+- On macOS, the desktop app launched from the Dock reads `PATH` from the shell profile but not other exported variables, so a `GITLAB_TOKEN` exported only in `~/.zshrc` is not expected to reach a plugin's server. On Windows the app inherits user and system environment variables. VS Code launched outside a terminal has a similar caveat.
+- MCP elicitation (a server asking the user directly through a dialog) is documented for the terminal; for the desktop app and IDE extensions it isn't documented. A user's own `Elicitation` hook can answer on their behalf.
+- Whether a plugin's local MCP server inherits the full environment isn't documented.

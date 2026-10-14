@@ -1,7 +1,7 @@
 # How does the plugin talk to GitLab?
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: 01, 02, 03, 04, 05, 12, 13, 14, 16
 
 ## Question
