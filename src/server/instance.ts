@@ -1,6 +1,5 @@
 // What the configured Instance is: GitLab version, edition, and who the token signs in as.
-import type { Gateway } from "./gateway.js";
-import { GitLabError } from "./gateway.js";
+import { GitLabError, MINIMUM_GLAB, glabMeetsMinimum, type Gateway } from "./gateway.js";
 
 export const MINIMUM_GITLAB = [18, 1] as const;
 export const MINIMUM_GITLAB_TEXT = "18.1";
@@ -48,8 +47,16 @@ export class Instance {
     return this.info;
   }
 
-  /** Throws unless the Instance is new enough; every tool but `status` calls this first. */
+  private glabChecked: Promise<void> | undefined;
+
+  /** Throws unless glab and the Instance are new enough; every tool but `status` calls this first. */
   async requireSupported(): Promise<InstanceInfo> {
+    this.glabChecked ??= this.gateway.glabVersion().then((version) => {
+      if (!glabMeetsMinimum(version)) {
+        throw new GitLabError(`glab ${version} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`, "not-set-up");
+      }
+    });
+    await this.glabChecked;
     const info = await this.probe();
     if (!info.meetsMinimumVersion) {
       throw new GitLabError(

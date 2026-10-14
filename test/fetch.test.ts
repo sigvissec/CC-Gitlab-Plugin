@@ -143,6 +143,15 @@ describe("fetching one Work Item", () => {
       expect(result.text).toContain("https://gitlab.example.com");
     });
 
+    it("stops when glab is older than the minimum", async () => {
+      session = await start({
+        cassette: cassette({ glabVersion: "1.90.0", auth: loggedIn(), interactions: [instanceProbe(), fetchWorkItem()] }),
+      });
+      const result = await session.call("fetch_work_item", { reference: "acme/app#12" });
+      expect(result.isError).toBe(true);
+      expect(result.text).toMatch(/needs glab 1\.123\.0 or later/);
+    });
+
     it("stops on GitLab older than 18.1", async () => {
       const s = await withItems([], { version: "17.11.2-ee" });
       const result = await s.call("fetch_work_item", { reference: "acme/app#12" });

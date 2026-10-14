@@ -36757,8 +36757,15 @@ var Instance = class {
     });
     return this.info;
   }
-  /** Throws unless the Instance is new enough; every tool but `status` calls this first. */
+  glabChecked;
+  /** Throws unless glab and the Instance are new enough; every tool but `status` calls this first. */
   async requireSupported() {
+    this.glabChecked ??= this.gateway.glabVersion().then((version2) => {
+      if (!glabMeetsMinimum(version2)) {
+        throw new GitLabError(`glab ${version2} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`, "not-set-up");
+      }
+    });
+    await this.glabChecked;
     const info = await this.probe();
     if (!info.meetsMinimumVersion) {
       throw new GitLabError(
