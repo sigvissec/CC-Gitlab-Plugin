@@ -8,6 +8,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 
 ## Notes
 
+- **Destination reached:** the spec is [spec.md](spec.md) (`ready-for-agent`).
 - Domain: GitLab Work Items and Claude Code plugins. Vocabulary lives in `/GLOSSARY.md`; use its terms.
 - Skills every session should consult: `grilling` and `domain-modeling` for grilling tickets; `research` for research tickets; `prototype` for prototype tickets.
 - Tracker: local markdown (this directory). Tickets are `issues/NN-<slug>.md`, with `Type:`, `Status:` (open/claimed/resolved/closed), and `Blocked by:` lines. `closed` means ruled out of scope.
