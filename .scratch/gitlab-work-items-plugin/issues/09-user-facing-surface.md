@@ -1,7 +1,7 @@
 # How do users invoke the plugin?
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: none
 
 ## Question
