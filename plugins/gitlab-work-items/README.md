@@ -65,7 +65,7 @@ These behaviours couldn't be checked when the plugin was built, so watch for the
 - **Premium and your own Instance:** reads were checked against gitlab.com, and every Write runs in CI against throwaway Instances (GitLab 18.1 EE, the newest EE, and the newest CE, all on Free). Premium-only Writes (weight, "blocks" links) haven't run against real GitLab yet. Before relying on Writes, try them on a scratch project on your Instance:
   1. `/gitlab-work-items:status <project>`: every probe passes.
   2. Fetch an Issue, then ask Claude to retitle it, add a label, and set a due date. Confirm, and check the result in GitLab.
-  3. Comment on it, then reply to that Comment's Thread by its link, then resolve the Thread.
+  3. Ask Claude to start a Thread on it, then to reply in that Thread by the link to its first Comment, then to resolve the Thread.
   4. Create a Task under the Issue.
   5. Prepare an Edit, change the Issue in GitLab's own UI, then confirm: the Edit is held back and Claude shows what changed.
 
