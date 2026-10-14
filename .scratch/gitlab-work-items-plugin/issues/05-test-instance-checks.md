@@ -88,3 +88,7 @@ The user won't run checks by hand against their Instance; verification is limite
 - the Work Item Type IDs on a self-managed 18.x Instance;
 - silent-drop behaviour on Free (extra assignees, weight), and the exact errors for unlicensed fields;
 - associated merge request edge cases (two `relatedMergeRequests` in one request, counts higher than visible merge requests).
+
+## Update
+
+The checklist above is kept for the user's own verification of Writes after the build (see [How is the plugin verified using only what Claude can set up?](18-testing-strategy.md)); `status` covers the read-only checks.

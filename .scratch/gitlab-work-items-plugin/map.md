@@ -35,6 +35,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [How do users invoke the plugin?](issues/09-user-facing-surface.md): conversation first, with Commands `fetch`, `list`, `mine`, `comment`, and `status` under `/gitlab-work-items:`; a Fetch shows a digest including associated merge requests labelled closes or mentions.
 - [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md): no; v1 targets Desktop (Claude Code on the user's own machine: desktop app, terminal, or IDE extension), with no special handling in cloud sessions.
 - [How does the plugin talk to GitLab?](issues/10-integration-architecture.md): the plugin's own TypeScript MCP server calling `glab api` underneath; setup via `glab` login or a token in plugin settings; confirmation by direct dialog or a forced approval prompt; distributed from this repo as its own marketplace.
+- [How is the plugin verified using only what Claude can set up?](issues/18-testing-strategy.md): real GitLab EE (Free) and CE in containers as Test Instances, with recorded replays on every push; Desktop-only behaviours listed as unverified; `status` runs read-only probes so the user can check their own Instance later.
 
 ## Not yet specified
 
