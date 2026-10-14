@@ -1,7 +1,7 @@
 # What safety rails guard writes to GitLab?
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: none
 
 ## Question
