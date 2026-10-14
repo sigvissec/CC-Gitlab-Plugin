@@ -36995,9 +36995,11 @@ query ResolveWorkItem($fullPath: ID!, $iid: String!) {
 }`
 );
 function threadWithComment(item, noteId) {
-  const commentId = `gid://gitlab/Note/${noteId}`;
-  const thread = item.threads.find((t) => t.comments.some((c) => c.id === commentId));
-  return thread ? { thread, commentId } : void 0;
+  for (const thread of item.threads) {
+    const comment = thread.comments.find((c) => c.id.slice(c.id.lastIndexOf("/") + 1) === noteId);
+    if (comment) return { thread, commentId: comment.id };
+  }
+  return void 0;
 }
 var Reader = class {
   constructor(config3, gateway2, instance2) {

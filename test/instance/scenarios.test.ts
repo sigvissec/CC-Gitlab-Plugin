@@ -118,7 +118,7 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
   it("lists the group's Work Items with filters, including text, label, and parent", async () => {
     const s = await session(target, "lists");
     const byLabel = await s.call("list_work_items", { fullPath: seed.group, labels: ["bug"] });
-    const byText = await s.call("list_work_items", { fullPath: seed.group, search: "timeout" });
+    const byText = await s.call("list_work_items", { fullPath: seed.group, search: "seconds" });
     const children = await s.call("list_work_items", { fullPath: seed.project, parent: seed.issue });
     await s.close();
     expect(referencesIn(ok(byLabel)), byLabel.text).toContain(seed.issue);

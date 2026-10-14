@@ -250,11 +250,17 @@ export interface ResolvedRef {
   type: string;
 }
 
-/** The Thread holding a Comment, by the Comment's note number from a Comment link. */
+/**
+ * The Thread holding a Comment, by the Comment's note number from a Comment link. GitLab's
+ * global ID names the note's class (`Note`, or `DiscussionNote` inside a resolvable Thread),
+ * so only the number is compared.
+ */
 export function threadWithComment(item: WorkItem, noteId: string): { thread: Thread; commentId: string } | undefined {
-  const commentId = `gid://gitlab/Note/${noteId}`;
-  const thread = item.threads.find((t) => t.comments.some((c) => c.id === commentId));
-  return thread ? { thread, commentId } : undefined;
+  for (const thread of item.threads) {
+    const comment = thread.comments.find((c) => c.id.slice(c.id.lastIndexOf("/") + 1) === noteId);
+    if (comment) return { thread, commentId: comment.id };
+  }
+  return undefined;
 }
 
 export class Reader {

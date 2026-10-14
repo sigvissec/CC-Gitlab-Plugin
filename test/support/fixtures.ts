@@ -98,7 +98,8 @@ function threadConnection(reference: string, threads: ThreadFixture[], cursor?: 
       notes: {
         count: t.count ?? t.notes.length,
         nodes: t.notes.map((n) => ({
-          id: `gid://gitlab/Note/${n.id}`,
+          // As GitLab names them: a Comment in a resolvable Thread is a DiscussionNote.
+          id: `gid://gitlab/${(t.resolvable ?? true) ? "DiscussionNote" : "Note"}/${n.id}`,
           body: n.body,
           internal: n.internal ?? false,
           createdAt: "2026-10-01T10:00:00Z",

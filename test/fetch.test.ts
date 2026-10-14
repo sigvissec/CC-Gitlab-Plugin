@@ -84,7 +84,7 @@ describe("fetching one Work Item", () => {
 
     const result = await s.call("fetch_work_item", { reference: "https://gitlab.example.com/acme/app/-/work_items/12#note_457" });
 
-    expect(result.data.focus).toMatchObject({ threadId: "gid://gitlab/Discussion/d2", commentId: "gid://gitlab/Note/457" });
+    expect(result.data.focus).toMatchObject({ threadId: "gid://gitlab/Discussion/d2", commentId: "gid://gitlab/DiscussionNote/457" });
   });
 
   it("works on an Instance under a sub-path", async () => {
