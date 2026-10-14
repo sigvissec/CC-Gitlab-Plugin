@@ -234,3 +234,68 @@ export function resolveWorkItem(fullPath: string, iid: string, id: number, type 
     },
   };
 }
+
+// --- Writes ---------------------------------------------------------------
+
+export function lookupLabel(fullPath: string, title: string, id: number | null): Interaction {
+  return {
+    operationName: "LookupLabel",
+    variables: { fullPath, title },
+    response: { body: { data: { project: { labels: { nodes: id === null ? [] : [{ id: `gid://gitlab/ProjectLabel/${id}`, title }] } } } } },
+  };
+}
+
+export function lookupUsers(usernames: string[], found: Record<string, number>): Interaction {
+  return {
+    operationName: "LookupUsers",
+    variables: { usernames },
+    response: {
+      body: { data: { users: { nodes: usernames.filter((u) => u in found).map((u) => ({ id: `gid://gitlab/User/${found[u]}`, username: u })) } } },
+    },
+  };
+}
+
+export function lookupMilestone(fullPath: string, title: string, id: number | null): Interaction {
+  return {
+    operationName: "LookupMilestone",
+    variables: { fullPath, title },
+    response: { body: { data: { project: { milestones: { nodes: id === null ? [] : [{ id: `gid://gitlab/Milestone/${id}`, title }] } } } } },
+  };
+}
+
+export function lookupTypes(fullPath: string): Interaction {
+  return {
+    operationName: "LookupWorkItemTypes",
+    variables: { fullPath },
+    response: {
+      body: {
+        data: {
+          namespace: {
+            workItemTypes: {
+              nodes: [
+                { id: "gid://gitlab/WorkItems::Type/1", name: "Issue" },
+                { id: "gid://gitlab/WorkItems::Type/2", name: "Incident" },
+                { id: "gid://gitlab/WorkItems::Type/5", name: "Task" },
+                { id: "gid://gitlab/WorkItems::Type/8", name: "Epic" },
+              ],
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
+/** A mutation's response. `errors` are GitLab's mutation-level errors (glab still exits 0). */
+export function mutation(operationName: string, input: Record<string, unknown>, payload: Record<string, unknown>, errors: string[] = []): Interaction {
+  const field = {
+    UpdateWorkItem: "workItemUpdate",
+    CreateWorkItem: "workItemCreate",
+    CreateNote: "createNote",
+    CreateDiscussion: "createDiscussion",
+    ResolveThread: "discussionToggleResolve",
+    AddLinkedItems: "workItemAddLinkedItems",
+    RemoveLinkedItems: "workItemRemoveLinkedItems",
+  }[operationName]!;
+  return { operationName, variables: { input }, response: { body: { data: { [field]: { ...payload, errors } } } } };
+}

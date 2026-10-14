@@ -25,6 +25,7 @@ function threadText(thread: Thread, index: number): string {
 export async function fetchWorkItem(config: Config, reader: Reader, reference: string) {
   const ref = parseReference(reference, config);
   const item = await reader.fetch(ref);
+  reader.remember(item);
   const unresolved = item.threads.filter((t) => t.resolvable && !t.resolved).length;
   const shown = item.mergeRequests.all.slice(0, MR_LIMIT);
   const more = item.mergeRequests.all.length - shown.length;

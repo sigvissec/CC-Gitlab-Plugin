@@ -6,8 +6,10 @@ import { Gateway } from "./gateway.js";
 import { Instance } from "./instance.js";
 import { Reader } from "./reader.js";
 import { parseReference } from "./references.js";
+import { Lookups } from "./lookups.js";
+import { MAX_WRITES, Writes, type Confirm, type WriteRequest } from "./writes.js";
 import { DEFAULT_LIMIT, Lists, MAX_LIMIT } from "./lists.js";
-import { guarded } from "./result.js";
+import { answer, guarded } from "./result.js";
 import { status } from "./tools/status.js";
 import { fetchWorkItem } from "./tools/fetch.js";
 import { listAnswer } from "./tools/list.js";
@@ -18,6 +20,7 @@ const gateway = new Gateway(config);
 const instance = new Instance(gateway);
 const reader = new Reader(config, gateway, instance);
 const lists = new Lists(gateway, instance);
+const writes = new Writes(config, gateway, reader, new Lookups(gateway));
 
 const FILTER_SCHEMA = {
   state: z.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
@@ -95,6 +98,60 @@ server.registerTool(
     annotations: { readOnlyHint: true },
   },
   guarded(async ({ limit, after, ...filters }) => listAnswer("Your Work Items", await lists.mine(filters, limit, after))),
+);
+
+/** Asks the user directly through MCP elicitation, when the client supports it. */
+const confirmWithUser: Confirm = async (preview) => {
+  if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
+  const response = await server.server.elicitInput({
+    mode: "form",
+    message: preview,
+    requestedSchema: {
+      type: "object",
+      properties: {
+        confirm: { type: "boolean", title: "Apply to GitLab", description: "Tick to send these Writes to GitLab.", default: false },
+      },
+      required: ["confirm"],
+    },
+  });
+  return response.action === "accept" && response.content?.confirm === true;
+};
+
+const WRITE_SCHEMA = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("edit"),
+    reference: z.string().describe("Work Item URL or full reference"),
+    addLabels: z.array(z.string()).optional(),
+    removeLabels: z.array(z.string()).optional(),
+  }),
+]);
+
+server.registerTool(
+  "prepare_writes",
+  {
+    title: "Prepare GitLab Writes",
+    description: `Prepares up to ${MAX_WRITES} Writes to GitLab Work Items and returns a preview and a plan ID. Changes nothing: show the preview to the user, then call apply_writes with the plan ID only after they confirm.`,
+    inputSchema: { writes: z.array(WRITE_SCHEMA).min(1) },
+    annotations: { readOnlyHint: true },
+  },
+  guarded(async ({ writes: requests }) => {
+    const { plan, preview } = await writes.prepare(requests as WriteRequest[]);
+    return answer(preview, { planId: plan.id, count: plan.writes.length });
+  }),
+);
+
+server.registerTool(
+  "apply_writes",
+  {
+    title: "Apply prepared GitLab Writes",
+    description: "Applies a plan from prepare_writes after the user confirms it. The only tool that changes GitLab.",
+    inputSchema: { planId: z.string() },
+    annotations: { destructiveHint: true },
+  },
+  guarded(async ({ planId }) => {
+    const { results, report } = await writes.apply(planId, confirmWithUser);
+    return answer(report, { results });
+  }),
 );
 
 await server.connect(new StdioServerTransport());

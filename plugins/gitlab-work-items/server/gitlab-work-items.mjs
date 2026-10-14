@@ -7173,8 +7173,8 @@ var require_dist = __commonJS({
         return ajv;
       }
       const [formats, exportName] = opts.mode === "fast" ? [formats_1.fastFormats, fastName] : [formats_1.fullFormats, fullName];
-      const list = opts.formats || formats_1.formatNames;
-      addFormats(ajv, list, formats, exportName);
+      const list2 = opts.formats || formats_1.formatNames;
+      addFormats(ajv, list2, formats, exportName);
       if (opts.keywords)
         (0, limit_1.default)(ajv);
       return ajv;
@@ -7186,11 +7186,11 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list, fs, exportName) {
+    function addFormats(ajv, list2, fs, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
-      for (const f of list)
+      for (const f of list2)
         ajv.addFormat(f, fs[f]);
     }
     module.exports = exports = formatsPlugin;
@@ -27036,8 +27036,8 @@ var contributors = {
 function aggregateChecks(schema) {
   const agg = {};
   const def = schema._zod.def;
-  const list = schema._zod.traits.has("$ZodCheck") ? [schema, ...def.checks ?? []] : def.checks ?? [];
-  for (const ch of list)
+  const list2 = schema._zod.traits.has("$ZodCheck") ? [schema, ...def.checks ?? []] : def.checks ?? [];
+  for (const ch of list2)
     contributors[ch._zod.def.check]?.(agg, ch._zod.def);
   const bag = schema._zod.bag;
   if (bag.minimum !== void 0)
@@ -36945,6 +36945,8 @@ var Reader = class {
   config;
   gateway;
   instance;
+  /** When each Work Item was last updated, as of the version Claude was last shown. */
+  seen = /* @__PURE__ */ new Map();
   missing(ref) {
     return new GitLabError(`${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`, "not-found");
   }
@@ -36952,6 +36954,14 @@ var Reader = class {
     if (!SUPPORTED_TYPES.includes(type)) {
       throw refused(`${reference} is an ${type}; only Issues and Tasks are supported.`);
     }
+  }
+  /** Records the version of a Work Item that Claude has now seen. */
+  remember(item) {
+    this.seen.set(item.id, item.updatedAt);
+  }
+  /** The `updatedAt` of the version Claude last saw, if any. */
+  seenVersion(id) {
+    return this.seen.get(id);
   }
   /** Looks up a Work Item's global ID without fetching the rest of it. */
   async resolve(ref) {
@@ -36977,6 +36987,243 @@ var Reader = class {
     return item;
   }
 };
+
+// src/server/lookups.ts
+var LABEL = (
+  /* GraphQL */
+  `
+query LookupLabel($fullPath: ID!, $title: String!) {
+  project(fullPath: $fullPath) { labels(title: $title, includeAncestorGroups: true) { nodes { id title } } }
+}`
+);
+var USERS = (
+  /* GraphQL */
+  `
+query LookupUsers($usernames: [String!]) {
+  users(usernames: $usernames) { nodes { id username } }
+}`
+);
+var MILESTONE = (
+  /* GraphQL */
+  `
+query LookupMilestone($fullPath: ID!, $title: String!) {
+  project(fullPath: $fullPath) { milestones(title: $title, includeAncestors: true) { nodes { id title } } }
+}`
+);
+var TYPES = (
+  /* GraphQL */
+  `
+query LookupWorkItemTypes($fullPath: ID!) {
+  namespace(fullPath: $fullPath) { workItemTypes { nodes { id name } } }
+}`
+);
+var Lookups = class {
+  constructor(gateway2) {
+    this.gateway = gateway2;
+  }
+  gateway;
+  types = /* @__PURE__ */ new Map();
+  async labelId(fullPath, title) {
+    const data = await this.gateway.graphql("LookupLabel", LABEL, { fullPath, title });
+    const match = (data?.project?.labels?.nodes ?? []).find((l) => l.title === title);
+    if (!match) throw refused(`There's no label "${title}" in ${fullPath} or its groups.`);
+    return match.id;
+  }
+  async userIds(usernames) {
+    if (usernames.length === 0) return [];
+    const data = await this.gateway.graphql("LookupUsers", USERS, { usernames });
+    const byName = new Map((data?.users?.nodes ?? []).map((u) => [u.username, u.id]));
+    const missing = usernames.filter((u) => !byName.has(u));
+    if (missing.length) throw refused(`No GitLab user ${missing.map((u) => `"${u}"`).join(", ")} on this Instance.`);
+    return usernames.map((u) => byName.get(u));
+  }
+  async milestoneId(fullPath, title) {
+    const data = await this.gateway.graphql("LookupMilestone", MILESTONE, { fullPath, title });
+    const match = (data?.project?.milestones?.nodes ?? []).find((m) => m.title === title);
+    if (!match) throw refused(`There's no milestone "${title}" in ${fullPath} or its groups.`);
+    return match.id;
+  }
+  /** A Work Item Type's ID in a namespace, matched by name and cached; never hard-coded. */
+  async typeId(fullPath, name) {
+    let types = this.types.get(fullPath);
+    if (!types) {
+      types = this.gateway.graphql("LookupWorkItemTypes", TYPES, { fullPath }).then((data) => new Map((data?.namespace?.workItemTypes?.nodes ?? []).map((t) => [t.name, t.id])));
+      this.types.set(fullPath, types);
+    }
+    const id = (await types).get(name);
+    if (!id) throw refused(`${fullPath} doesn't offer the ${name} Work Item Type.`);
+    return id;
+  }
+};
+
+// src/server/writes.ts
+import { randomUUID } from "node:crypto";
+var MAX_WRITES = 20;
+var UPDATE = (
+  /* GraphQL */
+  `
+mutation UpdateWorkItem($input: WorkItemUpdateInput!) {
+  workItemUpdate(input: $input) { workItem { id } errors }
+}`
+);
+var list = (values) => values.length ? values.join(", ") : "none";
+var Writes = class {
+  constructor(config3, gateway2, reader2, lookups) {
+    this.config = config3;
+    this.gateway = gateway2;
+    this.reader = reader2;
+    this.lookups = lookups;
+  }
+  config;
+  gateway;
+  reader;
+  lookups;
+  plans = /* @__PURE__ */ new Map();
+  async prepare(requests) {
+    if (requests.length === 0) throw refused("There's nothing to write.");
+    if (requests.length > MAX_WRITES) {
+      throw refused(`That's ${requests.length} Writes; one preview holds at most ${MAX_WRITES}. Split them into smaller batches.`);
+    }
+    const writes2 = [];
+    for (const request of requests) writes2.push(await this.planEdit(request));
+    const plan = { id: randomUUID(), writes: writes2 };
+    this.plans.set(plan.id, plan);
+    return { plan, preview: renderPreview(plan) };
+  }
+  async planEdit(request) {
+    const ref = parseReference(request.reference, this.config);
+    const item = await this.current(ref);
+    const preview = [`Edit ${item.reference} (${item.url})`];
+    const input2 = { id: item.id };
+    const expect = {};
+    const add = request.addLabels ?? [];
+    const remove = request.removeLabels ?? [];
+    if (add.length || remove.length) {
+      const current = item.labels.map((l) => l.title);
+      const after = [...current.filter((t) => !remove.includes(t)), ...add.filter((t) => !current.includes(t))];
+      preview.push(`  labels: ${list(current)} \u2192 ${list(after)}`);
+      input2.labelsWidget = {
+        addLabelIds: await Promise.all(add.map((t) => this.lookups.labelId(ref.fullPath, t))),
+        removeLabelIds: item.labels.filter((l) => remove.includes(l.title)).map((l) => l.id)
+      };
+      expect.labelsInclude = add;
+      expect.labelsExclude = remove;
+    }
+    if (Object.keys(input2).length === 1) throw refused(`The Edit to ${item.reference} doesn't change anything.`);
+    return {
+      summary: `Edit ${item.reference}`,
+      preview,
+      target: { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt },
+      steps: [{ operationName: "UpdateWorkItem", query: UPDATE, input: input2, field: "workItemUpdate" }],
+      expect
+    };
+  }
+  /** Fetches a Work Item for a Write, refusing if it changed since Claude last saw it. */
+  async current(ref) {
+    const item = await this.reader.fetch(ref);
+    const seen = this.reader.seenVersion(item.id);
+    if (seen && seen !== item.updatedAt) {
+      this.reader.remember(item);
+      throw refused(
+        [
+          `${item.reference} changed in GitLab since you fetched it (now updated ${item.updatedAt}). Nothing was prepared. Its current state:`,
+          ...stateLines(item),
+          "Review the change with the user, then prepare the Write again."
+        ].join("\n")
+      );
+    }
+    return item;
+  }
+  async apply(planId, confirm) {
+    const plan = this.plans.get(planId);
+    if (!plan) throw refused("There's no prepared plan with that ID. Prepare the Writes again.");
+    this.plans.delete(planId);
+    const confirmed = await confirm(`${renderPreview(plan)}
+
+Apply ${plan.writes.length === 1 ? "this Write" : `these ${plan.writes.length} Writes`} to GitLab?`);
+    if (confirmed === false) {
+      const results2 = plan.writes.map((w, i) => ({
+        index: i + 1,
+        summary: w.summary,
+        outcome: "not applied",
+        didNotStick: [],
+        detail: "The user didn't confirm, so nothing was sent."
+      }));
+      return { results: results2, report: `The user didn't confirm the plan, so nothing was sent to GitLab.
+${renderReport(results2)}` };
+    }
+    const results = [];
+    const expected = /* @__PURE__ */ new Map();
+    let stopped = false;
+    for (const [i, write] of plan.writes.entries()) {
+      const index = i + 1;
+      if (stopped) {
+        results.push({ index, summary: write.summary, outcome: "not applied", didNotStick: [] });
+        continue;
+      }
+      try {
+        const now = await this.reader.fetch(write.target.ref);
+        if (now.updatedAt !== (expected.get(write.target.id) ?? write.target.updatedAt)) {
+          stopped = true;
+          results.push({
+            index,
+            summary: write.summary,
+            outcome: "not applied",
+            didNotStick: [],
+            detail: `${write.target.reference} changed in GitLab since it was fetched (updated ${now.updatedAt}). Nothing was written to it; fetch it again and prepare a new plan.`
+          });
+          continue;
+        }
+        for (const step of write.steps) await this.run(step);
+        const after = await this.reader.fetch(write.target.ref);
+        this.reader.remember(after);
+        expected.set(write.target.id, after.updatedAt);
+        results.push({ index, summary: write.summary, outcome: "done", didNotStick: didNotStick(write.expect, after) });
+      } catch (error62) {
+        if (!(error62 instanceof GitLabError)) throw error62;
+        stopped = true;
+        results.push({ index, summary: write.summary, outcome: "failed", didNotStick: [], detail: error62.message });
+      }
+    }
+    return { results, report: renderReport(results) };
+  }
+  async run(step) {
+    const data = await this.gateway.graphql(step.operationName, step.query, { input: step.input });
+    const payload = data?.[step.field];
+    if (payload?.errors?.length) throw new GitLabError(payload.errors.join("; "), "graphql");
+    return payload;
+  }
+};
+function stateLines(item) {
+  return [
+    `  ${item.title} [${item.type}, ${item.state}]`,
+    `  labels: ${list(item.labels.map((l) => l.title))}`,
+    `  assignees: ${list(item.assignees.map((a) => a.username))}`,
+    `  milestone: ${item.milestone?.title ?? "none"}, due: ${item.dueDate ?? "none"}`
+  ];
+}
+function didNotStick(expect, after) {
+  const problems = [];
+  const labels = after.labels.map((l) => l.title);
+  const missing = (expect.labelsInclude ?? []).filter((t) => !labels.includes(t));
+  const kept = (expect.labelsExclude ?? []).filter((t) => labels.includes(t));
+  if (missing.length || kept.length) problems.push(`labels: GitLab kept ${list(labels)}`);
+  return problems;
+}
+function renderPreview(plan) {
+  const lines = [`Plan ${plan.id}: ${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}. Nothing has been sent yet.`];
+  for (const [i, write] of plan.writes.entries()) {
+    lines.push(`${i + 1}. ${write.preview[0]}`, ...write.preview.slice(1));
+  }
+  return lines.join("\n");
+}
+function renderReport(results) {
+  return results.map((r) => {
+    const head = `${r.index}. ${r.summary}: ${r.outcome}`;
+    const notes = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
+    return [head, ...notes].join("\n");
+  }).join("\n");
+}
 
 // src/server/lists.ts
 var DEFAULT_LIMIT = 20;
@@ -37170,6 +37417,7 @@ function threadText(thread, index) {
 async function fetchWorkItem(config3, reader2, reference) {
   const ref = parseReference(reference, config3);
   const item = await reader2.fetch(ref);
+  reader2.remember(item);
   const unresolved = item.threads.filter((t) => t.resolvable && !t.resolved).length;
   const shown = item.mergeRequests.all.slice(0, MR_LIMIT);
   const more = item.mergeRequests.all.length - shown.length;
@@ -37249,6 +37497,7 @@ var gateway = new Gateway(config2);
 var instance = new Instance(gateway);
 var reader = new Reader(config2, gateway, instance);
 var lists = new Lists(gateway, instance);
+var writes = new Writes(config2, gateway, reader, new Lookups(gateway));
 var FILTER_SCHEMA = {
   state: external_exports.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
   types: external_exports.array(external_exports.enum(["Issue", "Task"])).optional().describe("Default: both"),
@@ -37316,5 +37565,54 @@ server.registerTool(
     annotations: { readOnlyHint: true }
   },
   guarded(async ({ limit, after, ...filters }) => listAnswer("Your Work Items", await lists.mine(filters, limit, after)))
+);
+var confirmWithUser = async (preview) => {
+  if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
+  const response = await server.server.elicitInput({
+    mode: "form",
+    message: preview,
+    requestedSchema: {
+      type: "object",
+      properties: {
+        confirm: { type: "boolean", title: "Apply to GitLab", description: "Tick to send these Writes to GitLab.", default: false }
+      },
+      required: ["confirm"]
+    }
+  });
+  return response.action === "accept" && response.content?.confirm === true;
+};
+var WRITE_SCHEMA = external_exports.discriminatedUnion("kind", [
+  external_exports.object({
+    kind: external_exports.literal("edit"),
+    reference: external_exports.string().describe("Work Item URL or full reference"),
+    addLabels: external_exports.array(external_exports.string()).optional(),
+    removeLabels: external_exports.array(external_exports.string()).optional()
+  })
+]);
+server.registerTool(
+  "prepare_writes",
+  {
+    title: "Prepare GitLab Writes",
+    description: `Prepares up to ${MAX_WRITES} Writes to GitLab Work Items and returns a preview and a plan ID. Changes nothing: show the preview to the user, then call apply_writes with the plan ID only after they confirm.`,
+    inputSchema: { writes: external_exports.array(WRITE_SCHEMA).min(1) },
+    annotations: { readOnlyHint: true }
+  },
+  guarded(async ({ writes: requests }) => {
+    const { plan, preview } = await writes.prepare(requests);
+    return answer(preview, { planId: plan.id, count: plan.writes.length });
+  })
+);
+server.registerTool(
+  "apply_writes",
+  {
+    title: "Apply prepared GitLab Writes",
+    description: "Applies a plan from prepare_writes after the user confirms it. The only tool that changes GitLab.",
+    inputSchema: { planId: external_exports.string() },
+    annotations: { destructiveHint: true }
+  },
+  guarded(async ({ planId }) => {
+    const { results, report } = await writes.apply(planId, confirmWithUser);
+    return answer(report, { results });
+  })
 );
 await server.connect(new StdioServerTransport());

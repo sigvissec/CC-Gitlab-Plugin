@@ -208,6 +208,9 @@ export interface ResolvedRef {
 }
 
 export class Reader {
+  /** When each Work Item was last updated, as of the version Claude was last shown. */
+  private readonly seen = new Map<string, string>();
+
   constructor(
     private readonly config: Config,
     private readonly gateway: Gateway,
@@ -222,6 +225,16 @@ export class Reader {
     if (!(SUPPORTED_TYPES as readonly string[]).includes(type)) {
       throw refused(`${reference} is an ${type}; only Issues and Tasks are supported.`);
     }
+  }
+
+  /** Records the version of a Work Item that Claude has now seen. */
+  remember(item: WorkItem): void {
+    this.seen.set(item.id, item.updatedAt);
+  }
+
+  /** The `updatedAt` of the version Claude last saw, if any. */
+  seenVersion(id: string): string | undefined {
+    return this.seen.get(id);
   }
 
   /** Looks up a Work Item's global ID without fetching the rest of it. */
