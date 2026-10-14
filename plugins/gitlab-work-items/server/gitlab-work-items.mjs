@@ -23554,19 +23554,25 @@ var Gateway = class {
     return this.tokenSource;
   }
   async chooseSource() {
+    if (this.config.settingToken) return "plugin setting";
     const status2 = await run(
       ["auth", "status", "--hostname", this.config.glabHost, "--output", "json"],
       scrubbed(this.baseEnv)
     );
     if (status2.code === 0) return "glab login";
+    if (this.baseEnv.GITLAB_TOKEN?.trim()) return "GITLAB_TOKEN";
     throw new GitLabError(
-      `No GitLab token for ${this.config.baseUrl}. Log glab in with \`glab auth login --hostname ${this.config.glabHost}\`, or set a token in the plugin's settings.`,
+      `No GitLab token for ${this.config.baseUrl}. Either log glab in with \`glab auth login --hostname ${this.config.glabHost}\`, or enter a token in the plugin's settings.`,
       "not-set-up"
     );
   }
+  /** glab's environment: only the chosen token, if glab needs one handed to it. */
   async envFor() {
-    await this.source();
-    return scrubbed(this.baseEnv);
+    const source = await this.source();
+    const env = scrubbed(this.baseEnv);
+    if (source === "plugin setting") env.GITLAB_TOKEN = this.config.settingToken;
+    if (source === "GITLAB_TOKEN") env.GITLAB_TOKEN = this.baseEnv.GITLAB_TOKEN;
+    return env;
   }
   async glabVersion() {
     const result = await run(["version"], scrubbed(this.baseEnv));
