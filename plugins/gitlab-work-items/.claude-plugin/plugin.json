@@ -2,7 +2,7 @@
   "name": "gitlab-work-items",
   "displayName": "GitLab Work Items",
   "version": "0.1.0",
-  "description": "Brings GitLab Issues and Tasks into Claude Code: fetch them and filtered lists live, see their merge requests, and edit, comment, resolve Threads, and create them after previewing every change.",
+  "description": "Brings GitLab Issues and Tasks into Claude Code: fetch them and filtered lists live, see their merge requests, and edit, comment, resolve Threads, and create them after previewing every Write.",
   "author": {
     "name": "sigvissec"
   },
@@ -20,7 +20,8 @@
       "type": "string",
       "title": "GitLab Instance URL",
       "description": "Base URL of your GitLab Instance, including any sub-path, for example https://gitlab.example.com or https://example.com/gitlab.",
-      "default": "https://gitlab.com"
+      "default": "https://gitlab.com",
+      "required": true
     },
     "token": {
       "type": "string",

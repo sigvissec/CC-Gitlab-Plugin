@@ -23,8 +23,9 @@ The plugin is a thin bridge: its tools Fetch Work Items live from the configured
    3. otherwise ask the user.
 
    Tell the user which Context you used.
-3. A short Reference inside a Fetched description or Comment resolves against that Work Item's own project. Fetch such References only when your answer needs them, and say when you do.
-4. Show the user the digest the tool returns. Keep the full description and Threads for follow-up questions; Fetch again only when the user wants fresh data.
+3. Epic References (`group&45`, `&45`) aren't supported: tell the user so instead of resolving or Fetching them.
+4. A short Reference inside a Fetched description or Comment resolves against that Work Item's own project. Fetch such References only when your answer needs them, and say when you do.
+5. Show the user the digest the tool returns. Keep the full description and Threads for follow-up questions; Fetch again only when the user wants fresh data.
 
 ## Lists
 

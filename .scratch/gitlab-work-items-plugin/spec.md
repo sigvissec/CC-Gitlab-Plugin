@@ -114,7 +114,7 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 66. As a developer, I want Comments public by default and internal only when I ask, so that the people asking questions can see the answers.
 67. As a developer, I want replies to follow their Thread's visibility, so that I don't hide an answer from the person who asked.
 68. As a developer whose role can't post internal Comments, I want to be asked whether to post publicly or cancel, so that nothing is silently made public.
-69. As a developer, I want Comments, replies, and new Work Items' descriptions to carry a short "_Posted with Claude Code_" footer that I can turn off in settings, so that colleagues know how it was written.
+69. As a developer, I want Comments, replies, and new Work Items' descriptions to carry a short "_Posted with Claude Code_" footer that I can turn off in settings, so that colleagues know how it was written. A new Work Item created without a description gets a description holding only the footer.
 
 ### Writes: safety checks
 
@@ -199,7 +199,7 @@ The server is organised as a few deep modules, each with a small interface:
 
 ### Write-guard hook
 
-- A `PreToolUse` hook shipped with the plugin that matches the apply tool and always returns an "ask" decision, so Claude Code's approval prompt appears for every Write even if the user set the tool to "always allow". It lets every other tool through untouched.
+- A `PreToolUse` hook shipped with the plugin that matches the apply tool and always returns an "ask" decision, so Claude Code's approval prompt appears for every Write even if the user set the tool to "always allow". It returns "allow" for the plugin's read-only tools (`status`, the Fetch and list tools, and the prepare tool, which changes nothing), so reading never prompts; a plugin can't pre-approve tools through its own settings. It says nothing about any other tool.
 
 ### Skills and Commands
 
