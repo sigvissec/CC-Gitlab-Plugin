@@ -29,13 +29,13 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [How do filtered lists behave?](issues/15-list-behaviour.md): group lists always include descendants; 20 items by default, most recently updated first, up to 200 on request; entries are compact summaries, with full detail from a single Fetch.
 - [Which GitLab API does the plugin build on?](issues/16-api-foundation.md): GraphQL Work Items only, no REST fallback, with version check and re-read after writes; GitLab's and glab's MCP servers are ruled out.
 - [How does a user refer to a Work Item?](issues/06-work-item-references.md): URLs (including Comment links), full and short references; short ones resolve against the conversation's Context, then the git remote, then ask; other Instances and unsupported types are refused; output always uses the full reference plus URL.
+- [What safety rails guard writes to GitLab?](issues/08-write-safety.md): every Write gets a preview and the user's own confirmation; permission and staleness checks before sending, re-read after; no deletes, no undo command; Comments public by default with a footer.
 
 ## Not yet specified
 
 - **OAuth**: whether and how the plugin supports OAuth sign-in, beyond PAT and `glab`.
 - **Implementation language and runtime**: hangs on the integration architecture.
 - **Testing strategy**: how the plugin is tested without Premium, and how much against a fake versus a real Instance.
-- **Concurrent Edits**: what happens when a description changed in GitLab since Claude read it. GitLab's Work Items API has no optimistic locking, so any guard is the plugin's own.
 - **Images and attachments** in descriptions and Comments.
 - **Custom fields** (GitLab 18's configurable fields on Work Items).
 - **Bulk operations** across many Work Items at once.
@@ -45,6 +45,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 
 ## Out of scope
 
+- **Deleting anything** (Work Items, Comments, Threads) and **editing posted Comments**: ruled out in [What safety rails guard writes to GitLab?](issues/08-write-safety.md); closing a Work Item covers removal, and the user fixes Comments in GitLab.
 - [What does a Review produce, and where does it go?](issues/07-review-output.md): the plugin is a thin bridge for Fetching and writing; reviewing is Claude reasoning over Fetched data, so there is no Review feature to design.
 - **Local mirroring of Work Items**: data is Fetched live and writes go straight back; a local copy would add sync and conflict problems GitLab gives no protection against.
 - **Merge requests**: the destination is Work Items only.
