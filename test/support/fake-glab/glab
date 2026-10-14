@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+// A stand-in for the real `glab`, put first on PATH by the tests.
+// It replays a cassette of recorded GitLab responses and logs every call.
+//
+// Environment:
+//   FAKE_GLAB_CASSETTE  path to the cassette JSON (see test/support/cassette.ts)
+//   FAKE_GLAB_LOG       path to a JSON-lines file each call is appended to
+import { appendFileSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
+
+const args = process.argv.slice(2);
+const cassettePath = process.env.FAKE_GLAB_CASSETTE;
+const cassette = cassettePath ? JSON.parse(readFileSync(cassettePath, "utf8")) : { interactions: [] };
+const statePath = cassettePath ? `${cassettePath}.state.json` : undefined;
+const TOKEN_VARS = ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"];
+
+function flag(name) {
+  const i = args.indexOf(name);
+  return i >= 0 ? args[i + 1] : undefined;
+}
+
+function log(entry) {
+  if (!process.env.FAKE_GLAB_LOG) return;
+  const env = {};
+  for (const name of TOKEN_VARS) if (process.env[name] !== undefined) env[name] = process.env[name];
+  appendFileSync(process.env.FAKE_GLAB_LOG, JSON.stringify({ args, env, ...entry }) + "\n");
+}
+
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .filter((k) => value[k] !== undefined)
+        .sort()
+        .map((k) => [k, canonical(value[k])]),
+    );
+  }
+  return value;
+}
+
+function finish(code, stdout = "", stderr = "") {
+  if (stdout) process.stdout.write(stdout);
+  if (stderr) process.stderr.write(stderr);
+  process.exit(code);
+}
+
+if (args[0] === "version") {
+  log({});
+  finish(0, `glab ${cassette.glabVersion ?? "1.123.0"} (fake)\n`);
+}
+
+if (args[0] === "auth" && args[1] === "status") {
+  const host = flag("--hostname");
+  log({ host });
+  const auth = cassette.auth?.[host];
+  const hosts = [
+    auth?.loggedIn
+      ? { host, state: "ok", token_source: auth.tokenSource ?? "keyring", user: auth.user ?? "fake-user" }
+      : { host, state: "error", error: "401 Unauthorized", token_source: "none" },
+  ];
+  finish(auth?.loggedIn ? 0 : 1, JSON.stringify({ hosts }));
+}
+
+if (args[0] === "api" && args[1] === "graphql") {
+  const host = flag("--hostname");
+  const body = JSON.parse(readFileSync(0, "utf8"));
+  log({ host, body });
+  const key = JSON.stringify(canonical({ operationName: body.operationName, variables: body.variables ?? {} }));
+  const queryHash = createHash("sha256").update(body.query).digest("hex");
+  const used = statePath && existsSync(statePath) ? JSON.parse(readFileSync(statePath, "utf8")) : {};
+  const matches = cassette.interactions
+    .map((interaction, index) => ({ interaction, index }))
+    .filter(({ interaction }) => {
+      const k = JSON.stringify(canonical({ operationName: interaction.operationName, variables: interaction.variables ?? {} }));
+      return k === key;
+    });
+  if (matches.length === 0) {
+    finish(99, "", `fake glab: no recording for ${key}\n`);
+  }
+  // Interactions with the same request are replayed in order; the last one repeats.
+  const next = matches.find(({ index }) => !used[index]) ?? matches[matches.length - 1];
+  used[next.index] = true;
+  if (statePath) writeFileSync(statePath, JSON.stringify(used));
+  const { interaction } = next;
+  if (interaction.queryHash && interaction.queryHash !== queryHash) {
+    finish(98, "", `fake glab: query for ${body.operationName} differs from the recording; re-record it\n`);
+  }
+  const response = interaction.response;
+  const stdout = JSON.stringify(response.body);
+  const stderr = response.exitCode && response.body?.errors ? `glab: ${response.body.errors[0].message}\n` : (response.stderr ?? "");
+  finish(response.exitCode ?? 0, stdout, stderr);
+}
+
+finish(64, "", `fake glab: unsupported arguments ${args.join(" ")}\n`);
