@@ -20,7 +20,8 @@ const gateway = new Gateway(config);
 const instance = new Instance(gateway);
 const reader = new Reader(config, gateway, instance);
 const lists = new Lists(gateway, instance);
-const writes = new Writes(config, gateway, instance, reader, new Lookups(gateway));
+const lookups = new Lookups(gateway);
+const writes = new Writes(config, gateway, instance, reader, lookups);
 
 const FILTER_SCHEMA = {
   state: z.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
@@ -43,10 +44,11 @@ server.registerTool(
   {
     title: "GitLab plugin status",
     description:
-      "Shows the configured GitLab Instance, where the token comes from, the GitLab version and edition, who the token signs in as, and whether GitLab 18.1 or later is met.",
+      "Shows the configured GitLab Instance, where the token comes from, glab's version, the GitLab version and edition, who the token signs in as, and whether GitLab 18.1 or later is met. Given a project, also runs read-only probes of the plugin's queries there.",
+    inputSchema: { project: z.string().optional().describe("A project's full path to run read-only probes in, e.g. acme/app") },
     annotations: { readOnlyHint: true },
   },
-  guarded(async () => status(config, gateway, instance)),
+  guarded(async ({ project }) => status(config, gateway, instance, { lookups, lists, reader }, project)),
 );
 
 server.registerTool(

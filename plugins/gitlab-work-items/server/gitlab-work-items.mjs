@@ -37157,12 +37157,12 @@ mutation UpdateWorkItem($input: WorkItemUpdateInput!) {
 );
 var list = (values) => values.length ? values.join(", ") : "none";
 var Writes = class {
-  constructor(config3, gateway2, instance2, reader2, lookups) {
+  constructor(config3, gateway2, instance2, reader2, lookups2) {
     this.config = config3;
     this.gateway = gateway2;
     this.instance = instance2;
     this.reader = reader2;
-    this.lookups = lookups;
+    this.lookups = lookups2;
   }
   config;
   gateway;
@@ -37774,11 +37774,49 @@ function guarded(handler) {
 }
 
 // src/server/tools/status.ts
-async function status(config3, gateway2, instance2) {
+async function probe(name, run2) {
+  try {
+    return { probe: name, ok: true, detail: await run2() };
+  } catch (error62) {
+    if (error62 instanceof GitLabError) return { probe: name, ok: false, detail: error62.message };
+    throw error62;
+  }
+}
+async function probes(config3, project, deps) {
+  const results = [];
+  results.push(
+    await probe("Work Item Types", async () => {
+      await deps.lookups.typeId(project, "Issue");
+      await deps.lookups.typeId(project, "Task");
+      return "Issue and Task available";
+    })
+  );
+  let first;
+  results.push(
+    await probe("List query", async () => {
+      const list2 = await deps.lists.namespace(project, { types: ["Issue"] }, 1);
+      first = list2.items[0]?.reference;
+      return first ?? "no open Issues to list";
+    })
+  );
+  if (first) {
+    const reference = first;
+    results.push(
+      await probe("Fetch with merge requests", async () => {
+        const item = await deps.reader.fetch(parseReference(reference, config3));
+        const count = item.mergeRequests.all.length;
+        return `${item.reference}: ${count} associated merge request${count === 1 ? "" : "s"}`;
+      })
+    );
+  }
+  return results;
+}
+async function status(config3, gateway2, instance2, deps, project) {
   const glabVersion = await gateway2.glabVersion();
   const glabOk = glabMeetsMinimum(glabVersion);
   const tokenSource = await gateway2.source();
   const info = await instance2.probe();
+  const checks = project && info.meetsMinimumVersion ? await probes(config3, project, deps) : void 0;
   const data = {
     instance: config3.baseUrl,
     gitlabVersion: info.version,
@@ -37787,7 +37825,8 @@ async function status(config3, gateway2, instance2) {
     tokenSource,
     glabVersion,
     glabMeetsMinimum: glabOk,
-    meetsMinimumVersion: info.meetsMinimumVersion
+    meetsMinimumVersion: info.meetsMinimumVersion,
+    ...checks ? { probes: checks } : {}
   };
   const lines = [
     `Instance: ${config3.baseUrl}`,
@@ -37795,7 +37834,8 @@ async function status(config3, gateway2, instance2) {
     `Signed in as: ${info.username}`,
     `Token from: ${tokenSource}`,
     glabOk ? `glab: ${glabVersion}` : `glab: ${glabVersion}, too old. The plugin needs glab ${MINIMUM_GLAB} or later.`,
-    info.meetsMinimumVersion ? `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: met` : `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: NOT met. This Instance runs ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB_TEXT} or later.`
+    info.meetsMinimumVersion ? `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: met` : `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: NOT met. This Instance runs ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB_TEXT} or later.`,
+    ...checks ? [`Read-only probes in ${project}:`, ...checks.map((c) => `  ${c.ok ? "ok" : "FAILED"} ${c.probe}: ${c.detail}`)] : []
   ];
   return answer(lines.join("\n"), data);
 }
@@ -37900,7 +37940,8 @@ var gateway = new Gateway(config2);
 var instance = new Instance(gateway);
 var reader = new Reader(config2, gateway, instance);
 var lists = new Lists(gateway, instance);
-var writes = new Writes(config2, gateway, instance, reader, new Lookups(gateway));
+var lookups = new Lookups(gateway);
+var writes = new Writes(config2, gateway, instance, reader, lookups);
 var FILTER_SCHEMA = {
   state: external_exports.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
   types: external_exports.array(external_exports.enum(["Issue", "Task"])).optional().describe("Default: both"),
@@ -37919,10 +37960,11 @@ server.registerTool(
   "status",
   {
     title: "GitLab plugin status",
-    description: "Shows the configured GitLab Instance, where the token comes from, the GitLab version and edition, who the token signs in as, and whether GitLab 18.1 or later is met.",
+    description: "Shows the configured GitLab Instance, where the token comes from, glab's version, the GitLab version and edition, who the token signs in as, and whether GitLab 18.1 or later is met. Given a project, also runs read-only probes of the plugin's queries there.",
+    inputSchema: { project: external_exports.string().optional().describe("A project's full path to run read-only probes in, e.g. acme/app") },
     annotations: { readOnlyHint: true }
   },
-  guarded(async () => status(config2, gateway, instance))
+  guarded(async ({ project }) => status(config2, gateway, instance, { lookups, lists, reader }, project))
 );
 server.registerTool(
   "fetch_work_item",
