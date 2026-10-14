@@ -12,7 +12,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - Skills every session should consult: `grilling` and `domain-modeling` for grilling tickets; `research` for research tickets; `prototype` for prototype tickets.
 - Tracker: local markdown (this directory). Tickets are `issues/NN-<slug>.md`, with `Type:`, `Status:` (open/claimed/resolved/closed), and `Blocked by:` lines. `closed` means ruled out of scope.
 - Minimum GitLab is 18.1 (see [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md)). Degrade gracefully where an Instance's tier lacks a Work Item Type.
-- Test Instance: the user has one, without Premium, but won't test against it by hand and agents can't reach it. Verification is limited to what Claude can set up itself.
+- The user's own Instance (Free, version unconfirmed) can't be reached by agents and isn't used during planning; the user may verify against it after the build. Verification otherwise uses only what Claude can set up itself (see [How is the plugin verified using only what Claude can set up?](issues/18-testing-strategy.md)).
 - v1 targets Desktop only (see [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md)).
 - Built for a team, but v1 auth is a `glab` login or a token in the plugin's settings only (see [How does the plugin talk to GitLab?](issues/10-integration-architecture.md)).
 - Planning only: produce decisions, not plugin code.

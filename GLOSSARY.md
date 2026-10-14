@@ -60,6 +60,10 @@ _Avoid_: discussion
 Claude Code running on the user's own machine, whether in the Claude desktop app, a terminal, or an IDE extension. The opposite is Claude Code on the web, which v1 doesn't target.
 _Avoid_: local, on-device
 
+**Test Instance**:
+A throwaway GitLab Instance that Claude or CI runs purely to verify the plugin. The user's own Instance is never a Test Instance.
+_Avoid_: sandbox, staging
+
 ## Plugin actions
 
 **Fetch**:
