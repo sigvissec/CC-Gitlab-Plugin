@@ -1,7 +1,8 @@
 name: Test Instances
 
 # Records the end-to-end scenarios against real GitLab in containers. Download the
-# recordings artifact and commit it under test/recordings/instances/ to update the replays.
+# recordings artifact (or decode the tarball the job prints) and commit it under
+# test/recordings/instances/ to update the replays.
 on:
   pull_request:
     paths:
@@ -46,6 +47,15 @@ jobs:
               for (const i of c.interactions ?? [c]) console.log(i.operationName ?? "", JSON.stringify(i.variables ?? {}), "->", JSON.stringify(i.response ?? i).slice(0, 3000));' "$file"
             echo "::endgroup::"
           done
+      - name: Print the recordings for sessions that can't download artifacts
+        if: always()
+        run: |
+          if [ -d test/recordings/instances/${{ matrix.instance }} ]; then
+            echo "RECORDINGS-BEGIN"
+            tar czf - -C test/recordings/instances ${{ matrix.instance }} | base64 -w0
+            echo
+            echo "RECORDINGS-END"
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
