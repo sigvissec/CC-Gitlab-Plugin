@@ -60,8 +60,12 @@ _Avoid_: discussion
 Reading one Work Item, or a filtered list of them, live from an Instance into the session.
 _Avoid_: sync, pull, import
 
+**Write**:
+Any change the plugin makes on an Instance: an Edit, a Comment or reply, resolving a Thread, or creating a Work Item. The plugin never deletes anything.
+_Avoid_: mutation, update, change
+
 **Edit**:
-A change to an existing Work Item's title, description, or fields (labels, assignees, milestone, state, weight, due date, parent).
+A change to an existing Work Item's title, description, fields (labels, assignees, milestone, state, weight, due date, parent), or Linked Items.
 _Avoid_: update, modify
 
 ## Working with Work Items
