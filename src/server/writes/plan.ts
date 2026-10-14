@@ -156,10 +156,8 @@ export class Planner {
       confidential,
     };
     const expect: Expectation = { title: request.title };
-    const preview = [
-      request.type === "Task" ? `Create a Task under ${parent!.reference} (${parent!.url})` : `Create an Issue in ${fullPath}`,
-      `  title: ${request.title}`,
-    ];
+    const summary = parent ? `Create a Task under ${parent.reference}` : `Create an Issue in ${fullPath}`;
+    const preview = [parent ? `${summary} (${parent.url})` : summary, `  title: ${request.title}`];
     if (description !== undefined) {
       input.descriptionWidget = { description };
       expect.description = description;
@@ -197,7 +195,7 @@ export class Planner {
     preview.push(`  confidential: ${confidential ? "yes" : "no"}`);
 
     return {
-      summary: request.type === "Task" ? `Create a Task under ${parent!.reference}` : `Create an Issue in ${fullPath}`,
+      summary,
       preview,
       target: { ref: { fullPath, iid: "" }, id: "", reference: "", updatedAt: "" },
       creates: true,

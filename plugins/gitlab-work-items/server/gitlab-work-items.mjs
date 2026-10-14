@@ -36590,7 +36590,8 @@ var StdioServerTransport = class {
 };
 
 // src/server/config.ts
-function readConfig(env = process.env) {
+function readConfig() {
+  const env = process.env;
   const raw = (env.GITLAB_WORK_ITEMS_URL || "https://gitlab.com").trim();
   const url2 = new URL(raw.includes("://") ? raw : `https://${raw}`);
   const path = url2.pathname.replace(/\/+$/, "");
@@ -36647,12 +36648,10 @@ function loginCommand(config3) {
   return GITLAB_SUBFOLDER ? `${login}\`, then \`glab config set subfolder ${GITLAB_SUBFOLDER} --host ${config3.glabHost}` : login;
 }
 var Gateway = class {
-  constructor(config3, baseEnv = process.env) {
+  constructor(config3) {
     this.config = config3;
-    this.baseEnv = baseEnv;
   }
   config;
-  baseEnv;
   tokenSource;
   /** Which token the server uses, decided once per session. */
   source() {
@@ -36663,10 +36662,10 @@ var Gateway = class {
     if (this.config.settingToken) return "plugin setting";
     const status2 = await run(
       ["auth", "status", "--hostname", this.config.glabHost, "--output", "json"],
-      { ...scrubbed(this.baseEnv), ...this.config.endpoint }
+      { ...scrubbed(process.env), ...this.config.endpoint }
     );
     if (status2.code === 0) return "glab login";
-    if (this.baseEnv.GITLAB_TOKEN?.trim()) return "GITLAB_TOKEN";
+    if (process.env.GITLAB_TOKEN?.trim()) return "GITLAB_TOKEN";
     throw new GitLabError(
       `No GitLab token for ${this.config.baseUrl}. Either log glab in with \`${loginCommand(this.config)}\`, or enter a token in the plugin's settings.`,
       "not-set-up"
@@ -36675,13 +36674,13 @@ var Gateway = class {
   /** glab's environment: only the chosen token, if glab needs one handed to it. */
   async envFor() {
     const source = await this.source();
-    const env = { ...scrubbed(this.baseEnv), ...this.config.endpoint };
+    const env = { ...scrubbed(process.env), ...this.config.endpoint };
     if (source === "plugin setting") env.GITLAB_TOKEN = this.config.settingToken;
-    if (source === "GITLAB_TOKEN") env.GITLAB_TOKEN = this.baseEnv.GITLAB_TOKEN;
+    if (source === "GITLAB_TOKEN") env.GITLAB_TOKEN = process.env.GITLAB_TOKEN;
     return env;
   }
   async glabVersion() {
-    const result = await run(["version"], scrubbed(this.baseEnv));
+    const result = await run(["version"], scrubbed(process.env));
     const match = /glab (?:version )?v?(\d+\.\d+\.\d+)/.exec(result.stdout);
     if (!match?.[1]) throw new GitLabError(`Couldn't read glab's version: ${result.stdout || result.stderr}`, "glab");
     return match[1];
@@ -37341,10 +37340,8 @@ var Planner = class {
       confidential
     };
     const expect = { title: request.title };
-    const preview = [
-      request.type === "Task" ? `Create a Task under ${parent.reference} (${parent.url})` : `Create an Issue in ${fullPath}`,
-      `  title: ${request.title}`
-    ];
+    const summary2 = parent ? `Create a Task under ${parent.reference}` : `Create an Issue in ${fullPath}`;
+    const preview = [parent ? `${summary2} (${parent.url})` : summary2, `  title: ${request.title}`];
     if (description !== void 0) {
       input2.descriptionWidget = { description };
       expect.description = description;
@@ -37381,7 +37378,7 @@ var Planner = class {
     }
     preview.push(`  confidential: ${confidential ? "yes" : "no"}`);
     return {
-      summary: request.type === "Task" ? `Create a Task under ${parent.reference}` : `Create an Issue in ${fullPath}`,
+      summary: summary2,
       preview,
       target: { ref: { fullPath, iid: "" }, id: "", reference: "", updatedAt: "" },
       creates: true,

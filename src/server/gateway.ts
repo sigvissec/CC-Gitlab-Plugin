@@ -59,10 +59,7 @@ function loginCommand(config: Config): string {
 export class Gateway {
   private tokenSource: Promise<TokenSource> | undefined;
 
-  constructor(
-    private readonly config: Config,
-    private readonly baseEnv: NodeJS.ProcessEnv = process.env,
-  ) {}
+  constructor(private readonly config: Config) {}
 
   /** Which token the server uses, decided once per session. */
   source(): Promise<TokenSource> {
@@ -74,10 +71,10 @@ export class Gateway {
     if (this.config.settingToken) return "plugin setting";
     const status = await run(
       ["auth", "status", "--hostname", this.config.glabHost, "--output", "json"],
-      { ...scrubbed(this.baseEnv), ...this.config.endpoint },
+      { ...scrubbed(process.env), ...this.config.endpoint },
     );
     if (status.code === 0) return "glab login";
-    if (this.baseEnv.GITLAB_TOKEN?.trim()) return "GITLAB_TOKEN";
+    if (process.env.GITLAB_TOKEN?.trim()) return "GITLAB_TOKEN";
     throw new GitLabError(
       `No GitLab token for ${this.config.baseUrl}. Either log glab in with \`${loginCommand(this.config)}\`, or enter a token in the plugin's settings.`,
       "not-set-up",
@@ -87,21 +84,21 @@ export class Gateway {
   /** glab's environment: only the chosen token, if glab needs one handed to it. */
   private async envFor(): Promise<NodeJS.ProcessEnv> {
     const source = await this.source();
-    const env: NodeJS.ProcessEnv = { ...scrubbed(this.baseEnv), ...this.config.endpoint };
+    const env: NodeJS.ProcessEnv = { ...scrubbed(process.env), ...this.config.endpoint };
     if (source === "plugin setting") env.GITLAB_TOKEN = this.config.settingToken;
-    if (source === "GITLAB_TOKEN") env.GITLAB_TOKEN = this.baseEnv.GITLAB_TOKEN;
+    if (source === "GITLAB_TOKEN") env.GITLAB_TOKEN = process.env.GITLAB_TOKEN;
     return env;
   }
 
   async glabVersion(): Promise<string> {
-    const result = await run(["version"], scrubbed(this.baseEnv));
+    const result = await run(["version"], scrubbed(process.env));
     const match = /glab (?:version )?v?(\d+\.\d+\.\d+)/.exec(result.stdout);
     if (!match?.[1]) throw new GitLabError(`Couldn't read glab's version: ${result.stdout || result.stderr}`, "glab");
     return match[1];
   }
 
   /** Runs one GraphQL operation and returns its `data`, or throws GitLab's own error text. */
-  async graphql<T = any>(operationName: string, query: string, variables: Record<string, unknown> = {}): Promise<T> {
+  async graphql(operationName: string, query: string, variables: Record<string, unknown> = {}): Promise<any> {
     const env = await this.envFor();
     const body = JSON.stringify({ operationName, query, variables });
     const result = await run(["api", "graphql", "--hostname", this.config.glabHost, "--input", "-"], env, body);
@@ -118,6 +115,6 @@ export class Gateway {
     if (result.code !== 0) {
       throw new GitLabError((result.stderr || `glab exited with code ${result.code}`).trim().replace(/^glab: /, ""), "glab");
     }
-    return parsed.data as T;
+    return parsed.data;
   }
 }

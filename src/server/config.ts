@@ -15,7 +15,8 @@ export interface Config {
   footer: boolean;
 }
 
-export function readConfig(env: NodeJS.ProcessEnv = process.env): Config {
+export function readConfig(): Config {
+  const env = process.env;
   const raw = (env.GITLAB_WORK_ITEMS_URL || "https://gitlab.com").trim();
   const url = new URL(raw.includes("://") ? raw : `https://${raw}`);
   const path = url.pathname.replace(/\/+$/, "");

@@ -23,8 +23,15 @@ async function probe(name: string, run: () => Promise<string>): Promise<Probe> {
   }
 }
 
+/** What the read-only probes run through: the same code the other tools use. */
+interface ProbeDeps {
+  lookups: Lookups;
+  lists: Lists;
+  reader: Reader;
+}
+
 /** Read-only checks that the plugin's queries work on this Instance, in one project. */
-async function probes(config: Config, project: string, deps: { lookups: Lookups; lists: Lists; reader: Reader }): Promise<Probe[]> {
+async function probes(config: Config, project: string, deps: ProbeDeps): Promise<Probe[]> {
   const results: Probe[] = [];
   results.push(
     await probe("Work Item Types", async () => {
@@ -58,7 +65,7 @@ export async function status(
   config: Config,
   gateway: Gateway,
   instance: Instance,
-  deps: { lookups: Lookups; lists: Lists; reader: Reader },
+  deps: ProbeDeps,
   project?: string,
 ) {
   const glabVersion = await gateway.glabVersion();
