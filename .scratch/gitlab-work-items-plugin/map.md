@@ -13,6 +13,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - Tracker: local markdown (this directory). Tickets are `issues/NN-<slug>.md`, with `Type:`, `Status:` (open/claimed/resolved/closed), and `Blocked by:` lines. `closed` means ruled out of scope.
 - Minimum GitLab is 18.1 (see [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md)). Degrade gracefully where an Instance's tier lacks a Work Item Type.
 - Test Instance: the user has one, without Premium, and can only test against it by hand. Agents cannot reach it; any check against it is a HITL task with a precise checklist.
+- v1 targets Desktop only (see [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md)).
 - Built for a team, but v1 auth is a PAT or a reused `glab` login only.
 - Planning only: produce decisions, not plugin code.
 
@@ -32,6 +33,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [What safety rails guard writes to GitLab?](issues/08-write-safety.md): every Write gets a preview and the user's own confirmation; permission and staleness checks before sending, re-read after; no deletes, no undo command; Comments public by default with a footer.
 - [How does GitLab expose the merge requests associated with a Work Item?](issues/17-associated-merge-requests.md): the Development widget lists closing merge requests (stable) and mentioning ones (Experiment, one Work Item per request) on Issues and Tasks, on Free; Epics have none.
 - [How do users invoke the plugin?](issues/09-user-facing-surface.md): conversation first, with Commands `fetch`, `list`, `mine`, `comment`, and `status` under `/gitlab-work-items:`; a Fetch shows a digest including associated merge requests labelled closes or mentions.
+- [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md): no; v1 targets Desktop (Claude Code on the user's own machine: desktop app, terminal, or IDE extension), with no special handling in cloud sessions.
 
 ## Not yet specified
 
@@ -47,6 +49,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 
 ## Out of scope
 
+- **Claude Code on the web (cloud sessions)**: v1 targets Desktop only, as decided in [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md).
 - **Deleting anything** (Work Items, Comments, Threads) and **editing posted Comments**: ruled out in [What safety rails guard writes to GitLab?](issues/08-write-safety.md); closing a Work Item covers removal, and the user fixes Comments in GitLab.
 - [What does a Review produce, and where does it go?](issues/07-review-output.md): the plugin is a thin bridge for Fetching and writing; reviewing is Claude reasoning over Fetched data, so there is no Review feature to design.
 - **Local mirroring of Work Items**: data is Fetched live and writes go straight back; a local copy would add sync and conflict problems GitLab gives no protection against.

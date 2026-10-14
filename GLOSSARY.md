@@ -54,6 +54,12 @@ _Avoid_: note
 A Comment together with its replies, which can be resolved as a unit.
 _Avoid_: discussion
 
+## Where it runs
+
+**Desktop**:
+Claude Code running on the user's own machine, whether in the Claude desktop app, a terminal, or an IDE extension. The opposite is Claude Code on the web, which v1 doesn't target.
+_Avoid_: local, on-device
+
 ## Plugin actions
 
 **Fetch**:
