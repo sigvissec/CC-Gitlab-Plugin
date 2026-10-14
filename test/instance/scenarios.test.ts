@@ -78,6 +78,8 @@ function changeBehindTheServersBack(target: Target, iid: string, title: string) 
 const iidOf = (reference: string) => reference.split("#")[1]!;
 const all = targets();
 
+it.skipIf(all.length > 0)("has Test Instance recordings to replay (run scripts/test-instance.mjs to make them)", () => {});
+
 describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $seed.edition)", (target) => {
   const { seed } = target;
 
