@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "gitlab": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/gitlab-work-items.mjs"],
+      "env": {
+        "GITLAB_WORK_ITEMS_URL": "${user_config.instance_url}",
+        "GITLAB_WORK_ITEMS_TOKEN": "${user_config.token}",
+        "GITLAB_WORK_ITEMS_FOOTER": "${user_config.footer}"
+      }
+    }
+  }
+}

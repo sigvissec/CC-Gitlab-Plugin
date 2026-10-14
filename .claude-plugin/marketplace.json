@@ -1,0 +1,12 @@
+{
+  "name": "gitlab-work-items",
+  "description": "GitLab Work Items for Claude Code",
+  "owner": { "name": "sigvissec" },
+  "plugins": [
+    {
+      "name": "gitlab-work-items",
+      "source": "./plugins/gitlab-work-items",
+      "description": "Fetch GitLab Issues and Tasks live, see their merge requests, and edit, comment, resolve Threads, and create them after previewing every change."
+    }
+  ]
+}
