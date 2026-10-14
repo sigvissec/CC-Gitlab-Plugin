@@ -4,7 +4,7 @@ Labels: wayfinder:map
 
 ## Destination
 
-A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that bridges GitLab Work Items into the session. It Fetches Issues and Tasks live from gitlab.com and self-managed Instances, as single items (with Threads, Hierarchy, and Linked Items) or filtered lists (by project or group, state, assignee, label, parent), shows the merge requests associated with a Work Item (read-only), and lets Claude Edit, Comment on (including replying to and resolving Threads), and create them. Reviewing is Claude reasoning over Fetched data, not a plugin feature. It talks to GitLab through `glab`; auth is an existing `glab` login or a token in the plugin's settings. Building the plugin is a separate effort that starts from this spec.
+A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that bridges GitLab Work Items into the session. It Fetches Issues and Tasks live from gitlab.com and self-managed Instances, as single items (with Threads, Hierarchy, and Linked Items) or filtered lists (by project or group, state, assignee, label, parent, title and description text), shows the merge requests associated with a Work Item (read-only), and lets Claude Edit, Comment on (including replying to and resolving Threads), and create them. Reviewing is Claude reasoning over Fetched data, not a plugin feature. It talks to GitLab through `glab`; auth is an existing `glab` login or a token in the plugin's settings. Building the plugin is a separate effort that starts from this spec.
 
 ## Notes
 
@@ -27,7 +27,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [What does GitLab's own MCP server offer for Work Items?](issues/02-gitlab-official-mcp-server.md): built into every Instance, but Premium-only on 18.x and Free from 19.2; it can't resolve Threads or read Linked Items even on 19.x, and it takes OAuth or fine-grained PATs, not legacy PATs or a glab login.
 - [How can the plugin Fetch filtered lists of Work Items?](issues/14-work-item-list-filters.md): `namespace.workItems` (18.1+) lists any scope with every needed filter on Free, but group lists must send `includeDescendants: true`, "assigned to me" needs a username lookup before 19.2, and most list fields are still Experiment; neither glab nor GitLab's MCP server exposes the full filter set.
 - [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md): 18.1 minimum, with a clear stop on older Instances; the user's own Instance version is unconfirmed.
-- [How do filtered lists behave?](issues/15-list-behaviour.md): group lists always include descendants; 20 items by default, most recently updated first, up to 200 on request; entries are compact summaries, with full detail from a single Fetch.
+- [How do filtered lists behave?](issues/15-list-behaviour.md): group lists always include descendants; a title and description text filter; 20 items by default, most recently updated first, up to 200 on request; entries are compact summaries, with full detail from a single Fetch.
 - [Which GitLab API does the plugin build on?](issues/16-api-foundation.md): GraphQL Work Items only, no REST fallback, with version check and re-read after writes; GitLab's and glab's MCP servers are ruled out.
 - [How does a user refer to a Work Item?](issues/06-work-item-references.md): URLs (including Comment links), full and short references; short ones resolve against the conversation's Context, then the git remote, then ask; other Instances and unsupported types are refused; output always uses the full reference plus URL.
 - [What safety rails guard writes to GitLab?](issues/08-write-safety.md): every Write gets a preview and the user's own confirmation; permission and staleness checks before sending, re-read after; no deletes, no undo command; Comments public by default with a footer.
@@ -39,14 +39,15 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 
 ## Not yet specified
 
-- **Images and attachments** in descriptions and Comments.
-- **Custom fields** (GitLab 18's configurable fields on Work Items).
-- **Bulk operations** across many Work Items at once.
-- **Full-text search** across Work Items, beyond filtered lists.
-- **Several Instances**: v1 talks to one configured Instance, and its token handling keeps the token on that Instance (see [How does the plugin talk to GitLab?](issues/10-integration-architecture.md)); whether people who work across several Instances are supported later, and how.
+Nothing: every item has been ticketed and resolved or ruled out of scope. The route to the spec is clear.
 
 ## Out of scope
 
+- **Images and attachments**: links in descriptions and Comments are shown as-is; no downloading for Claude to view, no uploading.
+- **Custom fields**: EE-only, Experiment, and likely a paid-tier feature the user can't test.
+- **Bulk operations** beyond the shared preview, which holds at most 20 Writes (see [What safety rails guard writes to GitLab?](issues/08-write-safety.md)).
+- **Searching Comments, and Instance-wide Advanced Search**: v1 searches title and description text as a list filter only (see [How do filtered lists behave?](issues/15-list-behaviour.md)).
+- **Several Instances**: v1 talks to one configured Instance.
 - **Claude Code on the web (cloud sessions)**: v1 targets Desktop only, as decided in [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md).
 - **Deleting anything** (Work Items, Comments, Threads) and **editing posted Comments**: ruled out in [What safety rails guard writes to GitLab?](issues/08-write-safety.md); closing a Work Item covers removal, and the user fixes Comments in GitLab.
 - [What does a Review produce, and where does it go?](issues/07-review-output.md): the plugin is a thin bridge for Fetching and writing; reviewing is Claude reasoning over Fetched data, so there is no Review feature to design.

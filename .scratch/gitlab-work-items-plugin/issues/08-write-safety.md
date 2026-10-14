@@ -40,3 +40,7 @@ Resolved by grilling (term Write added to `/GLOSSARY.md`; Edit now includes Link
 - If the user asks for internal and the token's role can't post internal Comments (Reporter or higher is required), the preview says so and asks the user to post publicly or cancel; it never falls back to public silently.
 - New Work Items get normal visibility unless the user asks for confidential.
 - Comments, replies, and new Work Items' descriptions carry a short footer such as "_Posted with Claude Code_", on by default and switchable off in settings. Edits carry no marker.
+
+## Update: batch cap
+
+Settled when the map's last "Not yet specified" items were scoped: one shared preview holds at most 20 Writes. Anything bigger is refused with a suggestion to split it up; bulk operations beyond that are out of scope for v1.

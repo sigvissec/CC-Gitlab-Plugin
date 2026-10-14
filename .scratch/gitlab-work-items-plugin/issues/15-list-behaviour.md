@@ -18,3 +18,7 @@ Given [How can the plugin Fetch filtered lists of Work Items?](14-work-item-list
 ## Update
 
 Epics are now out of scope (see [Do Epics stay in v1 without a Premium Instance to verify against?](11-epics-in-v1.md)): lists contain Issues and Tasks only, so filtering a group list down to its Epics no longer applies.
+
+## Update: text search
+
+Settled when the map's last "Not yet specified" items were scoped: lists also take a text filter on title and description, using the list query's built-in `search` argument (stable, Free, since before 16.0), for example "open Issues in acme/app mentioning *timeout*". Searching Comments, and Instance-wide Advanced Search, stay out of v1. This doesn't add lookup by title as a Reference (see [How does a user refer to a Work Item?](06-work-item-references.md)); Claude uses the text filter to narrow down instead.
