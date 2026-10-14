@@ -1,7 +1,7 @@
 # How is the plugin verified using only what Claude can set up?
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: 10
 
 ## Question
