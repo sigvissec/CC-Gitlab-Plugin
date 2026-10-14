@@ -95,7 +95,9 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
       id iid reference(full: true) title state confidential description webUrl createdAt updatedAt
       workItemType { name }
       author { username }
-      userPermissions { updateWorkItem setWorkItemMetadata adminParentLink adminWorkItemLink createNote markNoteAsInternal }
+      userPermissions {
+        updateWorkItem setWorkItemMetadata adminParentLink adminWorkItemLink createNote markNoteAsInternal${enterprise ? " blockedWorkItems" : ""}
+      }
       widgets {
         type
         ... on WorkItemWidgetLabels { labels { nodes { id title } } }

@@ -28,7 +28,7 @@
     "fullPath": "gitlab-org/cli",
     "iid": "7"
    },
-   "queryHash": "0d5977c3cfefd8dade0d9f5c42bc5b3bf7f436c8efca076aca7e0e71709972ec",
+   "queryHash": "9fcc348474665eb7dc40f04a8d65a4b5c217604ba9ab49f1b62f3a7966619aeb",
    "response": {
     "exitCode": 0,
     "body": {
@@ -57,7 +57,8 @@
          "adminParentLink": false,
          "adminWorkItemLink": false,
          "createNote": false,
-         "markNoteAsInternal": false
+         "markNoteAsInternal": false,
+         "blockedWorkItems": true
         },
         "widgets": [
          {

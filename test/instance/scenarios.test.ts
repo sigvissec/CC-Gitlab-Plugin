@@ -206,13 +206,18 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
     expect(applied.data.results[0]).toMatchObject({ outcome: "not applied", detail: expect.stringMatching(/changed in GitLab/) });
   });
 
-  it("refuses weight on Free and CE, and Epic References", async () => {
+  it("refuses weight and blocking links on Free and CE, and Epic References", async () => {
     const s = await session(target, "refusals");
     const weight = await s.call("prepare_writes", { writes: [{ kind: "edit", reference: seed.plain, weight: 3 }] });
+    const blocking = await s.call("prepare_writes", {
+      writes: [{ kind: "edit", reference: seed.plain, addLinks: [{ reference: seed.related, linkType: "blocks" }] }],
+    });
     const epic = await s.call("fetch_work_item", { reference: `${seed.group}&1` });
     await s.close();
     expect(weight.isError).toBe(true);
     expect(weight.text).toMatch(/weight isn't available/);
+    expect(blocking.isError, blocking.text).toBe(true);
+    expect(blocking.text).toMatch(/"blocks" links need GitLab Premium/);
     expect(epic.text).toMatch(/Epics aren't supported/);
   });
 });

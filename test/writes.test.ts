@@ -352,6 +352,22 @@ describe("a plan", () => {
 });
 
 describe("blocking links", () => {
+  const blocks = { kind: "edit", reference: "acme/app#12", addLinks: [{ reference: "acme/app#20", linkType: "blocks" }] };
+
+  it("are refused up front on EE below Premium", async () => {
+    const s = await withGitLab([fetchWorkItem({ permissions: { blockedWorkItems: false } })]);
+    const prepared = await s.call("prepare_writes", { writes: [blocks] });
+    expect(prepared.isError).toBe(true);
+    expect(prepared.text).toMatch(/"blocks" links need GitLab Premium/);
+  });
+
+  it("are prepared where the tier has them", async () => {
+    const s = await withGitLab([fetchWorkItem(), resolveWorkItem("acme/app", "20", 1020)]);
+    const prepared = await s.call("prepare_writes", { writes: [blocks] });
+    expect(prepared.isError).toBe(false);
+    expect(prepared.text).toContain("link: blocks acme/app#20");
+  });
+
   it("are refused up front on CE, which doesn't have them", async () => {
     session = await start({
       cassette: cassette({ auth: loggedIn(), interactions: [instanceProbe({ enterprise: false }), fetchWorkItem({}, { enterprise: false })] }),

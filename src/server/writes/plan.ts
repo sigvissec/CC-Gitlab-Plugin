@@ -355,9 +355,10 @@ export class Planner {
     const steps: Step[] = [];
     if (Object.keys(input).length > 1) steps.push({ operationName: "UpdateWorkItem", query: UPDATE, input, field: "workItemUpdate" });
 
+    // GitLab grants blockedWorkItems only on Premium or above; CE doesn't have it at all.
     const blocking = (request.addLinks ?? []).find((l) => l.linkType !== "relates_to");
-    if (blocking && !(await this.instance.probe()).enterprise) {
-      throw refused(`"${blocking.linkType.replaceAll("_", " ")}" links need GitLab Premium, and this Instance runs CE. Nothing was prepared.`);
+    if (blocking && !item.permissions.blockedWorkItems) {
+      throw refused(`"${blocking.linkType.replaceAll("_", " ")}" links need GitLab Premium or above, which ${item.reference} doesn't have. Nothing was prepared.`);
     }
     const byType = new Map<string, string[]>();
     for (const link of request.addLinks ?? []) {

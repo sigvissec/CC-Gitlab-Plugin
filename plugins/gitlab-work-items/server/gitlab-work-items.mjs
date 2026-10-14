@@ -36847,7 +36847,9 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
       id iid reference(full: true) title state confidential description webUrl createdAt updatedAt
       workItemType { name }
       author { username }
-      userPermissions { updateWorkItem setWorkItemMetadata adminParentLink adminWorkItemLink createNote markNoteAsInternal }
+      userPermissions {
+        updateWorkItem setWorkItemMetadata adminParentLink adminWorkItemLink createNote markNoteAsInternal${enterprise ? " blockedWorkItems" : ""}
+      }
       widgets {
         type
         ... on WorkItemWidgetLabels { labels { nodes { id title } } }
@@ -37522,8 +37524,8 @@ ${FOOTER}` : body;
     const steps = [];
     if (Object.keys(input2).length > 1) steps.push({ operationName: "UpdateWorkItem", query: UPDATE, input: input2, field: "workItemUpdate" });
     const blocking = (request.addLinks ?? []).find((l) => l.linkType !== "relates_to");
-    if (blocking && !(await this.instance.probe()).enterprise) {
-      throw refused(`"${blocking.linkType.replaceAll("_", " ")}" links need GitLab Premium, and this Instance runs CE. Nothing was prepared.`);
+    if (blocking && !item.permissions.blockedWorkItems) {
+      throw refused(`"${blocking.linkType.replaceAll("_", " ")}" links need GitLab Premium or above, which ${item.reference} doesn't have. Nothing was prepared.`);
     }
     const byType = /* @__PURE__ */ new Map();
     for (const link of request.addLinks ?? []) {

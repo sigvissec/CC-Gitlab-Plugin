@@ -191,6 +191,8 @@ export function workItemNode(f: WorkItemFixture = {}, options: { enterprise?: bo
       adminWorkItemLink: true,
       createNote: true,
       markNoteAsInternal: true,
+      // EE only, and true only on Premium or above.
+      ...(options.enterprise !== false ? { blockedWorkItems: true } : {}),
       ...f.permissions,
     },
     widgets,
