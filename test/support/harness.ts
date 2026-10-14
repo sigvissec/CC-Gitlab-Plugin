@@ -11,6 +11,7 @@ import type { Cassette } from "./cassette.js";
 const ROOT = resolve(import.meta.dirname, "../..");
 const SERVER = join(ROOT, "plugins/gitlab-work-items/server/gitlab-work-items.mjs");
 const FAKE_GLAB_DIR = join(ROOT, "test/support/fake-glab");
+const RECORDING_GLAB_DIR = join(ROOT, "test/support/recording-glab");
 
 export interface Session {
   call(tool: string, args?: Record<string, unknown>): Promise<ToolResult>;
@@ -35,6 +36,11 @@ export interface GlabCall {
 
 export interface StartOptions {
   cassette: Cassette;
+  /**
+   * Record against a real GitLab instead of replaying: the real glab runs behind a recorder
+   * that writes what GitLab answered to this cassette path.
+   */
+  record?: { cassettePath: string; realGlab: string; glabConfigDir: string };
   baseUrl?: string;
   token?: string;
   footer?: boolean;
@@ -48,13 +54,15 @@ export interface StartOptions {
 
 export async function start(options: StartOptions): Promise<Session> {
   chmodSync(join(FAKE_GLAB_DIR, "glab"), 0o755);
+  chmodSync(join(RECORDING_GLAB_DIR, "glab"), 0o755);
+  const glabDir = options.record ? RECORDING_GLAB_DIR : FAKE_GLAB_DIR;
   const dir = mkdtempSync(join(tmpdir(), "gwi-test-"));
   const cassettePath = join(dir, "cassette.json");
   const logPath = join(dir, "glab-calls.jsonl");
   writeFileSync(cassettePath, JSON.stringify(options.cassette));
 
   const env: Record<string, string> = {
-    PATH: [options.withoutGlab ? undefined : FAKE_GLAB_DIR, dirname(process.execPath), "/usr/bin", "/bin"]
+    PATH: [options.withoutGlab ? undefined : glabDir, dirname(process.execPath), "/usr/bin", "/bin"]
       .filter(Boolean)
       .join(":"),
     HOME: dir,
@@ -63,6 +71,9 @@ export async function start(options: StartOptions): Promise<Session> {
     GITLAB_WORK_ITEMS_URL: options.baseUrl ?? "https://gitlab.example.com",
     GITLAB_WORK_ITEMS_TOKEN: options.token ?? "",
     GITLAB_WORK_ITEMS_FOOTER: options.footer === false ? "false" : "true",
+    ...(options.record
+      ? { REAL_GLAB: options.record.realGlab, RECORD_CASSETTE: options.record.cassettePath, GLAB_CONFIG_DIR: options.record.glabConfigDir }
+      : {}),
     ...options.env,
   };
 
