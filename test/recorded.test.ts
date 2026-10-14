@@ -13,7 +13,7 @@ const recording = (name: string) => JSON.parse(readFileSync(new URL(`./recording
 
 describe("recorded from gitlab.com", () => {
   it("builds the digest of a real public Issue", async () => {
-    session = await start({ baseUrl: "https://gitlab.com", cassette: recording("gitlab-com-cli-7") });
+    session = await start({ baseUrl: "https://gitlab.com", cassette: recording("gitlab-com-public") });
 
     const result = await session.call("fetch_work_item", { reference: "https://gitlab.com/gitlab-org/cli/-/issues/7" });
 
@@ -34,5 +34,23 @@ describe("recorded from gitlab.com", () => {
       expect.objectContaining({ reference: "gitlab-org/cli!1854", state: "closed", relation: "closes" }),
       expect.objectContaining({ reference: "gitlab-org/cli!3183", state: "closed", relation: "mentions" }),
     ]);
+  });
+
+  it("lists real open Issues filtered by text, and offers to continue", async () => {
+    session = await start({ baseUrl: "https://gitlab.com", cassette: recording("gitlab-com-public") });
+
+    const result = await session.call("list_work_items", { scope: "gitlab-org/cli", limit: 5, search: "glab api" });
+
+    expect(result.isError).toBe(false);
+    expect(result.data.items.map((i: { reference: string }) => i.reference)).toEqual([
+      "gitlab-org/cli#8583",
+      "gitlab-org/cli#8552",
+      "gitlab-org/cli#8610",
+      "gitlab-org/cli#8609",
+      "gitlab-org/cli#8615",
+    ]);
+    expect(result.data.items[0]).toMatchObject({ type: "Issue", state: "open", url: "https://gitlab.com/gitlab-org/cli/-/work_items/8583" });
+    expect(result.data.hasMore).toBe(true);
+    expect(result.data.endCursor).toEqual(expect.any(String));
   });
 });

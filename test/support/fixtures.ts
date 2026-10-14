@@ -163,3 +163,74 @@ export function fetchWorkItem(f: WorkItemFixture = {}, options: { enterprise?: b
     },
   };
 }
+
+export interface ListEntryFixture {
+  reference: string;
+  title?: string;
+  type?: string;
+  state?: "OPEN" | "CLOSED";
+  assignees?: string[];
+  labels?: string[];
+  milestone?: string | null;
+  parent?: string | null;
+  updatedAt?: string;
+}
+
+export function listNode(e: ListEntryFixture) {
+  return {
+    id: `gid://gitlab/WorkItem/${e.reference.split("#")[1]}`,
+    reference: e.reference,
+    title: e.title ?? `Title of ${e.reference}`,
+    state: e.state ?? "OPEN",
+    webUrl: `${BASE}/${e.reference.replace("#", "/-/work_items/")}`,
+    updatedAt: e.updatedAt ?? "2026-10-01T12:00:00Z",
+    workItemType: { name: e.type ?? "Issue" },
+    widgets: [
+      { type: "ASSIGNEES", assignees: { nodes: (e.assignees ?? []).map((username) => ({ username })) } },
+      { type: "LABELS", labels: { nodes: (e.labels ?? []).map((title) => ({ title })) } },
+      { type: "MILESTONE", milestone: e.milestone ? { title: e.milestone } : null },
+      { type: "HIERARCHY", parent: e.parent ? { reference: e.parent } : null },
+    ],
+  };
+}
+
+/** One page of a namespace list. `variables` are exactly what the server should send. */
+export function listPage(
+  variables: Record<string, unknown>,
+  entries: ListEntryFixture[],
+  page: { hasNextPage?: boolean; endCursor?: string | null } = {},
+  operationName = "ListWorkItems",
+): Interaction {
+  const connection = {
+    nodes: entries.map(listNode),
+    pageInfo: { hasNextPage: page.hasNextPage ?? false, endCursor: page.endCursor ?? null },
+  };
+  const data = operationName === "ListMyWorkItems" ? { currentUser: { workItems: connection } } : { namespace: { workItems: connection } };
+  return { operationName, variables, response: { body: { data } } };
+}
+
+/** The defaults every namespace list sends. */
+export const LIST_DEFAULTS = {
+  first: 20,
+  state: "opened",
+  types: ["ISSUE", "TASK"],
+  includeDescendants: true,
+  sort: "UPDATED_DESC",
+};
+
+/** The light lookup from a Reference to a Work Item's global ID and type. */
+export function resolveWorkItem(fullPath: string, iid: string, id: number, type = "Issue", missing = false): Interaction {
+  return {
+    operationName: "ResolveWorkItem",
+    variables: { fullPath, iid },
+    response: {
+      body: {
+        data: {
+          namespace: missing
+            ? { workItem: null }
+            : { workItem: { id: `gid://gitlab/WorkItem/${id}`, reference: `${fullPath}#${iid}`, workItemType: { name: type } } },
+        },
+      },
+    },
+  };
+}

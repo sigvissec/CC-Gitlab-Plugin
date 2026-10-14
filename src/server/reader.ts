@@ -196,12 +196,44 @@ function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
   };
 }
 
+const RESOLVE = /* GraphQL */ `
+query ResolveWorkItem($fullPath: ID!, $iid: String!) {
+  namespace(fullPath: $fullPath) { workItem(iid: $iid) { id reference(full: true) workItemType { name } } }
+}`;
+
+export interface ResolvedRef {
+  id: string;
+  reference: string;
+  type: string;
+}
+
 export class Reader {
   constructor(
     private readonly config: Config,
     private readonly gateway: Gateway,
     private readonly instance: Instance,
   ) {}
+
+  private missing(ref: WorkItemRef): GitLabError {
+    return new GitLabError(`${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`, "not-found");
+  }
+
+  private requireSupportedType(reference: string, type: string): void {
+    if (!(SUPPORTED_TYPES as readonly string[]).includes(type)) {
+      throw refused(`${reference} is an ${type}; only Issues and Tasks are supported.`);
+    }
+  }
+
+  /** Looks up a Work Item's global ID without fetching the rest of it. */
+  async resolve(ref: WorkItemRef): Promise<ResolvedRef> {
+    await this.instance.requireSupported();
+    const data = await this.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
+    const node = data?.namespace?.workItem;
+    if (!node) throw this.missing(ref);
+    const resolved = { id: node.id, reference: node.reference ?? fullReference(ref), type: node.workItemType?.name ?? "Unknown" };
+    this.requireSupportedType(resolved.reference, resolved.type);
+    return resolved;
+  }
 
   /** Fetches a supported Work Item, or throws a readable refusal. */
   async fetch(ref: WorkItemRef): Promise<WorkItem> {
@@ -211,16 +243,9 @@ export class Reader {
       iid: ref.iid,
     });
     const node = data?.namespace?.workItem;
-    if (!node) {
-      throw new GitLabError(
-        `${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`,
-        "not-found",
-      );
-    }
+    if (!node) throw this.missing(ref);
     const item = toWorkItem(node, ref);
-    if (!(SUPPORTED_TYPES as readonly string[]).includes(item.type)) {
-      throw refused(`${item.reference} is an ${item.type}; only Issues and Tasks are supported.`);
-    }
+    this.requireSupportedType(item.reference, item.type);
     return item;
   }
 }

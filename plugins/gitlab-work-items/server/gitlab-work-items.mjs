@@ -16054,9 +16054,9 @@ var memo = {
     if (!bucket)
       return empty;
     handoff = void 0;
-    const entry = { value: empty, issues: null };
-    bucket.set(payload.value, entry);
-    open.push(entry);
+    const entry2 = { value: empty, issues: null };
+    bucket.set(payload.value, entry2);
+    open.push(entry2);
     return empty;
   },
   guard(inst) {
@@ -16130,16 +16130,16 @@ var memo = {
         const depth = open.length;
         const result = base(payload, ctx);
         handoff = void 0;
-        const entry = open.length > depth ? open.pop() : void 0;
+        const entry2 = open.length > depth ? open.pop() : void 0;
         if (result instanceof Promise) {
           return result.then((r) => {
-            if (entry)
-              entry.issues = r.issues.length ? cloneIssues(r.issues) : NO_ISSUES;
+            if (entry2)
+              entry2.issues = r.issues.length ? cloneIssues(r.issues) : NO_ISSUES;
             return r;
           });
         }
-        if (entry)
-          entry.issues = result.issues.length ? cloneIssues(result.issues) : NO_ISSUES;
+        if (entry2)
+          entry2.issues = result.issues.length ? cloneIssues(result.issues) : NO_ISSUES;
         return result;
       };
       inst._zod.parse = wrapped;
@@ -26553,42 +26553,42 @@ function extractDefs(ctx, schema) {
   if (ctx.external && ctx.sharedDefsExtractedFor === ctx.external)
     return;
   const idToSchema = /* @__PURE__ */ new Map();
-  for (const entry of ctx.seen.entries()) {
-    const id = ctx.metadataRegistry.get(entry[0])?.id;
+  for (const entry2 of ctx.seen.entries()) {
+    const id = ctx.metadataRegistry.get(entry2[0])?.id;
     if (id) {
       const existing = idToSchema.get(id);
-      if (existing && existing !== entry[0]) {
+      if (existing && existing !== entry2[0]) {
         throw new Error(`Duplicate schema id "${id}" detected during JSON Schema conversion. Two different schemas cannot share the same id when converted together.`);
       }
-      idToSchema.set(id, entry[0]);
+      idToSchema.set(id, entry2[0]);
     }
   }
-  const makeURI = (entry) => {
+  const makeURI = (entry2) => {
     const defsSegment = ctx.target === "draft-2020-12" ? "$defs" : "definitions";
     if (ctx.external) {
-      const externalId = ctx.external.registry.get(entry[0])?.id;
+      const externalId = ctx.external.registry.get(entry2[0])?.id;
       const uriGenerator = ctx.external.uri ?? ((id2) => id2);
       if (externalId) {
         return { ref: uriGenerator(externalId) };
       }
-      const id = entry[1].defId ?? entry[1].schema.id ?? `schema${ctx.counter++}`;
-      entry[1].defId = id;
+      const id = entry2[1].defId ?? entry2[1].schema.id ?? `schema${ctx.counter++}`;
+      entry2[1].defId = id;
       return { defId: id, ref: `${uriGenerator("__shared")}#/${defsSegment}/${encodeJSONPointerSegment(id)}` };
     }
     const uriPrefix = `#`;
     const defUriPrefix = `${uriPrefix}/${defsSegment}/`;
-    if (entry[1] === root && !entry[1].schema.id) {
+    if (entry2[1] === root && !entry2[1].schema.id) {
       return { ref: uriPrefix };
     }
-    const defId = entry[1].schema.id ?? `__schema${ctx.counter++}`;
+    const defId = entry2[1].schema.id ?? `__schema${ctx.counter++}`;
     return { defId, ref: defUriPrefix + encodeJSONPointerSegment(defId) };
   };
-  const extractToDef = (entry) => {
-    if (entry[1].schema.$ref) {
+  const extractToDef = (entry2) => {
+    if (entry2[1].schema.$ref) {
       return;
     }
-    const seen = entry[1];
-    const { ref, defId } = makeURI(entry);
+    const seen = entry2[1];
+    const { ref, defId } = makeURI(entry2);
     seen.def = { ...seen.schema };
     if (defId)
       seen.defId = defId;
@@ -26599,8 +26599,8 @@ function extractDefs(ctx, schema) {
     schema2.$ref = ref;
   };
   if (ctx.cycles === "throw") {
-    for (const entry of ctx.seen.entries()) {
-      const seen = entry[1];
+    for (const entry2 of ctx.seen.entries()) {
+      const seen = entry2[1];
       if (seen.cycle) {
         throw new Error(`Cycle detected: #/${seen.cycle?.join("/")}/<root>
 
@@ -26608,31 +26608,31 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       }
     }
   }
-  for (const entry of ctx.seen.entries()) {
-    const seen = entry[1];
-    if (schema === entry[0]) {
-      extractToDef(entry);
+  for (const entry2 of ctx.seen.entries()) {
+    const seen = entry2[1];
+    if (schema === entry2[0]) {
+      extractToDef(entry2);
       continue;
     }
     if (ctx.external) {
-      const ext = ctx.external.registry.get(entry[0])?.id;
-      if (schema !== entry[0] && ext) {
-        extractToDef(entry);
+      const ext = ctx.external.registry.get(entry2[0])?.id;
+      if (schema !== entry2[0] && ext) {
+        extractToDef(entry2);
         continue;
       }
     }
-    const id = ctx.metadataRegistry.get(entry[0])?.id;
+    const id = ctx.metadataRegistry.get(entry2[0])?.id;
     if (id) {
-      extractToDef(entry);
+      extractToDef(entry2);
       continue;
     }
     if (seen.cycle) {
-      extractToDef(entry);
+      extractToDef(entry2);
       continue;
     }
     if (seen.count > 1) {
       if (ctx.reused === "ref") {
-        extractToDef(entry);
+        extractToDef(entry2);
       }
     }
   }
@@ -26814,12 +26814,12 @@ function finalize(ctx, schema) {
     });
   };
   if (!ctx.external || ctx.sharedEmitDoneFor !== ctx.external) {
-    for (const entry of [...ctx.seen.entries()].reverse()) {
-      flattenRef(entry[0]);
+    for (const entry2 of [...ctx.seen.entries()].reverse()) {
+      flattenRef(entry2[0]);
     }
     if (ctx.target !== "openapi-3.0") {
-      for (const entry of ctx.seen.entries()) {
-        compactTypeUnion(entry[1].def ?? entry[1].schema);
+      for (const entry2 of ctx.seen.entries()) {
+        compactTypeUnion(entry2[1].def ?? entry2[1].schema);
       }
     }
     for (const rewrite of ctx.deferred)
@@ -26866,8 +26866,8 @@ function finalize(ctx, schema) {
     delete result.id;
   const defs = ctx.external?.defs ?? {};
   if (!ctx.external || ctx.sharedEmitDoneFor !== ctx.external) {
-    for (const entry of ctx.seen.entries()) {
-      const seen = entry[1];
+    for (const entry2 of ctx.seen.entries()) {
+      const seen = entry2[1];
       if (seen.def && seen.defId) {
         if (seen.def.id === seen.defId)
           delete seen.def.id;
@@ -27479,9 +27479,9 @@ function stringifyKeyNames(bySchema, json2, visited) {
 var pendingRecords = /* @__PURE__ */ new WeakMap();
 function rewriteKeyNames(ctx) {
   const bySchema = /* @__PURE__ */ new Map();
-  for (const entry of ctx.seen.values()) {
-    if (entry.def && !bySchema.has(entry.schema))
-      bySchema.set(entry.schema, entry);
+  for (const entry2 of ctx.seen.values()) {
+    if (entry2.def && !bySchema.has(entry2.schema))
+      bySchema.set(entry2.schema, entry2);
   }
   const rewrites = /* @__PURE__ */ new Map();
   for (const record2 of pendingRecords.get(ctx) ?? []) {
@@ -27495,8 +27495,8 @@ function rewriteKeyNames(ctx) {
   }
   if (!rewrites.size)
     return;
-  for (const entry of ctx.seen.values()) {
-    for (const carrier of [entry.schema, entry.def]) {
+  for (const entry2 of ctx.seen.values()) {
+    for (const carrier of [entry2.schema, entry2.def]) {
       const rewritten = carrier && rewrites.get(carrier.propertyNames);
       if (rewritten)
         carrier.propertyNames = rewritten;
@@ -27690,8 +27690,8 @@ function toJSONSchema(input2, params) {
     const registry2 = input2;
     const ctx2 = initializeContext({ ...params, processors: allProcessors });
     const defs = {};
-    for (const entry of registry2._idmap.entries()) {
-      const [_, schema] = entry;
+    for (const entry2 of registry2._idmap.entries()) {
+      const [_, schema] = entry2;
       processSchema(schema, ctx2);
     }
     const schemas = {};
@@ -27701,8 +27701,8 @@ function toJSONSchema(input2, params) {
       defs
     };
     ctx2.external = external;
-    for (const entry of registry2._idmap.entries()) {
-      const [key, schema] = entry;
+    for (const entry2 of registry2._idmap.entries()) {
+      const [key, schema] = entry2;
       extractDefs(ctx2, schema);
       assignProp(schemas, key, finalize(ctx2, schema));
     }
@@ -36929,6 +36929,13 @@ function toWorkItem(node2, ref) {
     permissions: node2.userPermissions ?? {}
   };
 }
+var RESOLVE = (
+  /* GraphQL */
+  `
+query ResolveWorkItem($fullPath: ID!, $iid: String!) {
+  namespace(fullPath: $fullPath) { workItem(iid: $iid) { id reference(full: true) workItemType { name } } }
+}`
+);
 var Reader = class {
   constructor(config3, gateway2, instance2) {
     this.config = config3;
@@ -36938,6 +36945,24 @@ var Reader = class {
   config;
   gateway;
   instance;
+  missing(ref) {
+    return new GitLabError(`${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`, "not-found");
+  }
+  requireSupportedType(reference, type) {
+    if (!SUPPORTED_TYPES.includes(type)) {
+      throw refused(`${reference} is an ${type}; only Issues and Tasks are supported.`);
+    }
+  }
+  /** Looks up a Work Item's global ID without fetching the rest of it. */
+  async resolve(ref) {
+    await this.instance.requireSupported();
+    const data = await this.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
+    const node2 = data?.namespace?.workItem;
+    if (!node2) throw this.missing(ref);
+    const resolved = { id: node2.id, reference: node2.reference ?? fullReference(ref), type: node2.workItemType?.name ?? "Unknown" };
+    this.requireSupportedType(resolved.reference, resolved.type);
+    return resolved;
+  }
   /** Fetches a supported Work Item, or throws a readable refusal. */
   async fetch(ref) {
     const info = await this.instance.requireSupported();
@@ -36946,17 +36971,134 @@ var Reader = class {
       iid: ref.iid
     });
     const node2 = data?.namespace?.workItem;
-    if (!node2) {
-      throw new GitLabError(
-        `${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`,
-        "not-found"
-      );
-    }
+    if (!node2) throw this.missing(ref);
     const item = toWorkItem(node2, ref);
-    if (!SUPPORTED_TYPES.includes(item.type)) {
-      throw refused(`${item.reference} is an ${item.type}; only Issues and Tasks are supported.`);
-    }
+    this.requireSupportedType(item.reference, item.type);
     return item;
+  }
+};
+
+// src/server/lists.ts
+var DEFAULT_LIMIT = 20;
+var MAX_LIMIT = 200;
+var PAGE_MAX = 100;
+var ENTRY = (
+  /* GraphQL */
+  `
+  nodes {
+    id reference(full: true) title state webUrl updatedAt
+    workItemType { name }
+    widgets(onlyTypes: [ASSIGNEES, LABELS, MILESTONE, HIERARCHY]) {
+      type
+      ... on WorkItemWidgetAssignees { assignees { nodes { username } } }
+      ... on WorkItemWidgetLabels { labels { nodes { title } } }
+      ... on WorkItemWidgetMilestone { milestone { title } }
+      ... on WorkItemWidgetHierarchy { parent { reference(full: true) } }
+    }
+  }
+  pageInfo { hasNextPage endCursor }`
+);
+var FILTER_VARIABLES = "$first: Int!, $after: String, $state: IssuableState, $types: [IssueType!], $assigneeUsernames: [String!], $authorUsername: String, $labelName: [String!], $milestoneTitle: [String!], $parentIds: [WorkItemID!], $search: String, $in: [IssuableSearchableField!], $not: NegatedWorkItemFilterInput, $or: UnionedWorkItemFilterInput, $sort: WorkItemSort";
+var FILTER_ARGUMENTS = "first: $first, after: $after, state: $state, types: $types, assigneeUsernames: $assigneeUsernames, authorUsername: $authorUsername, labelName: $labelName, milestoneTitle: $milestoneTitle, parentIds: $parentIds, search: $search, in: $in, not: $not, or: $or, sort: $sort";
+var NAMESPACE_LIST = (
+  /* GraphQL */
+  `
+query ListWorkItems($fullPath: ID!, $includeDescendants: Boolean, ${FILTER_VARIABLES}) {
+  namespace(fullPath: $fullPath) {
+    workItems(includeDescendants: $includeDescendants, ${FILTER_ARGUMENTS}) {${ENTRY}
+    }
+  }
+}`
+);
+var MY_LIST = (
+  /* GraphQL */
+  `
+query ListMyWorkItems(${FILTER_VARIABLES}) {
+  currentUser {
+    workItems(${FILTER_ARGUMENTS}) {${ENTRY}
+    }
+  }
+}`
+);
+function entry(node2) {
+  const widget = (type) => (node2.widgets ?? []).find((w) => w.type === type);
+  return {
+    reference: node2.reference,
+    title: node2.title,
+    type: node2.workItemType?.name ?? "Unknown",
+    state: node2.state === "CLOSED" ? "closed" : "open",
+    assignees: (widget("ASSIGNEES")?.assignees?.nodes ?? []).map((a) => a.username),
+    labels: (widget("LABELS")?.labels?.nodes ?? []).map((l) => l.title),
+    milestone: widget("MILESTONE")?.milestone?.title ?? null,
+    parent: widget("HIERARCHY")?.parent?.reference ?? null,
+    updatedAt: node2.updatedAt,
+    url: node2.webUrl
+  };
+}
+var Lists = class {
+  constructor(gateway2, instance2) {
+    this.gateway = gateway2;
+    this.instance = instance2;
+  }
+  gateway;
+  instance;
+  async variables(filters) {
+    const nonEmpty = (values) => values?.length ? values : void 0;
+    const assignees = [...filters.assignees ?? []];
+    if (filters.assignedToMe) {
+      const { username } = await this.instance.probe();
+      if (!assignees.includes(username)) assignees.push(username);
+    }
+    return {
+      state: filters.state ?? "opened",
+      types: (filters.types?.length ? filters.types : ["Issue", "Task"]).map((t) => t.toUpperCase()),
+      sort: "UPDATED_DESC",
+      assigneeUsernames: nonEmpty(assignees),
+      authorUsername: filters.author || void 0,
+      labelName: nonEmpty(filters.labels),
+      not: filters.excludeLabels?.length ? { labelName: filters.excludeLabels } : void 0,
+      or: filters.anyLabels?.length ? { labelNames: filters.anyLabels } : void 0,
+      milestoneTitle: filters.milestone ? [filters.milestone] : void 0,
+      parentIds: filters.parentId ? [filters.parentId] : void 0,
+      search: filters.search || void 0,
+      in: filters.search ? ["TITLE", "DESCRIPTION"] : void 0
+    };
+  }
+  /** Lists a project's or group's Work Items, subgroups and projects included. */
+  async namespace(fullPath, filters, limit = DEFAULT_LIMIT, after) {
+    await this.instance.requireSupported();
+    const base = { fullPath, includeDescendants: true, ...await this.variables(filters) };
+    return this.pages(limit, after, async (first, cursor) => {
+      const data = await this.gateway.graphql("ListWorkItems", NAMESPACE_LIST, { ...base, first, after: cursor });
+      if (!data?.namespace) return null;
+      return data.namespace.workItems;
+    }, fullPath);
+  }
+  /** The signed-in user's Work Items across the Instance, assigned to them. */
+  async mine(filters, limit = DEFAULT_LIMIT, after) {
+    await this.instance.requireSupported();
+    const base = await this.variables({ ...filters, assignedToMe: true });
+    return this.pages(limit, after, async (first, cursor) => {
+      const data = await this.gateway.graphql("ListMyWorkItems", MY_LIST, { ...base, first, after: cursor });
+      return data?.currentUser?.workItems ?? null;
+    }, "Your Work Items");
+  }
+  async pages(limit, after, fetchPage, scope) {
+    const wanted = Math.min(Math.max(1, Math.floor(limit)), MAX_LIMIT);
+    const items = [];
+    let cursor = after;
+    let hasMore = false;
+    let endCursor = null;
+    while (items.length < wanted) {
+      const connection = await fetchPage(Math.min(PAGE_MAX, wanted - items.length), cursor);
+      if (!connection) throw new GitLabError(`${scope}: not found, or your token can't see it.`, "not-found");
+      items.push(...(connection.nodes ?? []).map(entry));
+      hasMore = Boolean(connection.pageInfo?.hasNextPage);
+      endCursor = connection.pageInfo?.endCursor ?? null;
+      if (!hasMore || !endCursor) break;
+      cursor = endCursor;
+    }
+    return { items, hasMore, endCursor: hasMore ? endCursor : null };
   }
 };
 
@@ -37085,11 +37227,41 @@ ${mrLines.join("\n")}` : "Merge requests: none");
   return answer([...digest, ...details].join("\n"), data);
 }
 
+// src/server/tools/list.ts
+function listAnswer(heading, result) {
+  const lines = result.items.map((item) => {
+    const extras = [
+      item.assignees.length ? `assignees: ${item.assignees.join(", ")}` : "",
+      item.labels.length ? `labels: ${item.labels.join(", ")}` : "",
+      item.milestone ? `milestone: ${item.milestone}` : "",
+      item.parent ? `parent: ${item.parent}` : ""
+    ].filter(Boolean);
+    return `- ${item.reference} ${item.title} [${item.type}, ${item.state}, updated ${item.updatedAt}]${extras.length ? ` (${extras.join("; ")})` : ""} ${item.url}`;
+  });
+  const footer = result.hasMore ? `More Work Items exist. To continue, call again with after: "${result.endCursor}".` : "That's all of them.";
+  const text = [`${heading}: ${result.items.length} shown`, ...lines, footer].join("\n");
+  return answer(text, { ...result });
+}
+
 // src/server/main.ts
 var config2 = readConfig();
 var gateway = new Gateway(config2);
 var instance = new Instance(gateway);
 var reader = new Reader(config2, gateway, instance);
+var lists = new Lists(gateway, instance);
+var FILTER_SCHEMA = {
+  state: external_exports.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
+  types: external_exports.array(external_exports.enum(["Issue", "Task"])).optional().describe("Default: both"),
+  assignees: external_exports.array(external_exports.string()).optional().describe("Usernames; every one must be assigned"),
+  assignedToMe: external_exports.boolean().optional().describe("Only Work Items assigned to the signed-in user"),
+  author: external_exports.string().optional().describe("Author's username"),
+  labels: external_exports.array(external_exports.string()).optional().describe("Every one of these labels"),
+  excludeLabels: external_exports.array(external_exports.string()).optional().describe("None of these labels"),
+  anyLabels: external_exports.array(external_exports.string()).optional().describe("At least one of these labels"),
+  milestone: external_exports.string().optional().describe("Milestone title"),
+  parent: external_exports.string().optional().describe("The parent Work Item's URL or full reference, to list its children"),
+  search: external_exports.string().optional().describe("Text to find in titles and descriptions")
+};
 var server = new McpServer({ name: "gitlab-work-items", version: "0.1.0" });
 server.registerTool(
   "status",
@@ -37109,5 +37281,40 @@ server.registerTool(
     annotations: { readOnlyHint: true }
   },
   guarded(async ({ reference }) => fetchWorkItem(config2, reader, reference))
+);
+server.registerTool(
+  "list_work_items",
+  {
+    title: "List GitLab Work Items",
+    description: "Lists Issues and Tasks in a project or group (subgroups and projects included) as compact summaries, most recently updated first. 20 by default; ask for more with limit (up to 200) or continue with after.",
+    inputSchema: {
+      scope: external_exports.string().describe("Full path of the project or group, e.g. acme/app or acme"),
+      limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to return (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
+      after: external_exports.string().optional().describe("Cursor from a previous list, to continue it"),
+      ...FILTER_SCHEMA
+    },
+    annotations: { readOnlyHint: true }
+  },
+  guarded(async ({ scope, limit, after, parent, ...filters }) => {
+    const parentId = parent ? (await reader.resolve(parseReference(parent, config2))).id : void 0;
+    return listAnswer(`Work Items in ${scope}`, await lists.namespace(scope, { ...filters, parentId }, limit, after));
+  })
+);
+server.registerTool(
+  "my_work_items",
+  {
+    title: "List my GitLab Work Items",
+    description: "Lists the signed-in user's Issues and Tasks across the whole Instance (assigned to them), open by default, most recently updated first.",
+    inputSchema: {
+      limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to return (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
+      after: external_exports.string().optional().describe("Cursor from a previous list, to continue it"),
+      state: FILTER_SCHEMA.state,
+      types: FILTER_SCHEMA.types,
+      labels: FILTER_SCHEMA.labels,
+      search: FILTER_SCHEMA.search
+    },
+    annotations: { readOnlyHint: true }
+  },
+  guarded(async ({ limit, after, ...filters }) => listAnswer("Your Work Items", await lists.mine(filters, limit, after)))
 );
 await server.connect(new StdioServerTransport());
