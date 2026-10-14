@@ -125,6 +125,16 @@ describe("a reply", () => {
     expect(s.glabCalls().some((c) => c.body?.operationName === "CreateNote")).toBe(false);
   });
 
+  it("isn't sent if a long Thread gained Comments, even past the Comments fetched", async () => {
+    const long = (count: number) => ({ threads: [{ id: "d2", notes: [{ id: 456, author: "carol", body: "Which browser?" }], count }] });
+    const s = await withGitLab([fetchWorkItem(long(150)), fetchWorkItem({ ...long(151), updatedAt: "2026-10-03T00:00:00Z" })]);
+    const prepared = await s.call("prepare_writes", { writes: [{ kind: "reply", reference: "acme/app#12", thread: "d2", body: "Firefox" }] });
+
+    const applied = await s.call("apply_writes", { planId: prepared.data.planId });
+
+    expect(applied.data.results[0]).toMatchObject({ outcome: "not applied", detail: expect.stringMatching(/new Comments/) });
+  });
+
   it("asks which Thread when the Reference doesn't name one", async () => {
     const s = await withGitLab([fetchWorkItem(THREADS)]);
     const prepared = await s.call("prepare_writes", { writes: [{ kind: "reply", reference: "acme/app#12", body: "x" }] });

@@ -10,6 +10,16 @@ export interface MrFixture {
   draft?: boolean;
 }
 
+export interface ThreadFixture {
+  id: string;
+  resolvable?: boolean;
+  resolved?: boolean;
+  canResolve?: boolean;
+  notes: { id: number; author: string; body: string; internal?: boolean }[];
+  /** GitLab's count of Comments in the Thread, when more exist than are listed. */
+  count?: number;
+}
+
 export interface WorkItemFixture {
   fullPath?: string;
   iid?: string;
@@ -27,15 +37,17 @@ export interface WorkItemFixture {
   parent?: { reference: string; title: string; type?: string } | null;
   children?: { reference: string; title: string; state?: string; type?: string }[];
   linked?: { linkType: string; reference: string; title: string; state?: string }[];
-  threads?: {
-    id: string;
-    resolvable?: boolean;
-    resolved?: boolean;
-    canResolve?: boolean;
-    notes: { id: number; author: string; body: string; internal?: boolean }[];
-  }[];
+  threads?: ThreadFixture[];
+  /** Set when more Threads exist beyond this first page. */
+  threadsCursor?: string;
+  /** Set when more Linked Items exist beyond this first page. */
+  linkedCursor?: string;
+  /** GitLab's count of children, when it differs from the children listed. */
+  childrenCount?: number;
   closingMrs?: MrFixture[];
   closingCount?: number;
+  /** Set when more closing merge requests exist beyond the first page. */
+  closingCursor?: string;
   relatedMrs?: MrFixture[];
   permissions?: Partial<Record<string, boolean>>;
   confidential?: boolean;
@@ -58,6 +70,65 @@ function itemRef(reference: string) {
   return `${BASE}/${reference.replace("#", "/-/work_items/")}`;
 }
 
+function linkedConnection(linked: NonNullable<WorkItemFixture["linked"]>, cursor?: string) {
+  return {
+    nodes: linked.map((l) => ({
+      linkType: l.linkType,
+      workItem: {
+        id: `gid://gitlab/WorkItem/${700 + Number(l.reference.split("#")[1])}`,
+        reference: l.reference,
+        title: l.title,
+        state: l.state ?? "OPEN",
+        webUrl: itemRef(l.reference),
+        workItemType: { name: "Issue" },
+      },
+    })),
+    pageInfo: { hasNextPage: Boolean(cursor), endCursor: cursor ?? null },
+  };
+}
+
+function threadConnection(reference: string, threads: ThreadFixture[], cursor?: string) {
+  return {
+    nodes: threads.map((t) => ({
+      id: `gid://gitlab/Discussion/${t.id}`,
+      replyId: `gid://gitlab/Discussion/${t.id}`,
+      resolvable: t.resolvable ?? true,
+      resolved: t.resolved ?? false,
+      userPermissions: { resolveNote: t.canResolve ?? true },
+      notes: {
+        count: t.count ?? t.notes.length,
+        nodes: t.notes.map((n) => ({
+          id: `gid://gitlab/Note/${n.id}`,
+          body: n.body,
+          internal: n.internal ?? false,
+          createdAt: "2026-10-01T10:00:00Z",
+          author: { username: n.author },
+          url: `${itemRef(reference)}#note_${n.id}`,
+        })),
+      },
+    })),
+    pageInfo: { hasNextPage: Boolean(cursor), endCursor: cursor ?? null },
+  };
+}
+
+/** A further page of a Work Item's Threads. */
+export function threadsPage(fullPath: string, iid: string, after: string, threads: ThreadFixture[], next?: string): Interaction {
+  return {
+    operationName: "FetchWorkItemThreads",
+    variables: { fullPath, iid, after },
+    response: { body: { data: { namespace: { workItem: { widgets: [{ type: "NOTES", discussions: threadConnection(`${fullPath}#${iid}`, threads, next) }] } } } } },
+  };
+}
+
+/** A further page of a Work Item's Linked Items. */
+export function linksPage(fullPath: string, iid: string, after: string, linked: NonNullable<WorkItemFixture["linked"]>, next?: string): Interaction {
+  return {
+    operationName: "FetchWorkItemLinks",
+    variables: { fullPath, iid, after },
+    response: { body: { data: { namespace: { workItem: { widgets: [{ type: "LINKED_ITEMS", linkedItems: linkedConnection(linked, next) }] } } } } },
+  };
+}
+
 export function workItemNode(f: WorkItemFixture = {}, options: { enterprise?: boolean } = {}) {
   const fullPath = f.fullPath ?? "acme/app";
   const iid = f.iid ?? "12";
@@ -74,6 +145,7 @@ export function workItemNode(f: WorkItemFixture = {}, options: { enterprise?: bo
         : null,
       hasChildren: (f.children ?? []).length > 0,
       children: {
+        count: f.childrenCount ?? (f.children ?? []).length,
         nodes: (f.children ?? []).map((c, i) => ({
           id: `gid://gitlab/WorkItem/${500 + i}`,
           reference: c.reference,
@@ -85,43 +157,14 @@ export function workItemNode(f: WorkItemFixture = {}, options: { enterprise?: bo
         pageInfo: { hasNextPage: false, endCursor: null },
       },
     },
-    {
-      type: "LINKED_ITEMS",
-      linkedItems: {
-        nodes: (f.linked ?? []).map((l, i) => ({
-          linkType: l.linkType,
-          workItem: { id: `gid://gitlab/WorkItem/${700 + i}`, reference: l.reference, title: l.title, state: l.state ?? "OPEN", webUrl: itemRef(l.reference), workItemType: { name: "Issue" } },
-        })),
-      },
-    },
-    {
-      type: "NOTES",
-      discussions: {
-        nodes: (f.threads ?? []).map((t) => ({
-          id: `gid://gitlab/Discussion/${t.id}`,
-          replyId: `gid://gitlab/Discussion/${t.id}`,
-          resolvable: t.resolvable ?? true,
-          resolved: t.resolved ?? false,
-          userPermissions: { resolveNote: t.canResolve ?? true },
-          notes: {
-            nodes: t.notes.map((n) => ({
-              id: `gid://gitlab/Note/${n.id}`,
-              body: n.body,
-              internal: n.internal ?? false,
-              createdAt: "2026-10-01T10:00:00Z",
-              author: { username: n.author },
-              url: `${itemRef(reference)}#note_${n.id}`,
-            })),
-          },
-        })),
-        pageInfo: { hasNextPage: false, endCursor: null },
-      },
-    },
+    { type: "LINKED_ITEMS", linkedItems: linkedConnection(f.linked ?? [], f.linkedCursor) },
+    { type: "NOTES", discussions: threadConnection(reference, f.threads ?? [], f.threadsCursor) },
     {
       type: "DEVELOPMENT",
       closingMergeRequests: {
         count: f.closingCount ?? (f.closingMrs ?? []).length,
         nodes: (f.closingMrs ?? []).map((m) => ({ fromMrDescription: true, mergeRequest: mr(m) })),
+        pageInfo: { hasNextPage: Boolean(f.closingCursor), endCursor: f.closingCursor ?? null },
       },
       relatedMergeRequests: { nodes: (f.relatedMrs ?? []).map(mr) },
     },

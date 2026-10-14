@@ -20,7 +20,10 @@ export interface Thread {
   resolvable: boolean;
   resolved: boolean;
   canResolve: boolean;
+  /** The first 100 Comments; a longer Thread has more in GitLab. */
   comments: Comment[];
+  /** How many Comments the Thread has in GitLab, including any not fetched. */
+  commentCount: number;
 }
 
 export interface ItemSummary {
@@ -59,14 +62,29 @@ export interface WorkItem {
   dueDate: string | null;
   weight: number | null | undefined;
   parent: ItemSummary | null;
+  /** The first 100 children; `childrenCount` counts them all. */
   children: ItemSummary[];
+  childrenCount: number;
   linkedItems: (ItemSummary & { linkType: string })[];
   threads: Thread[];
-  mergeRequests: { all: MergeRequestLink[]; hidden: number };
+  /**
+   * `hidden` counts closing merge requests the token can't see; `unfetched` counts those past
+   * the first 100, which may or may not be visible.
+   */
+  mergeRequests: { all: MergeRequestLink[]; hidden: number; unfetched: number };
   permissions: Record<string, boolean>;
 }
 
 const SUMMARY = "id reference(full: true) title state webUrl workItemType { name }";
+const PAGE = "pageInfo { hasNextPage endCursor }";
+const LINKS = `nodes { linkType workItem { ${SUMMARY} } } ${PAGE}`;
+const THREADS = `
+            nodes {
+              id replyId resolvable resolved
+              userPermissions { resolveNote }
+              notes(first: 100) { count nodes { id body internal createdAt url author { username } } }
+            }
+            ${PAGE}`;
 
 function fetchQuery(enterprise: boolean): string {
   return /* GraphQL */ `
@@ -86,23 +104,15 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
         ... on WorkItemWidgetHierarchy {
           parent { ${SUMMARY} }
           hasChildren
-          children(first: 100) { nodes { ${SUMMARY} } pageInfo { hasNextPage endCursor } }
+          children(first: 100) { count nodes { ${SUMMARY} } }
         }
-        ... on WorkItemWidgetLinkedItems { linkedItems(first: 100) { nodes { linkType workItem { ${SUMMARY} } } } }
-        ... on WorkItemWidgetNotes {
-          discussions(filter: ONLY_COMMENTS, first: 100) {
-            nodes {
-              id replyId resolvable resolved
-              userPermissions { resolveNote }
-              notes(first: 100) { nodes { id body internal createdAt url author { username } } }
-            }
-            pageInfo { hasNextPage endCursor }
-          }
-        }
+        ... on WorkItemWidgetLinkedItems { linkedItems(first: 100) { ${LINKS} } }
+        ... on WorkItemWidgetNotes { discussions(filter: ONLY_COMMENTS, first: 100) { ${THREADS} } }
         ... on WorkItemWidgetDevelopment {
           closingMergeRequests(first: 100) {
             count
             nodes { fromMrDescription mergeRequest { id reference(full: true) title state draft webUrl } }
+            pageInfo { hasNextPage }
           }
           relatedMergeRequests(first: 100) { nodes { id reference(full: true) title state draft webUrl } }
         }
@@ -111,6 +121,36 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
   }
 }`;
 }
+
+/** Later pages of the connections a Fetch reads in full: Threads and Linked Items. */
+const PAGED = [
+  {
+    widget: "NOTES",
+    field: "discussions",
+    operationName: "FetchWorkItemThreads",
+    query: /* GraphQL */ `
+query FetchWorkItemThreads($fullPath: ID!, $iid: String!, $after: String!) {
+  namespace(fullPath: $fullPath) {
+    workItem(iid: $iid) {
+      widgets { type ... on WorkItemWidgetNotes { discussions(filter: ONLY_COMMENTS, first: 100, after: $after) { ${THREADS} } } }
+    }
+  }
+}`,
+  },
+  {
+    widget: "LINKED_ITEMS",
+    field: "linkedItems",
+    operationName: "FetchWorkItemLinks",
+    query: /* GraphQL */ `
+query FetchWorkItemLinks($fullPath: ID!, $iid: String!, $after: String!) {
+  namespace(fullPath: $fullPath) {
+    workItem(iid: $iid) { widgets { type ... on WorkItemWidgetLinkedItems { linkedItems(first: 100, after: $after) { ${LINKS} } } } }
+  }
+}`,
+  },
+] as const;
+
+const widgetOf = (node: any, type: string) => (node?.widgets ?? []).find((w: any) => w.type === type);
 
 const lower = (state: string): "open" | "closed" => (state === "CLOSED" ? "closed" : "open");
 
@@ -147,12 +187,15 @@ function mergeRequests(widget: any): WorkItem["mergeRequests"] {
   }
   const all = [...seen.values()].sort((a, b) => MR_ORDER[a.state] - MR_ORDER[b.state]);
   const visibleClosing = closing.filter((node: any) => node.mergeRequest).length;
-  const hidden = Math.max(0, (widget?.closingMergeRequests?.count ?? visibleClosing) - visibleClosing);
-  return { all, hidden };
+  const count = widget?.closingMergeRequests?.count ?? closing.length;
+  // Past the first page, GitLab's count can't tell unfetched merge requests from ones the token can't see.
+  return widget?.closingMergeRequests?.pageInfo?.hasNextPage
+    ? { all, hidden: closing.length - visibleClosing, unfetched: Math.max(0, count - closing.length) }
+    : { all, hidden: Math.max(0, count - visibleClosing), unfetched: 0 };
 }
 
 function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
-  const widget = (type: string) => (node.widgets ?? []).find((w: any) => w.type === type);
+  const widget = (type: string) => widgetOf(node, type);
   const hierarchy = widget("HIERARCHY");
   const weight = widget("WEIGHT");
   return {
@@ -175,6 +218,7 @@ function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
     weight: weight ? (weight.weight ?? null) : undefined,
     parent: hierarchy?.parent ? summary(hierarchy.parent) : null,
     children: (hierarchy?.children?.nodes ?? []).map(summary),
+    childrenCount: hierarchy?.children?.count ?? (hierarchy?.children?.nodes ?? []).length,
     linkedItems: (widget("LINKED_ITEMS")?.linkedItems?.nodes ?? []).map((n: any) => ({ ...summary(n.workItem), linkType: n.linkType })),
     threads: (widget("NOTES")?.discussions?.nodes ?? []).map((d: any) => ({
       id: d.id,
@@ -190,6 +234,7 @@ function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
         createdAt: n.createdAt,
         url: n.url,
       })),
+      commentCount: d.notes?.count ?? (d.notes?.nodes ?? []).length,
     })),
     mergeRequests: mergeRequests(widget("DEVELOPMENT")),
     permissions: node.userPermissions ?? {},
@@ -232,7 +277,7 @@ export class Reader {
   /** Records the version of a Work Item that Claude has now seen. */
   remember(item: WorkItem): void {
     this.seen.set(item.id, item.updatedAt);
-    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.comments.length);
+    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.commentCount);
   }
 
   /** How many Comments a Thread had when Claude last saw it, if it has. */
@@ -256,6 +301,19 @@ export class Reader {
     return resolved;
   }
 
+  /** The nodes on every page after the first of a Work Item's paged connection. */
+  private async laterPages(ref: WorkItemRef, paged: (typeof PAGED)[number], pageInfo: any): Promise<any[]> {
+    const nodes: any[] = [];
+    while (pageInfo?.hasNextPage && pageInfo.endCursor) {
+      const variables = { fullPath: ref.fullPath, iid: ref.iid, after: pageInfo.endCursor };
+      const data = await this.gateway.graphql(paged.operationName, paged.query, variables);
+      const connection = widgetOf(data?.namespace?.workItem, paged.widget)?.[paged.field];
+      nodes.push(...(connection?.nodes ?? []));
+      pageInfo = connection?.pageInfo;
+    }
+    return nodes;
+  }
+
   /** Fetches a supported Work Item, or throws a readable refusal. */
   async fetch(ref: WorkItemRef): Promise<WorkItem> {
     const info = await this.instance.requireSupported();
@@ -265,6 +323,10 @@ export class Reader {
     });
     const node = data?.namespace?.workItem;
     if (!node) throw this.missing(ref);
+    for (const paged of PAGED) {
+      const connection = widgetOf(node, paged.widget)?.[paged.field];
+      if (connection) connection.nodes = [...(connection.nodes ?? []), ...(await this.laterPages(ref, paged, connection.pageInfo))];
+    }
     const item = toWorkItem(node, ref);
     this.requireSupportedType(item.reference, item.type);
     return item;

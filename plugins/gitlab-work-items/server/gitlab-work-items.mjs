@@ -36825,6 +36825,15 @@ function parseUrl(text, config3) {
 
 // src/server/reader.ts
 var SUMMARY = "id reference(full: true) title state webUrl workItemType { name }";
+var PAGE = "pageInfo { hasNextPage endCursor }";
+var LINKS = `nodes { linkType workItem { ${SUMMARY} } } ${PAGE}`;
+var THREADS = `
+            nodes {
+              id replyId resolvable resolved
+              userPermissions { resolveNote }
+              notes(first: 100) { count nodes { id body internal createdAt url author { username } } }
+            }
+            ${PAGE}`;
 function fetchQuery(enterprise) {
   return (
     /* GraphQL */
@@ -36845,23 +36854,15 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
         ... on WorkItemWidgetHierarchy {
           parent { ${SUMMARY} }
           hasChildren
-          children(first: 100) { nodes { ${SUMMARY} } pageInfo { hasNextPage endCursor } }
+          children(first: 100) { count nodes { ${SUMMARY} } }
         }
-        ... on WorkItemWidgetLinkedItems { linkedItems(first: 100) { nodes { linkType workItem { ${SUMMARY} } } } }
-        ... on WorkItemWidgetNotes {
-          discussions(filter: ONLY_COMMENTS, first: 100) {
-            nodes {
-              id replyId resolvable resolved
-              userPermissions { resolveNote }
-              notes(first: 100) { nodes { id body internal createdAt url author { username } } }
-            }
-            pageInfo { hasNextPage endCursor }
-          }
-        }
+        ... on WorkItemWidgetLinkedItems { linkedItems(first: 100) { ${LINKS} } }
+        ... on WorkItemWidgetNotes { discussions(filter: ONLY_COMMENTS, first: 100) { ${THREADS} } }
         ... on WorkItemWidgetDevelopment {
           closingMergeRequests(first: 100) {
             count
             nodes { fromMrDescription mergeRequest { id reference(full: true) title state draft webUrl } }
+            pageInfo { hasNextPage }
           }
           relatedMergeRequests(first: 100) { nodes { id reference(full: true) title state draft webUrl } }
         }
@@ -36871,6 +36872,39 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
 }`
   );
 }
+var PAGED = [
+  {
+    widget: "NOTES",
+    field: "discussions",
+    operationName: "FetchWorkItemThreads",
+    query: (
+      /* GraphQL */
+      `
+query FetchWorkItemThreads($fullPath: ID!, $iid: String!, $after: String!) {
+  namespace(fullPath: $fullPath) {
+    workItem(iid: $iid) {
+      widgets { type ... on WorkItemWidgetNotes { discussions(filter: ONLY_COMMENTS, first: 100, after: $after) { ${THREADS} } } }
+    }
+  }
+}`
+    )
+  },
+  {
+    widget: "LINKED_ITEMS",
+    field: "linkedItems",
+    operationName: "FetchWorkItemLinks",
+    query: (
+      /* GraphQL */
+      `
+query FetchWorkItemLinks($fullPath: ID!, $iid: String!, $after: String!) {
+  namespace(fullPath: $fullPath) {
+    workItem(iid: $iid) { widgets { type ... on WorkItemWidgetLinkedItems { linkedItems(first: 100, after: $after) { ${LINKS} } } } }
+  }
+}`
+    )
+  }
+];
+var widgetOf = (node2, type) => (node2?.widgets ?? []).find((w) => w.type === type);
 var lower = (state) => state === "CLOSED" ? "closed" : "open";
 function summary(node2) {
   return {
@@ -36902,11 +36936,11 @@ function mergeRequests(widget) {
   }
   const all = [...seen.values()].sort((a, b) => MR_ORDER[a.state] - MR_ORDER[b.state]);
   const visibleClosing = closing.filter((node2) => node2.mergeRequest).length;
-  const hidden = Math.max(0, (widget?.closingMergeRequests?.count ?? visibleClosing) - visibleClosing);
-  return { all, hidden };
+  const count = widget?.closingMergeRequests?.count ?? closing.length;
+  return widget?.closingMergeRequests?.pageInfo?.hasNextPage ? { all, hidden: closing.length - visibleClosing, unfetched: Math.max(0, count - closing.length) } : { all, hidden: Math.max(0, count - visibleClosing), unfetched: 0 };
 }
 function toWorkItem(node2, ref) {
-  const widget = (type) => (node2.widgets ?? []).find((w) => w.type === type);
+  const widget = (type) => widgetOf(node2, type);
   const hierarchy = widget("HIERARCHY");
   const weight = widget("WEIGHT");
   return {
@@ -36929,6 +36963,7 @@ function toWorkItem(node2, ref) {
     weight: weight ? weight.weight ?? null : void 0,
     parent: hierarchy?.parent ? summary(hierarchy.parent) : null,
     children: (hierarchy?.children?.nodes ?? []).map(summary),
+    childrenCount: hierarchy?.children?.count ?? (hierarchy?.children?.nodes ?? []).length,
     linkedItems: (widget("LINKED_ITEMS")?.linkedItems?.nodes ?? []).map((n) => ({ ...summary(n.workItem), linkType: n.linkType })),
     threads: (widget("NOTES")?.discussions?.nodes ?? []).map((d) => ({
       id: d.id,
@@ -36943,7 +36978,8 @@ function toWorkItem(node2, ref) {
         internal: Boolean(n.internal),
         createdAt: n.createdAt,
         url: n.url
-      }))
+      })),
+      commentCount: d.notes?.count ?? (d.notes?.nodes ?? []).length
     })),
     mergeRequests: mergeRequests(widget("DEVELOPMENT")),
     permissions: node2.userPermissions ?? {}
@@ -36980,7 +37016,7 @@ var Reader = class {
   /** Records the version of a Work Item that Claude has now seen. */
   remember(item) {
     this.seen.set(item.id, item.updatedAt);
-    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.comments.length);
+    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.commentCount);
   }
   /** How many Comments a Thread had when Claude last saw it, if it has. */
   seenThreadSize(threadId) {
@@ -37000,6 +37036,18 @@ var Reader = class {
     this.requireSupportedType(resolved.reference, resolved.type);
     return resolved;
   }
+  /** The nodes on every page after the first of a Work Item's paged connection. */
+  async laterPages(ref, paged, pageInfo) {
+    const nodes = [];
+    while (pageInfo?.hasNextPage && pageInfo.endCursor) {
+      const variables = { fullPath: ref.fullPath, iid: ref.iid, after: pageInfo.endCursor };
+      const data = await this.gateway.graphql(paged.operationName, paged.query, variables);
+      const connection = widgetOf(data?.namespace?.workItem, paged.widget)?.[paged.field];
+      nodes.push(...connection?.nodes ?? []);
+      pageInfo = connection?.pageInfo;
+    }
+    return nodes;
+  }
   /** Fetches a supported Work Item, or throws a readable refusal. */
   async fetch(ref) {
     const info = await this.instance.requireSupported();
@@ -37009,6 +37057,10 @@ var Reader = class {
     });
     const node2 = data?.namespace?.workItem;
     if (!node2) throw this.missing(ref);
+    for (const paged of PAGED) {
+      const connection = widgetOf(node2, paged.widget)?.[paged.field];
+      if (connection) connection.nodes = [...connection.nodes ?? [], ...await this.laterPages(ref, paged, connection.pageInfo)];
+    }
     const item = toWorkItem(node2, ref);
     this.requireSupportedType(item.reference, item.type);
     return item;
@@ -37341,14 +37393,14 @@ ${FOOTER}` : body;
     const thread = findThread(item, request.thread, ref.noteId);
     const first = thread.comments[0];
     const internal = Boolean(first?.internal);
-    const comments = this.reader.seenThreadSize(thread.id) ?? thread.comments.length;
-    if (thread.comments.length !== comments) {
+    const comments = this.reader.seenThreadSize(thread.id) ?? thread.commentCount;
+    if (thread.commentCount !== comments) {
       throw refused(
         `That Thread on ${item.reference} has new Comments since you fetched it. Fetch ${item.reference} again and show the user the new Comments first. Nothing was prepared.`
       );
     }
     const guard = { kind: "thread", threadId: thread.id, comments };
-    const replies = thread.comments.length - 1;
+    const replies = thread.commentCount - 1;
     const about = `"${excerpt(first?.body ?? "")}" by ${first?.author ?? "unknown"}, ${replies} repl${replies === 1 ? "y" : "ies"}`;
     if (request.kind === "reply") {
       if (!request.body) throw refused("A reply needs a body.");
@@ -37565,11 +37617,13 @@ ${renderReport(all2)}` };
     }
     if (guard.kind === "thread") {
       const thread = now.threads.find((t) => t.id === guard.threadId);
-      if (!thread || thread.comments.length !== guard.comments) {
+      if (!thread || thread.commentCount !== guard.comments) {
         const added = thread ? thread.comments.slice(guard.comments) : [];
+        const unshown = (thread?.commentCount ?? 0) - guard.comments - added.length;
         return [
           `The Thread on ${target.reference} has new Comments since it was fetched. Nothing was written. New Comments:`,
           ...added.map((c) => `  ${c.author}: ${excerpt(c.body)}`),
+          ...unshown > 0 ? [`  ${unshown} more, past the first 100; open the Thread in GitLab to read them.`] : [],
           "Show the user the new Comments, then prepare a new plan."
         ].join("\n");
       }
@@ -37901,6 +37955,8 @@ function threadText(thread, index) {
     lines.push(`  - ${c.author}${c.internal ? " (internal)" : ""}, ${c.createdAt}, comment ${c.id}:`);
     lines.push(...c.body.split("\n").map((line) => `      ${line}`));
   }
+  const unfetched = thread.commentCount - thread.comments.length;
+  if (unfetched > 0) lines.push(`  - ${unfetched} more Comments not shown; open the Thread in GitLab to read them.`);
   return lines.join("\n");
 }
 async function fetchWorkItem(config3, reader2, reference) {
@@ -37909,7 +37965,7 @@ async function fetchWorkItem(config3, reader2, reference) {
   reader2.remember(item);
   const unresolved = item.threads.filter((t) => t.resolvable && !t.resolved).length;
   const shown = item.mergeRequests.all.slice(0, MR_LIMIT);
-  const more = item.mergeRequests.all.length - shown.length;
+  const more = item.mergeRequests.all.length - shown.length + item.mergeRequests.unfetched;
   const focus = focusOf(item, ref.noteId);
   const data = {
     reference: item.reference,
@@ -37925,7 +37981,7 @@ async function fetchWorkItem(config3, reader2, reference) {
     dueDate: item.dueDate,
     ...item.weight !== void 0 ? { weight: item.weight } : {},
     parent: item.parent ? { reference: item.parent.reference, title: item.parent.title, url: item.parent.url } : null,
-    childrenCount: item.children.length,
+    childrenCount: item.childrenCount,
     children: item.children.map(({ reference: reference2, title, type, state }) => ({ reference: reference2, title, type, state })),
     linkedItemsCount: item.linkedItems.length,
     linkedItems: item.linkedItems.map(({ reference: reference2, title, state, linkType }) => ({ reference: reference2, title, state, linkType })),
@@ -37942,7 +37998,7 @@ async function fetchWorkItem(config3, reader2, reference) {
     `Labels: ${data.labels.join(", ") || "none"}`,
     `Milestone: ${data.milestone ?? "none"}  Due: ${item.dueDate ?? "none"}${item.weight !== void 0 ? `  Weight: ${item.weight ?? "none"}` : ""}`,
     `Parent: ${item.parent ? `${item.parent.reference} (${item.parent.title})` : "none"}`,
-    `Children: ${item.children.length}  Linked Items: ${item.linkedItems.length}`,
+    `Children: ${item.childrenCount}  Linked Items: ${item.linkedItems.length}`,
     `Threads: ${item.threads.length} (${unresolved} unresolved)`
   ];
   const mrLines = shown.map((m) => `  - ${m.relation} ${m.reference}: ${m.title} [${m.state}] ${m.url}`);
@@ -37958,6 +38014,7 @@ ${mrLines.join("\n")}` : "Merge requests: none");
     "Description:",
     item.description || "(empty)",
     ...item.children.length ? ["", "Children:", ...item.children.map((c) => `  - ${c.reference} ${c.title} [${c.type}, ${c.state}]`)] : [],
+    ...item.childrenCount > item.children.length ? [`  - ${item.childrenCount - item.children.length} more not shown; list them with list_work_items and this parent.`] : [],
     ...item.linkedItems.length ? ["", "Linked Items:", ...item.linkedItems.map((l) => `  - ${l.linkType} ${l.reference} ${l.title} [${l.state}]`)] : [],
     ...item.threads.length ? ["", ...item.threads.map(threadText)] : []
   ];

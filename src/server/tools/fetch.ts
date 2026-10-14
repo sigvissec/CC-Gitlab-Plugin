@@ -19,6 +19,8 @@ function threadText(thread: Thread, index: number): string {
     lines.push(`  - ${c.author}${c.internal ? " (internal)" : ""}, ${c.createdAt}, comment ${c.id}:`);
     lines.push(...c.body.split("\n").map((line) => `      ${line}`));
   }
+  const unfetched = thread.commentCount - thread.comments.length;
+  if (unfetched > 0) lines.push(`  - ${unfetched} more Comments not shown; open the Thread in GitLab to read them.`);
   return lines.join("\n");
 }
 
@@ -28,7 +30,7 @@ export async function fetchWorkItem(config: Config, reader: Reader, reference: s
   reader.remember(item);
   const unresolved = item.threads.filter((t) => t.resolvable && !t.resolved).length;
   const shown = item.mergeRequests.all.slice(0, MR_LIMIT);
-  const more = item.mergeRequests.all.length - shown.length;
+  const more = item.mergeRequests.all.length - shown.length + item.mergeRequests.unfetched;
   const focus = focusOf(item, ref.noteId);
 
   const data = {
@@ -45,7 +47,7 @@ export async function fetchWorkItem(config: Config, reader: Reader, reference: s
     dueDate: item.dueDate,
     ...(item.weight !== undefined ? { weight: item.weight } : {}),
     parent: item.parent ? { reference: item.parent.reference, title: item.parent.title, url: item.parent.url } : null,
-    childrenCount: item.children.length,
+    childrenCount: item.childrenCount,
     children: item.children.map(({ reference, title, type, state }) => ({ reference, title, type, state })),
     linkedItemsCount: item.linkedItems.length,
     linkedItems: item.linkedItems.map(({ reference, title, state, linkType }) => ({ reference, title, state, linkType })),
@@ -63,7 +65,7 @@ export async function fetchWorkItem(config: Config, reader: Reader, reference: s
     `Labels: ${data.labels.join(", ") || "none"}`,
     `Milestone: ${data.milestone ?? "none"}  Due: ${item.dueDate ?? "none"}${item.weight !== undefined ? `  Weight: ${item.weight ?? "none"}` : ""}`,
     `Parent: ${item.parent ? `${item.parent.reference} (${item.parent.title})` : "none"}`,
-    `Children: ${item.children.length}  Linked Items: ${item.linkedItems.length}`,
+    `Children: ${item.childrenCount}  Linked Items: ${item.linkedItems.length}`,
     `Threads: ${item.threads.length} (${unresolved} unresolved)`,
   ];
   const mrLines = shown.map((m) => `  - ${m.relation} ${m.reference}: ${m.title} [${m.state}] ${m.url}`);
@@ -79,6 +81,9 @@ export async function fetchWorkItem(config: Config, reader: Reader, reference: s
     "Description:",
     item.description || "(empty)",
     ...(item.children.length ? ["", "Children:", ...item.children.map((c) => `  - ${c.reference} ${c.title} [${c.type}, ${c.state}]`)] : []),
+    ...(item.childrenCount > item.children.length
+      ? [`  - ${item.childrenCount - item.children.length} more not shown; list them with list_work_items and this parent.`]
+      : []),
     ...(item.linkedItems.length ? ["", "Linked Items:", ...item.linkedItems.map((l) => `  - ${l.linkType} ${l.reference} ${l.title} [${l.state}]`)] : []),
     ...(item.threads.length ? ["", ...item.threads.map(threadText)] : []),
   ];

@@ -28,7 +28,7 @@
     "fullPath": "gitlab-org/cli",
     "iid": "7"
    },
-   "queryHash": "454910f553fbca3da9678dd3496c5a0860aa25ac5a02d3241c01cf131d9df3ec",
+   "queryHash": "0d5977c3cfefd8dade0d9f5c42bc5b3bf7f436c8efca076aca7e0e71709972ec",
    "response": {
     "exitCode": 0,
     "body": {
@@ -103,7 +103,10 @@
               "webUrl": "https://gitlab.com/gitlab-org/cli/-/merge_requests/1854"
              }
             }
-           ]
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
           },
           "relatedMergeRequests": {
            "nodes": [
@@ -140,11 +143,8 @@
           "parent": null,
           "hasChildren": false,
           "children": {
-           "nodes": [],
-           "pageInfo": {
-            "hasNextPage": false,
-            "endCursor": null
-           }
+           "count": 0,
+           "nodes": []
           }
          },
          {
@@ -164,7 +164,11 @@
          {
           "type": "LINKED_ITEMS",
           "linkedItems": {
-           "nodes": []
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
           }
          },
          {

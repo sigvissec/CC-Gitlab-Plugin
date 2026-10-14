@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { start, type Session } from "./support/harness.js";
 import { cassette, instanceProbe, loggedIn, type Interaction } from "./support/cassette.js";
-import { fetchWorkItem } from "./support/fixtures.js";
+import { fetchWorkItem, linksPage, threadsPage } from "./support/fixtures.js";
 
 let session: Session | undefined;
 afterEach(async () => {
@@ -171,6 +171,33 @@ describe("fetching one Work Item", () => {
   });
 });
 
+describe("long Work Items", () => {
+  it("fetches every Thread and Linked Item past the first page, and counts children and Comments from GitLab", async () => {
+    const thread = (i: number) => ({ id: `d${i}`, notes: [{ id: 1000 + i, author: "bob", body: `Thread ${i}` }] });
+    const link = (i: number) => ({ linkType: "relates_to", reference: `acme/app#${100 + i}`, title: `Link ${i}` });
+    const s = await withItems([
+      fetchWorkItem({
+        threads: [thread(1), { id: "long", notes: [{ id: 1, author: "carol", body: "Long one" }], count: 150 }],
+        threadsCursor: "t1",
+        linked: [link(1)],
+        linkedCursor: "l1",
+        children: [{ reference: "acme/app#13", title: "One shown" }],
+        childrenCount: 140,
+      }),
+      threadsPage("acme/app", "12", "t1", [thread(3), thread(4)], "t2"),
+      threadsPage("acme/app", "12", "t2", [thread(5)]),
+      linksPage("acme/app", "12", "l1", [link(2), link(3)]),
+    ]);
+
+    const result = await s.call("fetch_work_item", { reference: "acme/app#12" });
+
+    expect(result.data.threads).toEqual({ total: 5, unresolved: 5 });
+    expect(result.data.linkedItemsCount).toBe(3);
+    expect(result.data.childrenCount).toBe(140);
+    expect(result.text).toContain("149 more Comments not shown");
+  });
+});
+
 describe("associated merge requests in the digest", () => {
   it("merges closing and mentioning merge requests, once each, labelled", async () => {
     const s = await withItems([
@@ -205,6 +232,15 @@ describe("associated merge requests in the digest", () => {
     const states = result.data.mergeRequests.shown.map((m: { state: string }) => m.state);
     expect(states).toEqual(["draft", "open", "open", "open", "merged", "merged", "merged", "merged", "closed", "closed"]);
     expect(result.data.mergeRequests.more).toBe(3);
+  });
+
+  it("counts closing merge requests past the first page as more, not hidden", async () => {
+    const closing = Array.from({ length: 3 }, (_, i) => ({ id: i + 1, reference: `acme/app!${i + 1}`, title: `MR ${i}`, state: "opened" as const }));
+    const s = await withItems([fetchWorkItem({ closingMrs: closing, closingCount: 150, closingCursor: "m1" })]);
+
+    const result = await s.call("fetch_work_item", { reference: "acme/app#12" });
+
+    expect(result.data.mergeRequests).toMatchObject({ hidden: 0, more: 147 });
   });
 
   it("reports closing merge requests the token can't see as hidden", async () => {

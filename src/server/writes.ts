@@ -332,14 +332,14 @@ export class Writes {
     const thread = findThread(item, request.thread, ref.noteId);
     const first = thread.comments[0];
     const internal = Boolean(first?.internal);
-    const comments = this.reader.seenThreadSize(thread.id) ?? thread.comments.length;
-    if (thread.comments.length !== comments) {
+    const comments = this.reader.seenThreadSize(thread.id) ?? thread.commentCount;
+    if (thread.commentCount !== comments) {
       throw refused(
         `That Thread on ${item.reference} has new Comments since you fetched it. Fetch ${item.reference} again and show the user the new Comments first. Nothing was prepared.`,
       );
     }
     const guard: Guard = { kind: "thread", threadId: thread.id, comments };
-    const replies = thread.comments.length - 1;
+    const replies = thread.commentCount - 1;
     const about = `"${excerpt(first?.body ?? "")}" by ${first?.author ?? "unknown"}, ${replies} repl${replies === 1 ? "y" : "ies"}`;
 
     if (request.kind === "reply") {
@@ -579,11 +579,13 @@ export class Writes {
     }
     if (guard.kind === "thread") {
       const thread = now.threads.find((t) => t.id === guard.threadId);
-      if (!thread || thread.comments.length !== guard.comments) {
+      if (!thread || thread.commentCount !== guard.comments) {
         const added = thread ? thread.comments.slice(guard.comments) : [];
+        const unshown = (thread?.commentCount ?? 0) - guard.comments - added.length;
         return [
           `The Thread on ${target.reference} has new Comments since it was fetched. Nothing was written. New Comments:`,
           ...added.map((c) => `  ${c.author}: ${excerpt(c.body)}`),
+          ...(unshown > 0 ? [`  ${unshown} more, past the first 100; open the Thread in GitLab to read them.`] : []),
           "Show the user the new Comments, then prepare a new plan.",
         ].join("\n");
       }
