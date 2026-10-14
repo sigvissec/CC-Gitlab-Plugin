@@ -15,3 +15,7 @@ Minimum supported GitLab version for v1 is **18.1**, on the assumption that the 
 - Why 18.1: `namespace.workItems` (one list query for any scope) and parent filtering arrive in 18.1, and Epic Work Items became generally available then (see [How can the plugin Fetch filtered lists of Work Items?](14-work-item-list-filters.md)). Supporting 18.0 would need a second set of queries.
 - On an older Instance the plugin stops with a clear message naming the minimum version, rather than half-working.
 - Newer-version features (such as the `ME` assignee wildcard in 19.2) are not required; the plugin uses the 18.1-compatible form everywhere.
+
+## Update
+
+The confirmation step was dropped when [What does our test Instance actually support?](05-test-instance-checks.md) was closed: the 18.1 minimum stands, but the user's own Instance version is unconfirmed.

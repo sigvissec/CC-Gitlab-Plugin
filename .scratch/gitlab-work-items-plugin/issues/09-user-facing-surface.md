@@ -35,3 +35,7 @@ Resolved by grilling (term Command added to `/GLOSSARY.md`), using [How does Git
 
 **Setup and failures**
 - Any use when the plugin isn't set up, or the token fails, reports exactly what's missing or failing (no token, wrong Instance, expired token, GitLab below 18.1) and points to `/gitlab-work-items:status`. Claude never asks the user to paste a token into the chat.
+
+## Update
+
+Epics are now out of scope (see [Do Epics stay in v1 without a Premium Instance to verify against?](11-epics-in-v1.md)), so the Epic digest note no longer applies.

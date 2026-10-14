@@ -1,7 +1,7 @@
 # What does our test Instance actually support?
 
 Type: task
-Status: open
+Status: closed
 Blocked by: 01
 
 ## Question
@@ -78,3 +78,13 @@ Written from [What can GitLab's Work Items API do, and where is it gated?](01-gi
 11. **glab, if installed.** Record the output of `glab version` and `glab auth status --hostname <host>`. Don't use `--show-token`.
 
 Delete the token and the throwaway project when done, and paste the results (or a summary of them) back into the session.
+
+## Closed: out of scope
+
+The user won't run checks by hand against their Instance; verification is limited to what Claude can set up itself (see the "Testing strategy" item on the map). The checklist above stays as a reference. Facts that only a real Instance could have confirmed remain unverified, among them:
+
+- that the user's Instance is GitLab 18.1 or later (the assumption behind [Which GitLab versions must v1 support?](13-gitlab-versions.md));
+- whether GitLab accepts a PAT sent as `Authorization: Bearer`;
+- the Work Item Type IDs on a self-managed 18.x Instance;
+- silent-drop behaviour on Free (extra assignees, weight), and the exact errors for unlicensed fields;
+- associated merge request edge cases (two `relatedMergeRequests` in one request, counts higher than visible merge requests).

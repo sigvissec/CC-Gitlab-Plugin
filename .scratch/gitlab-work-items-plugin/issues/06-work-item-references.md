@@ -32,3 +32,7 @@ Resolved by grilling (terms Reference, IID, and Context added to `/GLOSSARY.md`)
 
 **Output**
 - The plugin always writes the full reference plus its URL (for example `group/project#123` and its link) in lists, confirmations, and errors.
+
+## Update
+
+Epics are now out of scope (see [Do Epics stay in v1 without a Premium Instance to verify against?](11-epics-in-v1.md)). Epic References (`group&45`, `&45`, and `/epics/` or group `/work_items/` URLs pointing at an Epic) are refused like any unsupported Work Item Type. An Issue's Epic parent, where one exists on a Premium Instance, is still shown by its full reference.

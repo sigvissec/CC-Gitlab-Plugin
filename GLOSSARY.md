@@ -25,7 +25,7 @@ A Work Item's number within its project (Issues and Tasks) or group (Epics), as 
 _Avoid_: ID, number
 
 **Work Item Type**:
-The kind of a Work Item. Issue, Task, and Epic are supported; other types (objective, key result, incident, test case, requirement) are not.
+The kind of a Work Item. Issue and Task are supported; Epic and the other types (objective, key result, incident, test case, requirement) are not.
 
 **Issue**:
 A Work Item of type Issue, living in a project.
