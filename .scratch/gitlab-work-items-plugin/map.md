@@ -4,7 +4,7 @@ Labels: wayfinder:map
 
 ## Destination
 
-A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that bridges GitLab Work Items into the session. It Fetches Issues and Tasks live from gitlab.com and self-managed Instances, as single items (with Threads, Hierarchy, and Linked Items) or filtered lists (by project or group, state, assignee, label, parent), shows the merge requests associated with a Work Item (read-only), and lets Claude Edit, Comment on (including replying to and resolving Threads), and create them. Reviewing is Claude reasoning over Fetched data, not a plugin feature. Auth is a PAT (`GITLAB_TOKEN`) or an existing `glab` login. Building the plugin is a separate effort that starts from this spec.
+A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that bridges GitLab Work Items into the session. It Fetches Issues and Tasks live from gitlab.com and self-managed Instances, as single items (with Threads, Hierarchy, and Linked Items) or filtered lists (by project or group, state, assignee, label, parent), shows the merge requests associated with a Work Item (read-only), and lets Claude Edit, Comment on (including replying to and resolving Threads), and create them. Reviewing is Claude reasoning over Fetched data, not a plugin feature. It talks to GitLab through `glab`; auth is an existing `glab` login or a token in the plugin's settings. Building the plugin is a separate effort that starts from this spec.
 
 ## Notes
 
@@ -14,7 +14,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - Minimum GitLab is 18.1 (see [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md)). Degrade gracefully where an Instance's tier lacks a Work Item Type.
 - Test Instance: the user has one, without Premium, but won't test against it by hand and agents can't reach it. Verification is limited to what Claude can set up itself.
 - v1 targets Desktop only (see [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md)).
-- Built for a team, but v1 auth is a PAT or a reused `glab` login only.
+- Built for a team, but v1 auth is a `glab` login or a token in the plugin's settings only (see [How does the plugin talk to GitLab?](issues/10-integration-architecture.md)).
 - Planning only: produce decisions, not plugin code.
 
 ## Decisions so far
@@ -34,18 +34,15 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [How does GitLab expose the merge requests associated with a Work Item?](issues/17-associated-merge-requests.md): the Development widget lists closing merge requests (stable) and mentioning ones (Experiment, one Work Item per request) on Issues and Tasks, on Free; Epics have none.
 - [How do users invoke the plugin?](issues/09-user-facing-surface.md): conversation first, with Commands `fetch`, `list`, `mine`, `comment`, and `status` under `/gitlab-work-items:`; a Fetch shows a digest including associated merge requests labelled closes or mentions.
 - [Must the plugin work in Claude Code on the web, and how does it get there?](issues/12-cloud-session-support.md): no; v1 targets Desktop (Claude Code on the user's own machine: desktop app, terminal, or IDE extension), with no special handling in cloud sessions.
+- [How does the plugin talk to GitLab?](issues/10-integration-architecture.md): the plugin's own TypeScript MCP server calling `glab api` underneath; setup via `glab` login or a token in plugin settings; confirmation by direct dialog or a forced approval prompt; distributed from this repo as its own marketplace.
 
 ## Not yet specified
 
-- **OAuth**: whether and how the plugin supports OAuth sign-in, beyond PAT and `glab`.
-- **Implementation language and runtime**: hangs on the integration architecture.
-- **Testing strategy**: how the plugin is verified when agents can't reach the user's Instance and the user won't test by hand: only what Claude can set up itself (for example a fake GitLab built from GitLab's published schema).
 - **Images and attachments** in descriptions and Comments.
 - **Custom fields** (GitLab 18's configurable fields on Work Items).
 - **Bulk operations** across many Work Items at once.
 - **Full-text search** across Work Items, beyond filtered lists.
-- **Token-to-Instance scoping**: v1 only ever contacts the one configured Instance (see [How does a user refer to a Work Item?](issues/06-work-item-references.md)), but `GITLAB_TOKEN` and a `glab` login aren't tied to a host, so a token meant for another Instance could still be sent to the configured one. How the plugin makes sure its token belongs to the configured Instance, and whether people with several Instances are supported later.
-- **Distribution**: how teams install and update the plugin (marketplace, versioning).
+- **Several Instances**: v1 talks to one configured Instance, and its token handling keeps the token on that Instance (see [How does the plugin talk to GitLab?](issues/10-integration-architecture.md)); whether people who work across several Instances are supported later, and how.
 
 ## Out of scope
 
