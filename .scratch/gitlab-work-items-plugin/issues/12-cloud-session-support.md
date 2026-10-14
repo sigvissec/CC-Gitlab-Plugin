@@ -1,7 +1,7 @@
 # Must the plugin work in Claude Code on the web, and how does it get there?
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: none
 
 ## Question
