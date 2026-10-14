@@ -37,6 +37,15 @@ jobs:
           echo "$RUNNER_TEMP/glab/bin" >> "$GITHUB_PATH"
       - name: Record against a ${{ matrix.instance }} Test Instance
         run: node scripts/test-instance.mjs ${{ matrix.instance }}
+      - name: Show what GitLab answered in each recording
+        if: failure()
+        run: |
+          for file in test/recordings/instances/${{ matrix.instance }}/*.json; do
+            echo "::group::$file"
+            node -e 'const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+              for (const i of c.interactions ?? [c]) console.log(i.operationName ?? "", JSON.stringify(i.variables ?? {}), "->", JSON.stringify(i.response ?? i).slice(0, 3000));' "$file"
+            echo "::endgroup::"
+          done
       - uses: actions/upload-artifact@v4
         if: always()
         with:

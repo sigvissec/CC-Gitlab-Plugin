@@ -122,7 +122,17 @@ function rootToken() {
   return token;
 }
 
-function seed() {
+/** Waits for Sidekiq to link the Issue to every merge request that closes or mentions it. */
+async function waitForRelatedMergeRequests(projectId, issueIid, mergeRequestIids) {
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const related = rest("GET", `projects/${projectId}/issues/${issueIid}/related_merge_requests`) ?? [];
+    if (mergeRequestIids.every((iid) => related.some((mr) => mr.iid === iid))) return;
+    await sleep(2_000);
+  }
+  throw new Error(`GitLab never related merge requests ${mergeRequestIids.join(", ")} to Issue ${issueIid}.`);
+}
+
+async function seed() {
   const users = ["alice", "bob"].map((username) =>
     rest("POST", "users", { username, name: username, email: `${username}@example.test`, password: "Suite-Passw0rd-not-secret", skip_confirmation: true }),
   );
@@ -130,6 +140,7 @@ function seed() {
   const project = rest("POST", "projects", { name: "app", path: "app", namespace_id: group.id, initialize_with_readme: true });
   for (const user of users) rest("POST", `projects/${project.id}/members`, { user_id: user.id, access_level: 30 });
   for (const name of ["bug", "blocked", "auth"]) rest("POST", `projects/${project.id}/labels`, { name, color: "#cc3333" });
+  const milestone = rest("POST", `projects/${project.id}/milestones`, { title: "18.2" });
 
   const issue = rest("POST", `projects/${project.id}/issues`, {
     title: "Login times out after 30 seconds",
@@ -149,18 +160,18 @@ function seed() {
   rest("POST", `projects/${project.id}/issues/${issue.iid}/links`, { target_project_id: project.id, target_issue_iid: related.iid });
   const thread = rest("POST", `projects/${project.id}/issues/${issue.iid}/discussions`, { body: "Which browser?" });
 
-  rest("POST", `projects/${project.id}/repository/commits`, {
-    branch: "fix-timeout",
-    start_branch: "main",
-    commit_message: "Fix the login timeout",
-    actions: [{ action: "create", file_path: "fix.txt", content: "fixed" }],
-  });
-  const mr = rest("POST", `projects/${project.id}/merge_requests`, {
-    source_branch: "fix-timeout",
-    target_branch: "main",
-    title: "Fix the login timeout",
-    description: `Closes #${issue.iid}`,
-  });
+  const mergeRequest = (branch, title, description) => {
+    rest("POST", `projects/${project.id}/repository/commits`, {
+      branch,
+      start_branch: "main",
+      commit_message: title,
+      actions: [{ action: "create", file_path: `${branch}.txt`, content: title }],
+    });
+    return rest("POST", `projects/${project.id}/merge_requests`, { source_branch: branch, target_branch: "main", title, description });
+  };
+  const mr = mergeRequest("fix-timeout", "Fix the login timeout", `Closes #${issue.iid}`);
+  const mention = mergeRequest("log-timeouts", "Log session timeouts", `Related to #${issue.iid}`);
+  await waitForRelatedMergeRequests(project.id, issue.iid, [mr.iid, mention.iid]);
 
   const version = rest("GET", "version");
   return {
@@ -175,6 +186,8 @@ function seed() {
     related: `acme/app#${related.iid}`,
     plain: `acme/app#${plain.iid}`,
     mergeRequest: `acme/app!${mr.iid}`,
+    mentioningMergeRequest: `acme/app!${mention.iid}`,
+    milestone: milestone.title,
     threadNoteUrl: `${URL_BASE}/acme/app/-/work_items/${issue.iid}#note_${thread.notes[0].id}`,
     users: users.map((u) => u.username),
   };
@@ -189,7 +202,7 @@ async function main() {
     run(REAL_GLAB, ["auth", "login", "--hostname", HOST, "--api-host", API_HOST, "--token", rootToken(), "--api-protocol", "http", "--git-protocol", "http"], {
       env: glabEnv,
     });
-    const manifest = seed();
+    const manifest = await seed();
     rmSync(RECORDINGS_DIR, { recursive: true, force: true });
     mkdirSync(RECORDINGS_DIR, { recursive: true });
     writeFileSync(join(RECORDINGS_DIR, "seed.json"), `${JSON.stringify(manifest, null, 1)}\n`);

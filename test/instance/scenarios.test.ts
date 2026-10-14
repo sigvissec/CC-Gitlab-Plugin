@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { start, type Session } from "../support/harness.js";
+import { start, type Session, type ToolResult } from "../support/harness.js";
 
 const RECORDINGS = resolve(import.meta.dirname, "../recordings/instances");
 const recording = process.env.SCENARIO_MODE === "record";
@@ -25,6 +25,8 @@ interface Seed {
   related: string;
   plain: string;
   mergeRequest: string;
+  mentioningMergeRequest: string;
+  milestone: string;
   threadNoteUrl: string;
   users: string[];
 }
@@ -76,6 +78,13 @@ function changeBehindTheServersBack(target: Target, iid: string, title: string) 
 }
 
 const iidOf = (reference: string) => reference.split("#")[1]!;
+const referencesIn = (result: ToolResult) => (result.data?.items ?? []).map((i: { reference: string }) => i.reference);
+
+/** Fails with the tool's own message, so a failed recording says what GitLab answered. */
+function ok(result: ToolResult): ToolResult {
+  expect(result.isError, result.text).toBe(false);
+  return result;
+}
 const all = targets();
 
 it.skipIf(all.length > 0)("has Test Instance recordings to replay (run scripts/test-instance.mjs to make them)", () => {});
@@ -100,7 +109,10 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
     expect(result.data.children).toEqual([expect.objectContaining({ reference: seed.task, type: "Task" })]);
     expect(result.data.linkedItems).toEqual([expect.objectContaining({ reference: seed.related })]);
     expect(result.data.threads).toMatchObject({ total: 1, unresolved: 1 });
-    expect(result.data.mergeRequests.shown).toEqual([expect.objectContaining({ reference: seed.mergeRequest, relation: "closes", state: "open" })]);
+    expect(result.data.mergeRequests.shown).toEqual([
+      expect.objectContaining({ reference: seed.mergeRequest, relation: "closes", state: "open" }),
+      expect.objectContaining({ reference: seed.mentioningMergeRequest, relation: "mentions", state: "open" }),
+    ]);
   });
 
   it("lists the group's Work Items with filters, including text, label, and parent", async () => {
@@ -109,23 +121,34 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
     const byText = await s.call("list_work_items", { scope: seed.group, search: "timeout" });
     const children = await s.call("list_work_items", { scope: seed.project, parent: seed.issue });
     await s.close();
-    expect(byLabel.data.items.map((i: { reference: string }) => i.reference)).toContain(seed.issue);
-    expect(byText.data.items.map((i: { reference: string }) => i.reference)).toContain(seed.issue);
-    expect(children.data.items.map((i: { reference: string }) => i.reference)).toEqual([seed.task]);
+    expect(referencesIn(ok(byLabel)), byLabel.text).toContain(seed.issue);
+    expect(referencesIn(ok(byText)), byText.text).toContain(seed.issue);
+    expect(referencesIn(ok(children)), children.text).toEqual([seed.task]);
   });
 
   it("edits fields, and reports a second assignee GitLab drops on Free", async () => {
     const s = await session(target, "edit");
     await s.call("fetch_work_item", { reference: seed.plain });
     const prepared = await s.call("prepare_writes", {
-      writes: [{ kind: "edit", reference: seed.plain, title: "Renamed by the suite", addLabels: ["blocked"], assignees: seed.users, dueDate: "2027-01-31", state: "close" }],
+      writes: [
+        {
+          kind: "edit",
+          reference: seed.plain,
+          title: "Renamed by the suite",
+          addLabels: ["blocked"],
+          assignees: seed.users,
+          milestone: seed.milestone,
+          dueDate: "2027-01-31",
+          state: "close",
+        },
+      ],
     });
     const applied = await s.call("apply_writes", { planId: prepared.data.planId });
     const reopened = await s.call("prepare_writes", { writes: [{ kind: "edit", reference: seed.plain, state: "reopen" }] });
     const reopenApplied = await s.call("apply_writes", { planId: reopened.data.planId });
     await s.close();
-    expect(prepared.isError).toBe(false);
-    expect(applied.data.results[0]).toMatchObject({ outcome: "done" });
+    ok(prepared);
+    expect(ok(applied).data.results[0]).toMatchObject({ outcome: "done" });
     expect(applied.data.results[0].didNotStick).toEqual([expect.stringMatching(/^assignees: asked for/)]);
     expect(reopenApplied.data.results[0]).toMatchObject({ outcome: "done", didNotStick: [] });
   });
@@ -141,6 +164,7 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
     const resolved = await s.call("prepare_writes", { writes: [{ kind: "resolve", reference: seed.threadNoteUrl }] });
     const resolveApplied = await s.call("apply_writes", { planId: resolved.data.planId });
     await s.close();
+    for (const result of [commented, commentApplied, replied, replyApplied, resolved, resolveApplied]) ok(result);
     expect(commentApplied.data.results[0]).toMatchObject({ outcome: "done" });
     expect(replyApplied.data.results[0]).toMatchObject({ outcome: "done" });
     expect(resolveApplied.data.results[0]).toMatchObject({ outcome: "done" });
