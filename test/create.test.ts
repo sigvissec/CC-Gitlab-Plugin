@@ -110,4 +110,11 @@ describe("creating a Work Item", () => {
     const applied = await s.call("apply_writes", { planId: prepared.data.planId });
     expect(applied.data.results[0]).toMatchObject({ outcome: "done", didNotStick: [] });
   });
+
+  it("refuses weight up front where the namespace's tier doesn't offer it", async () => {
+    const s = await withGitLab([projectPermissions("acme/app"), lookupTypes("acme/app", { weight: false })]);
+    const prepared = await s.call("prepare_writes", { writes: [{ kind: "create", type: "Issue", project: "acme/app", title: "x", weight: 2 }] });
+    expect(prepared.isError).toBe(true);
+    expect(prepared.text).toMatch(/weight isn't available/);
+  });
 });

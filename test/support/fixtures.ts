@@ -263,25 +263,15 @@ export function lookupMilestone(fullPath: string, title: string, id: number | nu
   };
 }
 
-export function lookupTypes(fullPath: string): Interaction {
+/** A namespace's Work Item Types, with the widgets its tier allows (weight only on Premium). */
+export function lookupTypes(fullPath: string, options: { weight?: boolean } = {}): Interaction {
+  const widgets = ["ASSIGNEES", "DESCRIPTION", "HIERARCHY", "LABELS", "LINKED_ITEMS", "MILESTONE", "NOTES", "START_AND_DUE_DATE", ...(options.weight ? ["WEIGHT"] : [])];
+  const type = (id: number, name: string) => ({ id: `gid://gitlab/WorkItems::Type/${id}`, name, widgetDefinitions: widgets.map((t) => ({ type: t })) });
   return {
     operationName: "LookupWorkItemTypes",
     variables: { fullPath },
     response: {
-      body: {
-        data: {
-          namespace: {
-            workItemTypes: {
-              nodes: [
-                { id: "gid://gitlab/WorkItems::Type/1", name: "Issue" },
-                { id: "gid://gitlab/WorkItems::Type/2", name: "Incident" },
-                { id: "gid://gitlab/WorkItems::Type/5", name: "Task" },
-                { id: "gid://gitlab/WorkItems::Type/8", name: "Epic" },
-              ],
-            },
-          },
-        },
-      },
+      body: { data: { namespace: { workItemTypes: { nodes: [type(1, "Issue"), type(2, "Incident"), type(5, "Task"), type(8, "Epic")] } } } },
     },
   };
 }

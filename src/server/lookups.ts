@@ -20,11 +20,17 @@ query LookupMilestone($fullPath: ID!, $title: String!) {
 
 const TYPES = /* GraphQL */ `
 query LookupWorkItemTypes($fullPath: ID!) {
-  namespace(fullPath: $fullPath) { workItemTypes { nodes { id name } } }
+  namespace(fullPath: $fullPath) { workItemTypes { nodes { id name widgetDefinitions { type } } } }
 }`;
 
+interface TypeInfo {
+  id: string;
+  /** The widgets this type has in this namespace, which depends on the tier. */
+  widgets: Set<string>;
+}
+
 export class Lookups {
-  private readonly types = new Map<string, Promise<Map<string, string>>>();
+  private readonly types = new Map<string, Promise<Map<string, TypeInfo>>>();
 
   constructor(private readonly gateway: Gateway) {}
 
@@ -51,17 +57,32 @@ export class Lookups {
     return match.id;
   }
 
-  /** A Work Item Type's ID in a namespace, matched by name and cached; never hard-coded. */
-  async typeId(fullPath: string, name: string): Promise<string> {
+  private async type(fullPath: string, name: string): Promise<TypeInfo> {
     let types = this.types.get(fullPath);
     if (!types) {
-      types = this.gateway
-        .graphql("LookupWorkItemTypes", TYPES, { fullPath })
-        .then((data: any) => new Map<string, string>((data?.namespace?.workItemTypes?.nodes ?? []).map((t: any) => [t.name, t.id])));
+      types = this.gateway.graphql("LookupWorkItemTypes", TYPES, { fullPath }).then(
+        (data: any) =>
+          new Map<string, TypeInfo>(
+            (data?.namespace?.workItemTypes?.nodes ?? []).map((t: any) => [
+              t.name,
+              { id: t.id, widgets: new Set<string>((t.widgetDefinitions ?? []).map((w: any) => w.type)) },
+            ]),
+          ),
+      );
       this.types.set(fullPath, types);
     }
-    const id = (await types).get(name);
-    if (!id) throw refused(`${fullPath} doesn't offer the ${name} Work Item Type.`);
-    return id;
+    const type = (await types).get(name);
+    if (!type) throw refused(`${fullPath} doesn't offer the ${name} Work Item Type.`);
+    return type;
+  }
+
+  /** A Work Item Type's ID in a namespace, matched by name and cached; never hard-coded. */
+  async typeId(fullPath: string, name: string): Promise<string> {
+    return (await this.type(fullPath, name)).id;
+  }
+
+  /** Whether a Work Item Type has a widget (such as WEIGHT) on this namespace's tier. */
+  async typeOffers(fullPath: string, name: string, widget: string): Promise<boolean> {
+    return (await this.type(fullPath, name)).widgets.has(widget);
   }
 }

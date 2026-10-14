@@ -28,8 +28,10 @@ if (!instance) {
 const ROOT = resolve(import.meta.dirname, "..");
 const IMAGE = process.env.GITLAB_IMAGE || instance.image;
 const PORT = Number(process.env.GITLAB_PORT || 8929);
-const HOST = `localhost:${PORT}`;
-const URL_BASE = `http://${HOST}`;
+// glab names an Instance by its bare hostname; the port and protocol travel separately.
+const HOST = "localhost";
+const API_HOST = `localhost:${PORT}`;
+const URL_BASE = `http://${API_HOST}`;
 const CONTAINER = `gwi-test-instance-${label}`;
 const REAL_GLAB = resolveGlab(process.env.REAL_GLAB || "glab");
 const RECORDINGS_DIR = join(ROOT, "test/recordings/instances", label);
@@ -45,7 +47,7 @@ function run(command, args, options = {}) {
 }
 
 /** glab runs with its own throwaway config and none of the caller's token variables. */
-const glabEnv = { ...process.env, GLAB_CONFIG_DIR };
+const glabEnv = { ...process.env, GLAB_CONFIG_DIR, GITLAB_API_HOST: API_HOST, GLAB_API_PROTOCOL: "http", GITLAB_SUBFOLDER: "" };
 for (const name of ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"]) delete glabEnv[name];
 
 /** The recorder runs with a minimal PATH, so it needs glab's absolute path. */
@@ -184,7 +186,9 @@ async function main() {
   try {
     await waitUntilReady();
     console.log("GitLab is ready. Signing glab in and seeding…");
-    run(REAL_GLAB, ["auth", "login", "--hostname", HOST, "--token", rootToken(), "--api-protocol", "http", "--git-protocol", "http"], { env: glabEnv });
+    run(REAL_GLAB, ["auth", "login", "--hostname", HOST, "--api-host", API_HOST, "--token", rootToken(), "--api-protocol", "http", "--git-protocol", "http"], {
+      env: glabEnv,
+    });
     const manifest = seed();
     rmSync(RECORDINGS_DIR, { recursive: true, force: true });
     mkdirSync(RECORDINGS_DIR, { recursive: true });

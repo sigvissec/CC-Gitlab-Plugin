@@ -40,7 +40,7 @@ describe("an Edit", () => {
     const applied = await s.call("apply_writes", { planId: prepared.data.planId });
 
     expect(applied.isError).toBe(false);
-    expect(applied.data.results).toEqual([expect.objectContaining({ index: 1, outcome: "done", didNotStick: [] })]);
+    expect(applied.data.results).toEqual([expect.objectContaining({ number: 1, outcome: "done", didNotStick: [] })]);
   });
 
   it("isn't sent if the Work Item changed after the preview, and nothing after it runs", async () => {
@@ -48,7 +48,7 @@ describe("an Edit", () => {
     const s = await withGitLab([
       before,
       lookupLabel("acme/app", "blocked", 7),
-      fetchWorkItem({ labels: ["bug"], updatedAt: "2026-10-03T00:00:00Z" }), // a colleague edited it
+      fetchWorkItem({ labels: ["bug", "p1"], updatedAt: "2026-10-03T00:00:00Z" }), // a colleague edited it
     ]);
     const prepared = await s.call("prepare_writes", {
       writes: [
@@ -60,9 +60,10 @@ describe("an Edit", () => {
     const applied = await s.call("apply_writes", { planId: prepared.data.planId });
 
     expect(applied.data.results).toEqual([
-      expect.objectContaining({ index: 1, outcome: "not applied", detail: expect.stringMatching(/changed in GitLab since it was fetched/) }),
-      expect.objectContaining({ index: 2, outcome: "not applied" }),
+      expect.objectContaining({ number: 1, outcome: "not applied", detail: expect.stringMatching(/changed in GitLab since it was fetched/) }),
+      expect.objectContaining({ number: 2, outcome: "not applied" }),
     ]);
+    expect(applied.data.results[0].detail).toMatch(/labels: bug, p1/);
     expect(s.glabCalls().some((c) => c.body?.operationName === "UpdateWorkItem")).toBe(false);
   });
 
@@ -221,8 +222,8 @@ describe("an Edit", () => {
     const applied = await s.call("apply_writes", { planId: prepared.data.planId });
 
     expect(applied.data.results).toEqual([
-      expect.objectContaining({ index: 1, outcome: "failed", detail: "Label not allowed here" }),
-      expect.objectContaining({ index: 2, outcome: "not applied" }),
+      expect.objectContaining({ number: 1, outcome: "failed", detail: "Label not allowed here" }),
+      expect.objectContaining({ number: 2, outcome: "not applied" }),
     ]);
   });
 
@@ -324,8 +325,8 @@ describe("a plan", () => {
     expect(s.elicitations[0]!.message).not.toContain("acme/app#12");
     expect(s.elicitations[0]!.message).toMatch(/^2\. Edit acme\/app#13/m);
     expect(applied.data.results).toEqual([
-      expect.objectContaining({ index: 1, outcome: "not applied", detail: expect.stringMatching(/dropped/i) }),
-      expect.objectContaining({ index: 2, outcome: "done" }),
+      expect.objectContaining({ number: 1, outcome: "not applied", detail: expect.stringMatching(/dropped/i) }),
+      expect.objectContaining({ number: 2, outcome: "done" }),
     ]);
   });
 
@@ -347,5 +348,18 @@ describe("a plan", () => {
     expect(again.isError).toBe(true);
     expect(again.text).toMatch(/no prepared plan/);
     expect(s.glabCalls().filter((c) => c.body?.operationName === "CreateNote")).toHaveLength(1);
+  });
+});
+
+describe("blocking links", () => {
+  it("are refused up front on CE, which doesn't have them", async () => {
+    session = await start({
+      cassette: cassette({ auth: loggedIn(), interactions: [instanceProbe({ enterprise: false }), fetchWorkItem({}, { enterprise: false })] }),
+    });
+    const prepared = await session.call("prepare_writes", {
+      writes: [{ kind: "edit", reference: "acme/app#12", addLinks: [{ reference: "acme/app#20", linkType: "blocks" }] }],
+    });
+    expect(prepared.isError).toBe(true);
+    expect(prepared.text).toMatch(/"blocks" links need GitLab Premium/);
   });
 });

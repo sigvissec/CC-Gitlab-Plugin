@@ -58,6 +58,16 @@ function scrubbed(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
   return env;
 }
 
+/** How to sign glab in to this Instance, as a command the user can run. */
+function loginCommand(config: Config): string {
+  const { GITLAB_API_HOST, GLAB_API_PROTOCOL, GITLAB_SUBFOLDER } = config.endpoint;
+  const parts = [`glab auth login --hostname ${config.glabHost}`];
+  if (GITLAB_API_HOST !== config.glabHost) parts.push(`--api-host ${GITLAB_API_HOST}`);
+  if (GLAB_API_PROTOCOL !== "https") parts.push(`--api-protocol ${GLAB_API_PROTOCOL}`);
+  const login = parts.join(" ");
+  return GITLAB_SUBFOLDER ? `${login}\`, then \`glab config set subfolder ${GITLAB_SUBFOLDER} --host ${config.glabHost}` : login;
+}
+
 export class Gateway {
   private tokenSource: Promise<TokenSource> | undefined;
 
@@ -76,12 +86,12 @@ export class Gateway {
     if (this.config.settingToken) return "plugin setting";
     const status = await run(
       ["auth", "status", "--hostname", this.config.glabHost, "--output", "json"],
-      scrubbed(this.baseEnv),
+      { ...scrubbed(this.baseEnv), ...this.config.endpoint },
     );
     if (status.code === 0) return "glab login";
     if (this.baseEnv.GITLAB_TOKEN?.trim()) return "GITLAB_TOKEN";
     throw new GitLabError(
-      `No GitLab token for ${this.config.baseUrl}. Either log glab in with \`glab auth login --hostname ${this.config.glabHost}\`, or enter a token in the plugin's settings.`,
+      `No GitLab token for ${this.config.baseUrl}. Either log glab in with \`${loginCommand(this.config)}\`, or enter a token in the plugin's settings.`,
       "not-set-up",
     );
   }
@@ -89,7 +99,7 @@ export class Gateway {
   /** glab's environment: only the chosen token, if glab needs one handed to it. */
   private async envFor(): Promise<NodeJS.ProcessEnv> {
     const source = await this.source();
-    const env = scrubbed(this.baseEnv);
+    const env: NodeJS.ProcessEnv = { ...scrubbed(this.baseEnv), ...this.config.endpoint };
     if (source === "plugin setting") env.GITLAB_TOKEN = this.config.settingToken;
     if (source === "GITLAB_TOKEN") env.GITLAB_TOKEN = this.baseEnv.GITLAB_TOKEN;
     return env;

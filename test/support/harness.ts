@@ -29,7 +29,10 @@ export interface ToolResult {
 
 export interface GlabCall {
   args: string[];
+  /** The token variables glab received. */
   env: Record<string, string>;
+  /** The variables telling glab which endpoint to call. */
+  endpoint: Record<string, string>;
   host?: string;
   body?: { query: string; operationName?: string; variables?: Record<string, unknown> };
 }

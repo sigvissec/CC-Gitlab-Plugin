@@ -10,7 +10,7 @@ afterEach(async () => {
 });
 
 async function withItems(interactions: Interaction[], options: { baseUrl?: string; version?: string; enterprise?: boolean } = {}) {
-  const host = options.baseUrl ? new URL(options.baseUrl).host + new URL(options.baseUrl).pathname.replace(/\/$/, "") : undefined;
+  const host = options.baseUrl ? new URL(options.baseUrl).hostname : undefined;
   session = await start({
     baseUrl: options.baseUrl,
     cassette: cassette({

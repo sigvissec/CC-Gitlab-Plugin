@@ -61,16 +61,21 @@ describe("token precedence", () => {
     expect(result.text).not.toMatch(/paste/i);
   });
 
-  it("checks glab's login for the configured Instance, including a sub-path", async () => {
-    session = await start({
-      baseUrl: "https://example.com/gitlab/",
-      cassette: cassette({ auth: loggedIn("example.com/gitlab"), interactions: [instanceProbe()] }),
-    });
+  it.each([
+    ["a sub-path", "https://example.com/gitlab/", "example.com", { GITLAB_API_HOST: "example.com", GLAB_API_PROTOCOL: "https", GITLAB_SUBFOLDER: "gitlab" }],
+    ["a port over http", "http://localhost:8929", "localhost", { GITLAB_API_HOST: "localhost:8929", GLAB_API_PROTOCOL: "http", GITLAB_SUBFOLDER: "" }],
+    ["the root of gitlab.com", "https://gitlab.com", "gitlab.com", { GITLAB_API_HOST: "gitlab.com", GLAB_API_PROTOCOL: "https", GITLAB_SUBFOLDER: "" }],
+  ])("points glab at exactly the configured Instance on %s", async (_, baseUrl, hostname, endpoint) => {
+    session = await start({ baseUrl, cassette: cassette({ auth: loggedIn(hostname), interactions: [instanceProbe()] }) });
 
     const result = await session.call("status");
 
-    expect(result.data).toMatchObject({ instance: "https://example.com/gitlab", tokenSource: "glab login" });
-    const hosts = session.glabCalls().map((c) => c.host).filter(Boolean);
-    expect(new Set(hosts)).toEqual(new Set(["example.com/gitlab"]));
+    expect(result.data).toMatchObject({ instance: baseUrl.replace(/\/$/, ""), tokenSource: "glab login" });
+    const calls = session.glabCalls().filter((c) => c.args[0] !== "version");
+    expect(calls.length).toBeGreaterThan(0);
+    for (const call of calls) {
+      expect(call.host).toBe(hostname);
+      expect(call.endpoint).toEqual(endpoint);
+    }
   });
 });

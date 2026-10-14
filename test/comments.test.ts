@@ -103,7 +103,8 @@ describe("a reply", () => {
       writes: [{ kind: "reply", reference: "https://gitlab.example.com/acme/app/-/work_items/12#note_456", body: "Firefox 130" }],
     });
 
-    expect(prepared.text).toMatch(/Reply on acme\/app#12 \(public, like its Thread\) in the Thread "Which browser\?" by carol, 0 replies/);
+    expect(prepared.text).toMatch(/Reply on acme\/app#12 \(public, like its Thread\) https:\/\/gitlab\.example\.com\/acme\/app\/-\/work_items\/12/);
+    expect(prepared.text).toContain('in the Thread "Which browser?" by carol, 0 replies');
     const applied = await s.call("apply_writes", { planId: prepared.data.planId });
     expect(applied.data.results[0]).toMatchObject({ outcome: "done" });
   });
@@ -141,7 +142,7 @@ describe("resolving a Thread", () => {
       mutation("ResolveThread", { id: "gid://gitlab/Discussion/d2", resolve: true }, { discussion: { id: "gid://gitlab/Discussion/d2", resolved: true } }),
     ]);
     const prepared = await s.call("prepare_writes", { writes: [{ kind: "resolve", reference: "acme/app#12", thread: "gid://gitlab/Discussion/d2" }] });
-    expect(prepared.text).toContain('Resolve the Thread on acme/app#12: "Which browser?" by carol, 0 replies');
+    expect(prepared.text).toContain('Resolve the Thread on acme/app#12 https://gitlab.example.com/acme/app/-/work_items/12: "Which browser?" by carol, 0 replies');
     const applied = await s.call("apply_writes", { planId: prepared.data.planId });
     expect(applied.data.results[0]).toMatchObject({ outcome: "done" });
   });

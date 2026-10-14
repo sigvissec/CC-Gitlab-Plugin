@@ -69,7 +69,7 @@ function changeBehindTheServersBack(target: Target, iid: string, title: string) 
   const project = encodeURIComponent(target.seed.project);
   const result = spawnSync(
     process.env.REAL_GLAB!,
-    ["api", "--hostname", new URL(target.seed.url).host, "--method", "PUT", `projects/${project}/issues/${iid}`, "-f", `title=${title}`],
+    ["api", "--hostname", new URL(target.seed.url).hostname, "--method", "PUT", `projects/${project}/issues/${iid}`, "-f", `title=${title}`],
     { encoding: "utf8", env: process.env },
   );
   if (result.status !== 0) throw new Error(`Couldn't change the Issue: ${result.stderr}`);

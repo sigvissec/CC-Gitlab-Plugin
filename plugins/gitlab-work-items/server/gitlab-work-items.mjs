@@ -36596,7 +36596,12 @@ function readConfig(env = process.env) {
   const path = url2.pathname.replace(/\/+$/, "");
   return {
     baseUrl: `${url2.protocol}//${url2.host}${path}`,
-    glabHost: `${url2.host}${path}`,
+    glabHost: url2.hostname,
+    endpoint: {
+      GITLAB_API_HOST: url2.host,
+      GLAB_API_PROTOCOL: url2.protocol.replace(":", ""),
+      GITLAB_SUBFOLDER: path.replace(/^\/+/, "")
+    },
     settingToken: (env.GITLAB_WORK_ITEMS_TOKEN ?? "").trim(),
     footer: (env.GITLAB_WORK_ITEMS_FOOTER ?? "true").trim().toLowerCase() !== "false"
   };
@@ -36642,6 +36647,14 @@ function scrubbed(base) {
   for (const name of TOKEN_VARIABLES) delete env[name];
   return env;
 }
+function loginCommand(config3) {
+  const { GITLAB_API_HOST, GLAB_API_PROTOCOL, GITLAB_SUBFOLDER } = config3.endpoint;
+  const parts = [`glab auth login --hostname ${config3.glabHost}`];
+  if (GITLAB_API_HOST !== config3.glabHost) parts.push(`--api-host ${GITLAB_API_HOST}`);
+  if (GLAB_API_PROTOCOL !== "https") parts.push(`--api-protocol ${GLAB_API_PROTOCOL}`);
+  const login = parts.join(" ");
+  return GITLAB_SUBFOLDER ? `${login}\`, then \`glab config set subfolder ${GITLAB_SUBFOLDER} --host ${config3.glabHost}` : login;
+}
 var Gateway = class {
   constructor(config3, baseEnv = process.env) {
     this.config = config3;
@@ -36659,19 +36672,19 @@ var Gateway = class {
     if (this.config.settingToken) return "plugin setting";
     const status2 = await run(
       ["auth", "status", "--hostname", this.config.glabHost, "--output", "json"],
-      scrubbed(this.baseEnv)
+      { ...scrubbed(this.baseEnv), ...this.config.endpoint }
     );
     if (status2.code === 0) return "glab login";
     if (this.baseEnv.GITLAB_TOKEN?.trim()) return "GITLAB_TOKEN";
     throw new GitLabError(
-      `No GitLab token for ${this.config.baseUrl}. Either log glab in with \`glab auth login --hostname ${this.config.glabHost}\`, or enter a token in the plugin's settings.`,
+      `No GitLab token for ${this.config.baseUrl}. Either log glab in with \`${loginCommand(this.config)}\`, or enter a token in the plugin's settings.`,
       "not-set-up"
     );
   }
   /** glab's environment: only the chosen token, if glab needs one handed to it. */
   async envFor() {
     const source = await this.source();
-    const env = scrubbed(this.baseEnv);
+    const env = { ...scrubbed(this.baseEnv), ...this.config.endpoint };
     if (source === "plugin setting") env.GITLAB_TOKEN = this.config.settingToken;
     if (source === "GITLAB_TOKEN") env.GITLAB_TOKEN = this.baseEnv.GITLAB_TOKEN;
     return env;
@@ -37021,7 +37034,7 @@ var TYPES = (
   /* GraphQL */
   `
 query LookupWorkItemTypes($fullPath: ID!) {
-  namespace(fullPath: $fullPath) { workItemTypes { nodes { id name } } }
+  namespace(fullPath: $fullPath) { workItemTypes { nodes { id name widgetDefinitions { type } } } }
 }`
 );
 var Lookups = class {
@@ -37050,16 +37063,30 @@ var Lookups = class {
     if (!match) throw refused(`There's no milestone "${title}" in ${fullPath} or its groups.`);
     return match.id;
   }
-  /** A Work Item Type's ID in a namespace, matched by name and cached; never hard-coded. */
-  async typeId(fullPath, name) {
+  async type(fullPath, name) {
     let types = this.types.get(fullPath);
     if (!types) {
-      types = this.gateway.graphql("LookupWorkItemTypes", TYPES, { fullPath }).then((data) => new Map((data?.namespace?.workItemTypes?.nodes ?? []).map((t) => [t.name, t.id])));
+      types = this.gateway.graphql("LookupWorkItemTypes", TYPES, { fullPath }).then(
+        (data) => new Map(
+          (data?.namespace?.workItemTypes?.nodes ?? []).map((t) => [
+            t.name,
+            { id: t.id, widgets: new Set((t.widgetDefinitions ?? []).map((w) => w.type)) }
+          ])
+        )
+      );
       this.types.set(fullPath, types);
     }
-    const id = (await types).get(name);
-    if (!id) throw refused(`${fullPath} doesn't offer the ${name} Work Item Type.`);
-    return id;
+    const type = (await types).get(name);
+    if (!type) throw refused(`${fullPath} doesn't offer the ${name} Work Item Type.`);
+    return type;
+  }
+  /** A Work Item Type's ID in a namespace, matched by name and cached; never hard-coded. */
+  async typeId(fullPath, name) {
+    return (await this.type(fullPath, name)).id;
+  }
+  /** Whether a Work Item Type has a widget (such as WEIGHT) on this namespace's tier. */
+  async typeOffers(fullPath, name, widget) {
+    return (await this.type(fullPath, name)).widgets.has(widget);
   }
 };
 
@@ -37212,8 +37239,8 @@ var Writes = class {
       if (!data.project.userPermissions?.createWorkItem) throw refused(`Your token can't create Work Items in ${request.project}. Nothing was prepared.`);
       fullPath = request.project;
     }
-    if (request.weight !== void 0 && !(await this.instance.probe()).enterprise) {
-      throw refused("Weight isn't available: it needs GitLab EE on Premium or above. Nothing was prepared.");
+    if (request.weight !== void 0 && !await this.lookups.typeOffers(fullPath, request.type, "WEIGHT")) {
+      throw refused(`In ${fullPath}, weight isn't available: it needs GitLab EE on Premium or above. Nothing was prepared.`);
     }
     const description = request.description ? this.withFooter(request.description) : this.config.footer ? FOOTER : void 0;
     const confidential = request.confidential === true;
@@ -37322,7 +37349,7 @@ ${FOOTER}` : body;
       const body = this.withFooter(request.body);
       return {
         summary: `Reply on ${item.reference}`,
-        preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) in the Thread ${about}`, ...quote(body)],
+        preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) ${item.url}`, `  in the Thread ${about}`, ...quote(body)],
         target: targetOf(ref, item),
         guard,
         steps: [{ operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, discussionId: thread.replyId, body }, field: "createNote" }],
@@ -37334,7 +37361,7 @@ ${FOOTER}` : body;
     if (!thread.canResolve) throw refused(`On ${item.reference}, your token can't resolve that Thread. Nothing was prepared.`);
     return {
       summary: `Resolve a Thread on ${item.reference}`,
-      preview: [`Resolve the Thread on ${item.reference}: ${about}`],
+      preview: [`Resolve the Thread on ${item.reference} ${item.url}: ${about}`],
       target: targetOf(ref, item),
       guard,
       steps: [{ operationName: "ResolveThread", query: RESOLVE_THREAD, input: { id: thread.id, resolve: true }, field: "discussionToggleResolve" }],
@@ -37408,6 +37435,10 @@ ${FOOTER}` : body;
     }
     const steps = [];
     if (Object.keys(input2).length > 1) steps.push({ operationName: "UpdateWorkItem", query: UPDATE, input: input2, field: "workItemUpdate" });
+    const blocking = (request.addLinks ?? []).find((l) => l.linkType !== "relates_to");
+    if (blocking && !(await this.instance.probe()).enterprise) {
+      throw refused(`"${blocking.linkType.replaceAll("_", " ")}" links need GitLab Premium, and this Instance runs CE. Nothing was prepared.`);
+    }
     const byType = /* @__PURE__ */ new Map();
     for (const link of request.addLinks ?? []) {
       const target = await this.reader.resolve(parseReference(link.reference, this.config));
@@ -37452,41 +37483,40 @@ ${FOOTER}` : body;
     if (!stored) throw refused("There's no prepared plan with that ID. Prepare the Writes again.");
     this.plans.delete(planId);
     const dropped = new Set(drop);
-    const plan = { id: stored.id, writes: stored.writes.filter((_, i) => !dropped.has(i + 1)) };
-    const droppedResults = stored.writes.map((w, i) => ({ w, index: i + 1 })).filter(({ index }) => dropped.has(index)).map(({ w, index }) => ({ index, summary: w.summary, outcome: "not applied", didNotStick: [], detail: "Dropped by the user before applying." }));
+    const plan = { id: stored.id, writes: stored.writes.filter((w) => !dropped.has(w.number)) };
+    const droppedResults = stored.writes.filter((w) => dropped.has(w.number)).map((w) => ({ number: w.number, summary: w.summary, outcome: "not applied", didNotStick: [], detail: "Dropped by the user before applying." }));
     if (plan.writes.length === 0) {
       return { results: droppedResults, report: renderReport(droppedResults) };
     }
-    const originalIndex = (i) => plan.writes[i].number;
     const confirmed = await confirm(`${renderPreview(plan)}
 
 Apply ${plan.writes.length === 1 ? "this Write" : `these ${plan.writes.length} Writes`} to GitLab?`);
     if (confirmed === false) {
-      const results2 = plan.writes.map((w, i) => ({
-        index: originalIndex(i),
+      const results2 = plan.writes.map((w) => ({
+        number: w.number,
         summary: w.summary,
         outcome: "not applied",
         didNotStick: [],
         detail: "The user didn't confirm, so nothing was sent."
       }));
-      const all2 = byIndex([...results2, ...droppedResults]);
+      const all2 = byNumber([...results2, ...droppedResults]);
       return { results: all2, report: `The user didn't confirm the plan, so nothing was sent to GitLab.
 ${renderReport(all2)}` };
     }
     const results = [];
     const expected = /* @__PURE__ */ new Map();
     let stopped = false;
-    for (const [i, write] of plan.writes.entries()) {
-      const index = originalIndex(i);
+    for (const write of plan.writes) {
+      const number4 = write.number;
       if (stopped) {
-        results.push({ index, summary: write.summary, outcome: "not applied", didNotStick: [] });
+        results.push({ number: number4, summary: write.summary, outcome: "not applied", didNotStick: [] });
         continue;
       }
       try {
         const changed = await this.changedSincePreview(write, expected);
         if (changed) {
           stopped = true;
-          results.push({ index, summary: write.summary, outcome: "not applied", didNotStick: [], detail: changed });
+          results.push({ number: number4, summary: write.summary, outcome: "not applied", didNotStick: [], detail: changed });
           continue;
         }
         let created;
@@ -37499,7 +37529,7 @@ ${renderReport(all2)}` };
         this.reader.remember(after);
         expected.set(after.id, after.updatedAt);
         results.push({
-          index,
+          number: number4,
           summary: write.summary,
           outcome: "done",
           didNotStick: didNotStick(write.expect, after),
@@ -37508,10 +37538,10 @@ ${renderReport(all2)}` };
       } catch (error62) {
         if (!(error62 instanceof GitLabError)) throw error62;
         stopped = true;
-        results.push({ index, summary: write.summary, outcome: "failed", didNotStick: [], detail: error62.message });
+        results.push({ number: number4, summary: write.summary, outcome: "failed", didNotStick: [], detail: error62.message });
       }
     }
-    const all = byIndex([...results, ...droppedResults]);
+    const all = byNumber([...results, ...droppedResults]);
     return { results: all, report: renderReport(all) };
   }
   /** Why a Write mustn't be sent now, or undefined when it may. */
@@ -37520,12 +37550,21 @@ ${renderReport(all2)}` };
     if (guard.kind === "none") return void 0;
     const now = await this.reader.fetch(target.ref);
     if (guard.kind === "version" && now.updatedAt !== (expected.get(target.id) ?? target.updatedAt)) {
-      return `${target.reference} changed in GitLab since it was fetched (updated ${now.updatedAt}). Nothing was written to it; fetch it again and prepare a new plan.`;
+      return [
+        `${target.reference} changed in GitLab since it was fetched (updated ${now.updatedAt}). Nothing was written to it. Its current state:`,
+        ...stateLines(now),
+        "Show the user what changed, then prepare a new plan."
+      ].join("\n");
     }
     if (guard.kind === "thread") {
       const thread = now.threads.find((t) => t.id === guard.threadId);
       if (!thread || thread.comments.length !== guard.comments) {
-        return `The Thread on ${target.reference} has new Comments since it was fetched. Nothing was written; fetch it again and show the user the new Comments first.`;
+        const added = thread ? thread.comments.slice(guard.comments) : [];
+        return [
+          `The Thread on ${target.reference} has new Comments since it was fetched. Nothing was written. New Comments:`,
+          ...added.map((c) => `  ${c.author}: ${excerpt(c.body)}`),
+          "Show the user the new Comments, then prepare a new plan."
+        ].join("\n");
       }
     }
     return void 0;
@@ -37553,8 +37592,8 @@ function requirePermissions(item, request) {
   const denied = needs.filter(([wanted, permission]) => wanted && !item.permissions[permission]).map(([, , what]) => what);
   if (denied.length) throw refused(`On ${item.reference}, your token can't ${denied.join(", or ")}. Nothing was prepared.`);
 }
-function byIndex(results) {
-  return [...results].sort((a, b) => a.index - b.index);
+function byNumber(results) {
+  return [...results].sort((a, b) => a.number - b.number);
 }
 function targetOf(ref, item) {
   return { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt };
@@ -37622,7 +37661,7 @@ function renderPreview(plan) {
 }
 function renderReport(results) {
   return results.map((r) => {
-    const head = `${r.index}. ${r.summary}: ${r.outcome}${r.created ? `, created ${r.created} ${r.url}` : ""}`;
+    const head = `${r.number}. ${r.summary}: ${r.outcome}${r.created ? `, created ${r.created} ${r.url}` : ""}`;
     const notes = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
     return [head, ...notes].join("\n");
   }).join("\n");
