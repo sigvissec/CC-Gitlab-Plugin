@@ -41,6 +41,13 @@ Written from [What can GitLab's Work Items API do, and where is it gated?](01-gi
    ```graphql
    query { project(fullPath: "<group/project>") { workItems(first: 5, state: opened) { nodes { iid title workItemType { name } } pageInfo { hasNextPage endCursor } } } }
    ```
+4c. **Associated merge requests.** Open a merge request in the throwaway project whose description says `Closes #<iid>` for your test Issue, then:
+   ```graphql
+   query { namespace(fullPath: "<group/project>") { workItem(iid: "<iid>") { widgets(onlyTypes: [DEVELOPMENT]) { ... on WorkItemWidgetDevelopment {
+     closingMergeRequests { nodes { fromMrDescription mergeRequest { reference(full: true) title state draft webUrl } } }
+     relatedMergeRequests { nodes { reference(full: true) title state } }
+   } } } } }
+   ```
 5. **Create a Task under the Issue** (Task type ID from step 3, Issue `id` from step 4):
    ```graphql
    mutation { workItemCreate(input: { namespacePath: "<group/project>", workItemTypeId: "<Task type id>", title: "Checklist task", hierarchyWidget: { parentId: "<Issue id>" } }) { workItem { id iid webUrl } errors } }

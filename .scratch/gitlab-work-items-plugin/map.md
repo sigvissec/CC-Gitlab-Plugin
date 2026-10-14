@@ -30,6 +30,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [Which GitLab API does the plugin build on?](issues/16-api-foundation.md): GraphQL Work Items only, no REST fallback, with version check and re-read after writes; GitLab's and glab's MCP servers are ruled out.
 - [How does a user refer to a Work Item?](issues/06-work-item-references.md): URLs (including Comment links), full and short references; short ones resolve against the conversation's Context, then the git remote, then ask; other Instances and unsupported types are refused; output always uses the full reference plus URL.
 - [What safety rails guard writes to GitLab?](issues/08-write-safety.md): every Write gets a preview and the user's own confirmation; permission and staleness checks before sending, re-read after; no deletes, no undo command; Comments public by default with a footer.
+- [How does GitLab expose the merge requests associated with a Work Item?](issues/17-associated-merge-requests.md): the Development widget lists closing merge requests (stable) and mentioning ones (Experiment, one Work Item per request) on Issues and Tasks, on Free; Epics have none.
 
 ## Not yet specified
 
