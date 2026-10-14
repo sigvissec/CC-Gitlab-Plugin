@@ -28,6 +28,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - [Which GitLab versions must v1 support?](issues/13-gitlab-versions.md): 18.1 minimum, with a clear stop on older Instances; pending confirmation that the test Instance is 18.1 or later.
 - [How do filtered lists behave?](issues/15-list-behaviour.md): group lists always include descendants; 20 items by default, most recently updated first, up to 200 on request; entries are compact summaries, with full detail from a single Fetch.
 - [Which GitLab API does the plugin build on?](issues/16-api-foundation.md): GraphQL Work Items only, no REST fallback, with version check and re-read after writes; GitLab's and glab's MCP servers are ruled out.
+- [How does a user refer to a Work Item?](issues/06-work-item-references.md): URLs (including Comment links), full and short references; short ones resolve against the conversation's Context, then the git remote, then ask; other Instances and unsupported types are refused; output always uses the full reference plus URL.
 
 ## Not yet specified
 
@@ -39,7 +40,7 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - **Custom fields** (GitLab 18's configurable fields on Work Items).
 - **Bulk operations** across many Work Items at once.
 - **Full-text search** across Work Items, beyond filtered lists.
-- **Token-to-Instance scoping**: `GITLAB_TOKEN` applies to every host in glab, so with more than one Instance configured, a token can reach the wrong one; how the plugin keeps each token on its own Instance.
+- **Token-to-Instance scoping**: v1 only ever contacts the one configured Instance (see [How does a user refer to a Work Item?](issues/06-work-item-references.md)), but `GITLAB_TOKEN` and a `glab` login aren't tied to a host, so a token meant for another Instance could still be sent to the configured one. How the plugin makes sure its token belongs to the configured Instance, and whether people with several Instances are supported later.
 - **Distribution**: how teams install and update the plugin (marketplace, versioning).
 
 ## Out of scope
