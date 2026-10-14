@@ -4,7 +4,7 @@ Labels: wayfinder:map
 
 ## Destination
 
-A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that bridges GitLab Work Items into the session. It Fetches Issues, Tasks, and Epics live from gitlab.com and self-managed Instances, as single items (with Threads, Hierarchy, and Linked Items) or filtered lists (by project or group, state, assignee, label, parent), and lets Claude Edit, Comment on (including replying to and resolving Threads), and create them. Reviewing is Claude reasoning over Fetched data, not a plugin feature. Auth is a PAT (`GITLAB_TOKEN`) or an existing `glab` login. Building the plugin is a separate effort that starts from this spec.
+A build-ready spec, with its architecture decisions locked, for a Claude Code plugin that bridges GitLab Work Items into the session. It Fetches Issues, Tasks, and Epics live from gitlab.com and self-managed Instances, as single items (with Threads, Hierarchy, and Linked Items) or filtered lists (by project or group, state, assignee, label, parent), shows the merge requests associated with a Work Item (read-only), and lets Claude Edit, Comment on (including replying to and resolving Threads), and create them. Reviewing is Claude reasoning over Fetched data, not a plugin feature. Auth is a PAT (`GITLAB_TOKEN`) or an existing `glab` login. Building the plugin is a separate effort that starts from this spec.
 
 ## Notes
 
@@ -48,6 +48,6 @@ A build-ready spec, with its architecture decisions locked, for a Claude Code pl
 - **Deleting anything** (Work Items, Comments, Threads) and **editing posted Comments**: ruled out in [What safety rails guard writes to GitLab?](issues/08-write-safety.md); closing a Work Item covers removal, and the user fixes Comments in GitLab.
 - [What does a Review produce, and where does it go?](issues/07-review-output.md): the plugin is a thin bridge for Fetching and writing; reviewing is Claude reasoning over Fetched data, so there is no Review feature to design.
 - **Local mirroring of Work Items**: data is Fetched live and writes go straight back; a local copy would add sync and conflict problems GitLab gives no protection against.
-- **Merge requests**: the destination is Work Items only.
+- **Acting on merge requests** (Fetching, reviewing, or commenting on a merge request itself): the destination is Work Items; only the merge requests associated with a Work Item are shown, read-only, as decided in [How do users invoke the plugin?](issues/09-user-facing-surface.md).
 - **Other Work Item Types**: objectives, key results, incidents, test cases, and requirements.
 - **Building the plugin**: this map ends at the spec.

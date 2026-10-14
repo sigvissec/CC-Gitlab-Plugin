@@ -68,6 +68,10 @@ _Avoid_: mutation, update, change
 A change to an existing Work Item's title, description, fields (labels, assignees, milestone, state, weight, due date, parent), or Linked Items.
 _Avoid_: update, modify
 
+**Command**:
+A slash command the user types to drive the plugin directly. Anything a Command does can also be asked for in conversation.
+_Avoid_: skill, shortcut
+
 ## Working with Work Items
 
 **Review**:
