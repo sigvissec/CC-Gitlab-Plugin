@@ -22,7 +22,7 @@ export type TokenSource = "plugin setting" | "glab login" | "GITLAB_TOKEN";
 export class GitLabError extends Error {
   constructor(
     message: string,
-    readonly kind: "not-set-up" | "glab-missing" | "graphql" | "glab",
+    readonly kind: "not-set-up" | "glab-missing" | "graphql" | "glab" | "refused" | "not-found",
   ) {
     super(message);
   }

@@ -1,0 +1,219 @@
+{
+ "source": "Recorded anonymously from gitlab.com (GitLab 19.x, EE) on 2026-10-14 with glab 1.123.0; public Work Item gitlab-org/cli#7.",
+ "auth": {
+  "gitlab.com": {
+   "loggedIn": true
+  }
+ },
+ "interactions": [
+  {
+   "operationName": "InstanceProbe",
+   "response": {
+    "body": {
+     "data": {
+      "metadata": {
+       "version": "19.5.0-pre",
+       "enterprise": true
+      },
+      "currentUser": {
+       "username": "recorder"
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "gitlab-org/cli",
+    "iid": "7"
+   },
+   "queryHash": "454910f553fbca3da9678dd3496c5a0860aa25ac5a02d3241c01cf131d9df3ec",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/105226063",
+        "iid": "7",
+        "reference": "gitlab-org/cli#7",
+        "title": "Ability to list merge requests",
+        "state": "CLOSED",
+        "confidential": false,
+        "description": "",
+        "webUrl": "https://gitlab.com/gitlab-org/cli/-/work_items/7",
+        "createdAt": "2020-07-26T04:30:03Z",
+        "updatedAt": "2023-08-06T10:46:36Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "profclems"
+        },
+        "userPermissions": {
+         "updateWorkItem": false,
+         "setWorkItemMetadata": false,
+         "adminParentLink": false,
+         "adminWorkItemLink": false,
+         "createNote": false,
+         "markNoteAsInternal": false
+        },
+        "widgets": [
+         {
+          "type": "AI_SESSION"
+         },
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "CUSTOM_FIELDS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/357469899",
+              "reference": "gitlab-org/cli!1854",
+              "title": "Draft: non-working duo chat implementation",
+              "state": "closed",
+              "draft": true,
+              "webUrl": "https://gitlab.com/gitlab-org/cli/-/merge_requests/1854"
+             }
+            }
+           ]
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/486108747",
+             "reference": "gitlab-org/cli!3269",
+             "title": "fix(orbit): stream raw response body in 'remote query'",
+             "state": "merged",
+             "draft": false,
+             "webUrl": "https://gitlab.com/gitlab-org/cli/-/merge_requests/3269"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/479649196",
+             "reference": "gitlab-org/cli!3183",
+             "title": "feat(agent): add experimental `glab agent file get` command",
+             "state": "closed",
+             "draft": false,
+             "webUrl": "https://gitlab.com/gitlab-org/cli/-/merge_requests/3183"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HEALTH_STATUS"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "ITERATION"
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/24360351",
+             "title": "enhancement"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         },
+         {
+          "type": "VULNERABILITIES"
+         },
+         {
+          "type": "LINKED_RESOURCES"
+         },
+         {
+          "type": "WEIGHT",
+          "weight": null
+         },
+         {
+          "type": "STATUS"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ ]
+}
