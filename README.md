@@ -9,6 +9,7 @@ Development home of [`gitlab-work-items`](plugins/gitlab-work-items/README.md), 
 | `plugins/gitlab-work-items/` | The plugin as installed: manifest, MCP config, hook config, skills, and the bundled server and hook |
 | `src/server/` | The MCP server's source (TypeScript), bundled into `plugins/gitlab-work-items/server/` |
 | `src/hook/` | The write-guard hook's source, bundled into `plugins/gitlab-work-items/hooks/` |
+| `src/tool-names.ts` | The MCP tools' names, and which read or write, shared by the server and the hook |
 | `test/` | Tests that drive the bundled server over stdio, with a fake `glab` replaying cassettes |
 | `test/recordings/` | Responses recorded from real GitLab; a changed query fails until re-recorded |
 | `.scratch/gitlab-work-items-plugin/` | The planning map, its decision tickets, and the [spec](.scratch/gitlab-work-items-plugin/spec.md) |

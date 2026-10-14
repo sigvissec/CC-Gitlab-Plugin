@@ -1,6 +1,10 @@
 // Filtered lists of Work Items: compact summaries, most recently updated first.
-import { GitLabError, type Gateway } from "./gateway.js";
+import { z } from "zod";
+import type { Config } from "./config.js";
+import type { Gateway } from "./gateway.js";
 import type { Instance } from "./instance.js";
+import { stateOf, widgetOf } from "./nodes.js";
+import { notFound } from "./references.js";
 
 export const DEFAULT_LIMIT = 20;
 export const MAX_LIMIT = 200;
@@ -61,27 +65,31 @@ query ListMyWorkItems(${FILTER_VARIABLES}) {
   }
 }`;
 
-export interface Filters {
-  state?: "opened" | "closed" | "all";
-  types?: ("Issue" | "Task")[];
-  assignees?: string[];
-  assignedToMe?: boolean;
-  author?: string;
-  labels?: string[];
-  excludeLabels?: string[];
-  anyLabels?: string[];
-  milestone?: string;
-  parentId?: string;
-  search?: string;
-}
+/** The filters list_work_items accepts; my_work_items takes some of them. */
+export const FILTER_SCHEMA = {
+  state: z.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
+  types: z.array(z.enum(["Issue", "Task"])).optional().describe("Default: both"),
+  assignees: z.array(z.string()).optional().describe("Usernames; every one must be assigned"),
+  assignedToMe: z.boolean().optional().describe("Only Work Items assigned to the signed-in user"),
+  author: z.string().optional().describe("Author's username"),
+  labels: z.array(z.string()).optional().describe("Every one of these labels"),
+  excludeLabels: z.array(z.string()).optional().describe("None of these labels"),
+  anyLabels: z.array(z.string()).optional().describe("At least one of these labels"),
+  milestone: z.string().optional().describe("Milestone title"),
+  parent: z.string().optional().describe("The parent Work Item's URL or full reference, to list its children"),
+  search: z.string().optional().describe("Text to find in titles and descriptions"),
+};
+
+/** The filters, with the parent already resolved to its global ID. */
+export type Filters = Omit<z.infer<z.ZodObject<typeof FILTER_SCHEMA>>, "parent"> & { parentId?: string };
 
 function entry(node: any): ListEntry {
-  const widget = (type: string) => (node.widgets ?? []).find((w: any) => w.type === type);
+  const widget = (type: string) => widgetOf(node, type);
   return {
     reference: node.reference,
     title: node.title,
     type: node.workItemType?.name ?? "Unknown",
-    state: node.state === "CLOSED" ? "closed" : "open",
+    state: stateOf(node.state),
     assignees: (widget("ASSIGNEES")?.assignees?.nodes ?? []).map((a: any) => a.username),
     labels: (widget("LABELS")?.labels?.nodes ?? []).map((l: any) => l.title),
     milestone: widget("MILESTONE")?.milestone?.title ?? null,
@@ -93,6 +101,7 @@ function entry(node: any): ListEntry {
 
 export class Lists {
   constructor(
+    private readonly config: Config,
     private readonly gateway: Gateway,
     private readonly instance: Instance,
   ) {}
@@ -121,7 +130,7 @@ export class Lists {
   }
 
   /** Lists a project's or group's Work Items, subgroups and projects included. */
-  async namespace(fullPath: string, filters: Filters, limit = DEFAULT_LIMIT, after?: string): Promise<ListResult> {
+  async within(fullPath: string, filters: Filters, limit = DEFAULT_LIMIT, after?: string): Promise<ListResult> {
     await this.instance.requireSupported();
     const base = { fullPath, includeDescendants: true, ...(await this.variables(filters)) };
     return this.pages(limit, after, async (first, cursor) => {
@@ -145,7 +154,7 @@ export class Lists {
     limit: number,
     after: string | undefined,
     fetchPage: (first: number, after: string | undefined) => Promise<any>,
-    scope: string,
+    what: string,
   ): Promise<ListResult> {
     const wanted = Math.min(Math.max(1, Math.floor(limit)), MAX_LIMIT);
     const items: ListEntry[] = [];
@@ -154,7 +163,7 @@ export class Lists {
     let endCursor: string | null = null;
     while (items.length < wanted) {
       const connection = await fetchPage(Math.min(PAGE_MAX, wanted - items.length), cursor);
-      if (!connection) throw new GitLabError(`${scope}: not found, or your token can't see it.`, "not-found");
+      if (!connection) throw notFound(what, this.config);
       items.push(...(connection.nodes ?? []).map(entry));
       hasMore = Boolean(connection.pageInfo?.hasNextPage);
       endCursor = connection.pageInfo?.endCursor ?? null;

@@ -39,7 +39,7 @@ describe("recorded from gitlab.com", () => {
   it("lists real open Issues filtered by text, and offers to continue", async () => {
     session = await start({ baseUrl: "https://gitlab.com", cassette: recording("gitlab-com-public") });
 
-    const result = await session.call("list_work_items", { scope: "gitlab-org/cli", limit: 5, search: "glab api" });
+    const result = await session.call("list_work_items", { fullPath: "gitlab-org/cli", limit: 5, search: "glab api" });
 
     expect(result.isError).toBe(false);
     expect(result.data.items.map((i: { reference: string }) => i.reference)).toEqual([

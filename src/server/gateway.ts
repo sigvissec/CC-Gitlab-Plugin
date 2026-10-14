@@ -3,18 +3,6 @@
 import { spawn } from "node:child_process";
 import type { Config } from "./config.js";
 
-/** The oldest glab the test suites pass with. */
-export const MINIMUM_GLAB = "1.123.0";
-
-export function glabMeetsMinimum(version: string): boolean {
-  const have = version.split(".").map(Number);
-  const need = MINIMUM_GLAB.split(".").map(Number);
-  for (let i = 0; i < need.length; i++) {
-    if ((have[i] ?? 0) !== (need[i] ?? 0)) return (have[i] ?? 0) > (need[i] ?? 0);
-  }
-  return true;
-}
-
 export const TOKEN_VARIABLES = ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"] as const;
 
 export type TokenSource = "plugin setting" | "glab login" | "GITLAB_TOKEN";

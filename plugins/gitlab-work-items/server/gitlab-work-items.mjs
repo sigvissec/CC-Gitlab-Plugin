@@ -6957,10 +6957,10 @@ var require_formats = __commonJS({
     function isLeapYear(year) {
       return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
     }
-    var DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
+    var DATE2 = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
     var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     function date5(str) {
-      const matches = DATE.exec(str);
+      const matches = DATE2.exec(str);
       if (!matches)
         return false;
       const year = +matches[1];
@@ -7173,8 +7173,8 @@ var require_dist = __commonJS({
         return ajv;
       }
       const [formats, exportName] = opts.mode === "fast" ? [formats_1.fastFormats, fastName] : [formats_1.fullFormats, fullName];
-      const list2 = opts.formats || formats_1.formatNames;
-      addFormats(ajv, list2, formats, exportName);
+      const list = opts.formats || formats_1.formatNames;
+      addFormats(ajv, list, formats, exportName);
       if (opts.keywords)
         (0, limit_1.default)(ajv);
       return ajv;
@@ -7186,11 +7186,11 @@ var require_dist = __commonJS({
         throw new Error(`Unknown format "${name}"`);
       return f;
     };
-    function addFormats(ajv, list2, fs, exportName) {
+    function addFormats(ajv, list, fs, exportName) {
       var _a3;
       var _b;
       (_a3 = (_b = ajv.opts.code).formats) !== null && _a3 !== void 0 ? _a3 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
-      for (const f of list2)
+      for (const f of list)
         ajv.addFormat(f, fs[f]);
     }
     module.exports = exports = formatsPlugin;
@@ -27036,8 +27036,8 @@ var contributors = {
 function aggregateChecks(schema) {
   const agg = {};
   const def = schema._zod.def;
-  const list2 = schema._zod.traits.has("$ZodCheck") ? [schema, ...def.checks ?? []] : def.checks ?? [];
-  for (const ch of list2)
+  const list = schema._zod.traits.has("$ZodCheck") ? [schema, ...def.checks ?? []] : def.checks ?? [];
+  for (const ch of list)
     contributors[ch._zod.def.check]?.(agg, ch._zod.def);
   const bag = schema._zod.bag;
   if (bag.minimum !== void 0)
@@ -36609,15 +36609,6 @@ function readConfig(env = process.env) {
 
 // src/server/gateway.ts
 import { spawn } from "node:child_process";
-var MINIMUM_GLAB = "1.123.0";
-function glabMeetsMinimum(version2) {
-  const have = version2.split(".").map(Number);
-  const need = MINIMUM_GLAB.split(".").map(Number);
-  for (let i = 0; i < need.length; i++) {
-    if ((have[i] ?? 0) !== (need[i] ?? 0)) return (have[i] ?? 0) > (need[i] ?? 0);
-  }
-  return true;
-}
 var TOKEN_VARIABLES = ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"];
 var GitLabError = class extends Error {
   constructor(message, kind) {
@@ -36717,9 +36708,19 @@ var Gateway = class {
   }
 };
 
+// src/server/versions.ts
+var MINIMUM_GLAB = "1.123.0";
+var MINIMUM_GITLAB = "18.1";
+function atLeast(version2, minimum) {
+  const have = version2.split(/[.-]/).map((part) => Number.parseInt(part, 10) || 0);
+  for (const [i, need] of minimum.split(".").map(Number).entries()) {
+    const part = have[i] ?? 0;
+    if (part !== need) return part > need;
+  }
+  return true;
+}
+
 // src/server/instance.ts
-var MINIMUM_GITLAB = [18, 1];
-var MINIMUM_GITLAB_TEXT = "18.1";
 var PROBE = (
   /* GraphQL */
   `
@@ -36729,10 +36730,6 @@ var PROBE = (
   }
 `
 );
-function meetsMinimum(version2) {
-  const [major = 0, minor = 0] = version2.split(/[.-]/).map((part) => Number.parseInt(part, 10));
-  return major > MINIMUM_GITLAB[0] || major === MINIMUM_GITLAB[0] && minor >= MINIMUM_GITLAB[1];
-}
 var Instance = class {
   constructor(gateway2) {
     this.gateway = gateway2;
@@ -36752,7 +36749,7 @@ var Instance = class {
         version: data.metadata.version,
         enterprise: Boolean(data.metadata.enterprise),
         username: data.currentUser.username,
-        meetsMinimumVersion: meetsMinimum(data.metadata.version)
+        meetsMinimumVersion: atLeast(data.metadata.version, MINIMUM_GITLAB)
       };
     });
     return this.info;
@@ -36761,7 +36758,7 @@ var Instance = class {
   /** Throws unless glab and the Instance are new enough; every tool but `status` calls this first. */
   async requireSupported() {
     this.glabChecked ??= this.gateway.glabVersion().then((version2) => {
-      if (!glabMeetsMinimum(version2)) {
+      if (!atLeast(version2, MINIMUM_GLAB)) {
         throw new GitLabError(`glab ${version2} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`, "not-set-up");
       }
     });
@@ -36769,7 +36766,7 @@ var Instance = class {
     const info = await this.probe();
     if (!info.meetsMinimumVersion) {
       throw new GitLabError(
-        `This Instance runs GitLab ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB_TEXT} or later.`,
+        `This Instance runs GitLab ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`,
         "not-set-up"
       );
     }
@@ -36777,10 +36774,17 @@ var Instance = class {
   }
 };
 
+// src/server/nodes.ts
+var widgetOf = (node2, type) => (node2?.widgets ?? []).find((w) => w.type === type);
+var stateOf = (state) => state === "CLOSED" ? "closed" : "open";
+
 // src/server/references.ts
 var SUPPORTED_TYPES = ["Issue", "Task"];
 function refused(message) {
   return new GitLabError(message, "refused");
+}
+function notFound(what, config3) {
+  return new GitLabError(`${what} on ${config3.baseUrl}: not found, or your token can't see it.`, "not-found");
 }
 var EPIC = "Epics aren't supported: the plugin works with Issues and Tasks only.";
 var mergeRequest = (reference) => `${reference} is a merge request. The plugin shows the merge requests linked to a Work Item, but doesn't work on merge requests themselves.`;
@@ -36904,15 +36908,13 @@ query FetchWorkItemLinks($fullPath: ID!, $iid: String!, $after: String!) {
     )
   }
 ];
-var widgetOf = (node2, type) => (node2?.widgets ?? []).find((w) => w.type === type);
-var lower = (state) => state === "CLOSED" ? "closed" : "open";
 function summary(node2) {
   return {
     id: node2.id,
     reference: node2.reference,
     title: node2.title,
     type: node2.workItemType?.name ?? "Unknown",
-    state: lower(node2.state),
+    state: stateOf(node2.state),
     url: node2.webUrl
   };
 }
@@ -36951,7 +36953,7 @@ function toWorkItem(node2, ref) {
     iid: node2.iid,
     title: node2.title,
     type: node2.workItemType?.name ?? "Unknown",
-    state: lower(node2.state),
+    state: stateOf(node2.state),
     confidential: Boolean(node2.confidential),
     author: node2.author?.username ?? "",
     description: node2.description ?? "",
@@ -36992,6 +36994,11 @@ query ResolveWorkItem($fullPath: ID!, $iid: String!) {
   namespace(fullPath: $fullPath) { workItem(iid: $iid) { id reference(full: true) workItemType { name } } }
 }`
 );
+function threadWithComment(item, noteId) {
+  const commentId = `gid://gitlab/Note/${noteId}`;
+  const thread = item.threads.find((t) => t.comments.some((c) => c.id === commentId));
+  return thread ? { thread, commentId } : void 0;
+}
 var Reader = class {
   constructor(config3, gateway2, instance2) {
     this.config = config3;
@@ -37005,9 +37012,6 @@ var Reader = class {
   seen = /* @__PURE__ */ new Map();
   /** How many Comments each Thread had in the version Claude was last shown. */
   seenThreads = /* @__PURE__ */ new Map();
-  missing(ref) {
-    return new GitLabError(`${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`, "not-found");
-  }
   requireSupportedType(reference, type) {
     if (!SUPPORTED_TYPES.includes(type)) {
       throw refused(`${reference} is an ${type}; only Issues and Tasks are supported.`);
@@ -37018,20 +37022,27 @@ var Reader = class {
     this.seen.set(item.id, item.updatedAt);
     for (const thread of item.threads) this.seenThreads.set(thread.id, thread.commentCount);
   }
-  /** How many Comments a Thread had when Claude last saw it, if it has. */
-  seenThreadSize(threadId) {
-    return this.seenThreads.get(threadId);
+  /** How many Comments a Thread had in the version Claude was last shown; its count now if never shown. */
+  commentsSeen(thread) {
+    return this.seenThreads.get(thread.id) ?? thread.commentCount;
   }
-  /** The `updatedAt` of the version Claude last saw, if any. */
-  seenVersion(id) {
-    return this.seen.get(id);
+  /**
+   * Fetches a Work Item and says whether it changed since the version Claude was last shown.
+   * A changed Work Item counts as shown from here on, so callers must show its new state.
+   */
+  async fetchSinceSeen(ref) {
+    const item = await this.fetch(ref);
+    const seen = this.seen.get(item.id);
+    const changed = seen !== void 0 && seen !== item.updatedAt;
+    if (changed) this.remember(item);
+    return { item, changed };
   }
   /** Looks up a Work Item's global ID without fetching the rest of it. */
   async resolve(ref) {
     await this.instance.requireSupported();
     const data = await this.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
     const node2 = data?.namespace?.workItem;
-    if (!node2) throw this.missing(ref);
+    if (!node2) throw notFound(fullReference(ref), this.config);
     const resolved = { id: node2.id, reference: node2.reference ?? fullReference(ref), type: node2.workItemType?.name ?? "Unknown" };
     this.requireSupportedType(resolved.reference, resolved.type);
     return resolved;
@@ -37056,7 +37067,7 @@ var Reader = class {
       iid: ref.iid
     });
     const node2 = data?.namespace?.workItem;
-    if (!node2) throw this.missing(ref);
+    if (!node2) throw notFound(fullReference(ref), this.config);
     for (const paged of PAGED) {
       const connection = widgetOf(node2, paged.widget)?.[paged.field];
       if (connection) connection.nodes = [...connection.nodes ?? [], ...await this.laterPages(ref, paged, connection.pageInfo)];
@@ -37149,7 +37160,7 @@ var Lookups = class {
   }
 };
 
-// src/server/writes.ts
+// src/server/writes/writes.ts
 import { randomUUID } from "node:crypto";
 
 // src/server/diff.ts
@@ -37181,8 +37192,39 @@ function lineDiff(before, after) {
   return out;
 }
 
-// src/server/writes.ts
-var MAX_WRITES = 20;
+// src/server/writes/render.ts
+var joinOrNone = (values) => values.length ? values.join(", ") : "none";
+function quote(body) {
+  return body.split("\n").map((line) => `  > ${line}`);
+}
+function excerpt(body, length = 80) {
+  const line = body.replace(/\s+/g, " ").trim();
+  return line.length > length ? `${line.slice(0, length - 1)}\u2026` : line;
+}
+function stateLines(item) {
+  return [
+    `  ${item.title} [${item.type}, ${item.state}]`,
+    `  labels: ${joinOrNone(item.labels.map((l) => l.title))}`,
+    `  assignees: ${joinOrNone(item.assignees.map((a) => a.username))}`,
+    `  milestone: ${item.milestone?.title ?? "none"}, due: ${item.dueDate ?? "none"}`
+  ];
+}
+function renderPreview(plan) {
+  const lines = [`Plan ${plan.id}: ${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}. Nothing has been sent yet.`];
+  for (const write of plan.writes) {
+    lines.push(`${write.number}. ${write.preview[0]}`, ...write.preview.slice(1));
+  }
+  return lines.join("\n");
+}
+function renderReport(results) {
+  return results.map((r) => {
+    const head = `${r.number}. ${r.summary}: ${r.outcome}${r.created ? `, created ${r.created} ${r.url}` : ""}`;
+    const notes = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
+    return [head, ...notes].join("\n");
+  }).join("\n");
+}
+
+// src/server/writes/plan.ts
 var FOOTER = "_Posted with Claude Code_";
 var ADD_LINKS = (
   /* GraphQL */
@@ -37241,8 +37283,7 @@ mutation UpdateWorkItem($input: WorkItemUpdateInput!) {
   workItemUpdate(input: $input) { workItem { id } errors }
 }`
 );
-var list = (values) => values.length ? values.join(", ") : "none";
-var Writes = class {
+var Planner = class {
   constructor(config3, gateway2, instance2, reader2, lookups2) {
     this.config = config3;
     this.gateway = gateway2;
@@ -37255,18 +37296,6 @@ var Writes = class {
   instance;
   reader;
   lookups;
-  plans = /* @__PURE__ */ new Map();
-  async prepare(requests) {
-    if (requests.length === 0) throw refused("There's nothing to write.");
-    if (requests.length > MAX_WRITES) {
-      throw refused(`That's ${requests.length} Writes; one preview holds at most ${MAX_WRITES}. Split them into smaller batches.`);
-    }
-    const writes2 = [];
-    for (const [i, request] of requests.entries()) writes2.push({ ...await this.plan(request), number: i + 1 });
-    const plan = { id: randomUUID(), writes: writes2 };
-    this.plans.set(plan.id, plan);
-    return { plan, preview: renderPreview(plan) };
-  }
   plan(request) {
     switch (request.kind) {
       case "edit":
@@ -37294,7 +37323,7 @@ var Writes = class {
       if (request.parent) throw refused("An Issue's parent would be an Epic, and Epics aren't supported.");
       await this.instance.requireSupported();
       const data = await this.gateway.graphql("CheckProject", CHECK_PROJECT, { fullPath: request.project });
-      if (!data?.project) throw new GitLabError(`${request.project}: not found, or your token can't see it.`, "not-found");
+      if (!data?.project) throw notFound(request.project, this.config);
       if (!data.project.userPermissions?.createWorkItem) throw refused(`Your token can't create Work Items in ${request.project}. Nothing was prepared.`);
       fullPath = request.project;
     }
@@ -37322,12 +37351,12 @@ var Writes = class {
     if (request.labels?.length) {
       input2.labelsWidget = { labelIds: await Promise.all(request.labels.map((t) => this.lookups.labelId(fullPath, t))) };
       expect.labelsInclude = request.labels;
-      preview.push(`  labels: ${list(request.labels)}`);
+      preview.push(`  labels: ${joinOrNone(request.labels)}`);
     }
     if (request.assignees?.length) {
       input2.assigneesWidget = { assigneeIds: await this.lookups.userIds(request.assignees) };
       expect.assignees = request.assignees;
-      preview.push(`  assignees: ${list(request.assignees)}`);
+      preview.push(`  assignees: ${joinOrNone(request.assignees)}`);
     }
     if (request.milestone) {
       input2.milestoneWidget = { milestoneId: await this.lookups.milestoneId(fullPath, request.milestone) };
@@ -37393,7 +37422,7 @@ ${FOOTER}` : body;
     const thread = findThread(item, request.thread, ref.noteId);
     const first = thread.comments[0];
     const internal = Boolean(first?.internal);
-    const comments = this.reader.seenThreadSize(thread.id) ?? thread.commentCount;
+    const comments = this.reader.commentsSeen(thread);
     if (thread.commentCount !== comments) {
       throw refused(
         `That Thread on ${item.reference} has new Comments since you fetched it. Fetch ${item.reference} again and show the user the new Comments first. Nothing was prepared.`
@@ -37403,7 +37432,6 @@ ${FOOTER}` : body;
     const replies = thread.commentCount - 1;
     const about = `"${excerpt(first?.body ?? "")}" by ${first?.author ?? "unknown"}, ${replies} repl${replies === 1 ? "y" : "ies"}`;
     if (request.kind === "reply") {
-      if (!request.body) throw refused("A reply needs a body.");
       if (!item.permissions.createNote) throw refused(`On ${item.reference}, your token can't post Comments. Nothing was prepared.`);
       const body = this.withFooter(request.body);
       return {
@@ -37449,7 +37477,7 @@ ${FOOTER}` : body;
     if (add.length || remove.length) {
       const current = item.labels.map((l) => l.title);
       const after = [...current.filter((t) => !remove.includes(t)), ...add.filter((t) => !current.includes(t))];
-      preview.push(`  labels: ${list(current)} \u2192 ${list(after)}`);
+      preview.push(`  labels: ${joinOrNone(current)} \u2192 ${joinOrNone(after)}`);
       input2.labelsWidget = {
         addLabelIds: await Promise.all(add.map((t) => this.lookups.labelId(ref.fullPath, t))),
         removeLabelIds: item.labels.filter((l) => remove.includes(l.title)).map((l) => l.id)
@@ -37458,7 +37486,7 @@ ${FOOTER}` : body;
       expect.labelsExclude = remove;
     }
     if (request.assignees !== void 0) {
-      preview.push(`  assignees: ${list(item.assignees.map((a) => a.username))} \u2192 ${list(request.assignees)}`);
+      preview.push(`  assignees: ${joinOrNone(item.assignees.map((a) => a.username))} \u2192 ${joinOrNone(request.assignees)}`);
       input2.assigneesWidget = { assigneeIds: await this.lookups.userIds(request.assignees) };
       expect.assignees = request.assignees;
     }
@@ -37523,10 +37551,8 @@ ${FOOTER}` : body;
   }
   /** Fetches a Work Item for a Write, refusing if it changed since Claude last saw it. */
   async current(ref) {
-    const item = await this.reader.fetch(ref);
-    const seen = this.reader.seenVersion(item.id);
-    if (seen && seen !== item.updatedAt) {
-      this.reader.remember(item);
+    const { item, changed } = await this.reader.fetchSinceSeen(ref);
+    if (changed) {
       throw refused(
         [
           `${item.reference} changed in GitLab since you fetched it (now updated ${item.updatedAt}). Nothing was prepared. Its current state:`,
@@ -37536,6 +37562,114 @@ ${FOOTER}` : body;
       );
     }
     return item;
+  }
+};
+function requirePermissions(item, request) {
+  const needs = [
+    [request.title !== void 0 || request.description !== void 0 || request.state !== void 0, "updateWorkItem", "edit its title, description, or state"],
+    [
+      Boolean(request.addLabels?.length || request.removeLabels?.length) || request.assignees !== void 0 || request.milestone !== void 0 || request.dueDate !== void 0 || request.weight !== void 0,
+      "setWorkItemMetadata",
+      "change its labels, assignees, milestone, or dates"
+    ]
+  ];
+  needs.push(
+    [request.parent !== void 0, "adminParentLink", "change its parent"],
+    [Boolean(request.addLinks?.length || request.removeLinks?.length), "adminWorkItemLink", "change its Linked Items"]
+  );
+  const denied = needs.filter(([wanted, permission]) => wanted && !item.permissions[permission]).map(([, , what]) => what);
+  if (denied.length) throw refused(`On ${item.reference}, your token can't ${denied.join(", or ")}. Nothing was prepared.`);
+}
+function targetOf(ref, item) {
+  return { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt };
+}
+function findThread(item, threadId, noteId) {
+  const wanted = threadId && !threadId.startsWith("gid://") ? `gid://gitlab/Discussion/${threadId}` : threadId;
+  const thread = wanted ? item.threads.find((t) => t.id === wanted) : noteId ? threadWithComment(item, noteId)?.thread : void 0;
+  if (!thread) {
+    throw refused(
+      wanted || noteId ? `That Thread isn't on ${item.reference}, or your token can't see it.` : `Say which Thread on ${item.reference}: pass its ID from a Fetch, or use a link to one of its Comments.`
+    );
+  }
+  return thread;
+}
+
+// src/server/writes/requests.ts
+var MAX_WRITES = 20;
+var DATE = external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+var EDIT = external_exports.object({
+  kind: external_exports.literal("edit"),
+  reference: external_exports.string().describe("Work Item URL or full reference"),
+  title: external_exports.string().optional(),
+  description: external_exports.string().optional().describe("The whole new description"),
+  addLabels: external_exports.array(external_exports.string()).optional(),
+  removeLabels: external_exports.array(external_exports.string()).optional(),
+  assignees: external_exports.array(external_exports.string()).optional().describe("Usernames; replaces the current assignees"),
+  milestone: external_exports.string().nullable().optional().describe("Milestone title, or null to clear it"),
+  state: external_exports.enum(["close", "reopen"]).optional(),
+  dueDate: DATE.nullable().optional().describe("YYYY-MM-DD, or null to clear it"),
+  weight: external_exports.number().int().min(0).nullable().optional().describe("Needs GitLab EE Premium; null clears it"),
+  parent: external_exports.string().nullable().optional().describe("The parent's Reference (a Task's parent Issue), or null to remove it"),
+  addLinks: external_exports.array(external_exports.object({ reference: external_exports.string(), linkType: external_exports.enum(["relates_to", "blocks", "is_blocked_by"]) })).optional().describe("blocks and is_blocked_by need GitLab Premium"),
+  removeLinks: external_exports.array(external_exports.string()).optional().describe("References of Linked Items to unlink")
+});
+var COMMENT = external_exports.object({
+  kind: external_exports.literal("comment"),
+  reference: external_exports.string().describe("Work Item URL or full reference"),
+  body: external_exports.string().min(1).describe("The Comment, in Markdown"),
+  internal: external_exports.boolean().optional().describe("Internal Comment; public unless the user asks"),
+  startThread: external_exports.boolean().optional().describe("Start a resolvable Thread instead of a plain Comment; only when the user asks")
+});
+var REPLY = external_exports.object({
+  kind: external_exports.literal("reply"),
+  reference: external_exports.string().describe("A Comment link, or the Work Item's Reference together with thread"),
+  thread: external_exports.string().optional().describe("The Thread's ID from a Fetch"),
+  body: external_exports.string().min(1).describe("The reply, in Markdown")
+});
+var CREATE2 = external_exports.object({
+  kind: external_exports.literal("create"),
+  type: external_exports.enum(["Issue", "Task"]),
+  project: external_exports.string().optional().describe("For an Issue: the project's full path"),
+  parent: external_exports.string().optional().describe("For a Task: the parent Issue's Reference"),
+  title: external_exports.string().min(1),
+  description: external_exports.string().optional(),
+  labels: external_exports.array(external_exports.string()).optional(),
+  assignees: external_exports.array(external_exports.string()).optional(),
+  milestone: external_exports.string().optional(),
+  dueDate: DATE.optional(),
+  weight: external_exports.number().int().min(0).optional(),
+  confidential: external_exports.boolean().optional().describe("Only when the user asks")
+});
+var RESOLVE2 = external_exports.object({
+  kind: external_exports.literal("resolve"),
+  reference: external_exports.string().describe("A Comment link, or the Work Item's Reference together with thread"),
+  thread: external_exports.string().optional().describe("The Thread's ID from a Fetch")
+});
+var WRITE_SCHEMA = external_exports.discriminatedUnion("kind", [EDIT, COMMENT, REPLY, CREATE2, RESOLVE2]);
+
+// src/server/writes/writes.ts
+var Writes = class {
+  constructor(config3, gateway2, instance2, reader2, lookups2) {
+    this.config = config3;
+    this.gateway = gateway2;
+    this.reader = reader2;
+    this.planner = new Planner(config3, gateway2, instance2, reader2, lookups2);
+  }
+  config;
+  gateway;
+  reader;
+  plans = /* @__PURE__ */ new Map();
+  planner;
+  async prepare(requests) {
+    if (requests.length === 0) throw refused("There's nothing to write.");
+    if (requests.length > MAX_WRITES) {
+      throw refused(`That's ${requests.length} Writes; one preview holds at most ${MAX_WRITES}. Split them into smaller batches.`);
+    }
+    const writes2 = [];
+    for (const [i, request] of requests.entries()) writes2.push({ ...await this.planner.plan(request), number: i + 1 });
+    const plan = { id: randomUUID(), writes: writes2 };
+    this.plans.set(plan.id, plan);
+    return { plan, preview: renderPreview(plan) };
   }
   async apply(planId, confirm, drop = []) {
     const stored = this.plans.get(planId);
@@ -37637,52 +37771,8 @@ ${renderReport(all2)}` };
     return payload;
   }
 };
-function requirePermissions(item, request) {
-  const needs = [
-    [request.title !== void 0 || request.description !== void 0 || request.state !== void 0, "updateWorkItem", "edit its title, description, or state"],
-    [
-      Boolean(request.addLabels?.length || request.removeLabels?.length) || request.assignees !== void 0 || request.milestone !== void 0 || request.dueDate !== void 0 || request.weight !== void 0,
-      "setWorkItemMetadata",
-      "change its labels, assignees, milestone, or dates"
-    ]
-  ];
-  needs.push(
-    [request.parent !== void 0, "adminParentLink", "change its parent"],
-    [Boolean(request.addLinks?.length || request.removeLinks?.length), "adminWorkItemLink", "change its Linked Items"]
-  );
-  const denied = needs.filter(([wanted, permission]) => wanted && !item.permissions[permission]).map(([, , what]) => what);
-  if (denied.length) throw refused(`On ${item.reference}, your token can't ${denied.join(", or ")}. Nothing was prepared.`);
-}
 function byNumber(results) {
   return [...results].sort((a, b) => a.number - b.number);
-}
-function targetOf(ref, item) {
-  return { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt };
-}
-function quote(body) {
-  return body.split("\n").map((line) => `  > ${line}`);
-}
-function excerpt(body, length = 80) {
-  const line = body.replace(/\s+/g, " ").trim();
-  return line.length > length ? `${line.slice(0, length - 1)}\u2026` : line;
-}
-function findThread(item, threadId, noteId) {
-  const wanted = threadId && !threadId.startsWith("gid://") ? `gid://gitlab/Discussion/${threadId}` : threadId;
-  const thread = wanted ? item.threads.find((t) => t.id === wanted) : noteId ? item.threads.find((t) => t.comments.some((c) => c.id === `gid://gitlab/Note/${noteId}`)) : void 0;
-  if (!thread) {
-    throw refused(
-      wanted || noteId ? `That Thread isn't on ${item.reference}, or your token can't see it.` : `Say which Thread on ${item.reference}: pass its ID from a Fetch, or use a link to one of its Comments.`
-    );
-  }
-  return thread;
-}
-function stateLines(item) {
-  return [
-    `  ${item.title} [${item.type}, ${item.state}]`,
-    `  labels: ${list(item.labels.map((l) => l.title))}`,
-    `  assignees: ${list(item.assignees.map((a) => a.username))}`,
-    `  milestone: ${item.milestone?.title ?? "none"}, due: ${item.dueDate ?? "none"}`
-  ];
 }
 function didNotStick(expect, after) {
   const problems = [];
@@ -37691,7 +37781,7 @@ function didNotStick(expect, after) {
   if (expect.assignees !== void 0) {
     const kept2 = after.assignees.map((a) => a.username);
     const same = kept2.length === expect.assignees.length && expect.assignees.every((u) => kept2.includes(u));
-    if (!same) problems.push(`assignees: asked for ${list(expect.assignees)}; GitLab kept ${list(kept2)}`);
+    if (!same) problems.push(`assignees: asked for ${joinOrNone(expect.assignees)}; GitLab kept ${joinOrNone(kept2)}`);
   }
   if (expect.milestone !== void 0 && (after.milestone?.title ?? null) !== expect.milestone) {
     problems.push(`milestone: GitLab kept ${after.milestone?.title ?? "none"}`);
@@ -37705,27 +37795,13 @@ function didNotStick(expect, after) {
   const linked = after.linkedItems.map((l) => l.reference);
   const notLinked = (expect.linksInclude ?? []).filter((r) => !linked.includes(r));
   const stillLinked = (expect.linksExclude ?? []).filter((r) => linked.includes(r));
-  if (notLinked.length) problems.push(`links: not linked to ${list(notLinked)}`);
-  if (stillLinked.length) problems.push(`links: still linked to ${list(stillLinked)}`);
+  if (notLinked.length) problems.push(`links: not linked to ${joinOrNone(notLinked)}`);
+  if (stillLinked.length) problems.push(`links: still linked to ${joinOrNone(stillLinked)}`);
   const labels = after.labels.map((l) => l.title);
   const missing = (expect.labelsInclude ?? []).filter((t) => !labels.includes(t));
   const kept = (expect.labelsExclude ?? []).filter((t) => labels.includes(t));
-  if (missing.length || kept.length) problems.push(`labels: GitLab kept ${list(labels)}`);
+  if (missing.length || kept.length) problems.push(`labels: GitLab kept ${joinOrNone(labels)}`);
   return problems;
-}
-function renderPreview(plan) {
-  const lines = [`Plan ${plan.id}: ${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}. Nothing has been sent yet.`];
-  for (const write of plan.writes) {
-    lines.push(`${write.number}. ${write.preview[0]}`, ...write.preview.slice(1));
-  }
-  return lines.join("\n");
-}
-function renderReport(results) {
-  return results.map((r) => {
-    const head = `${r.number}. ${r.summary}: ${r.outcome}${r.created ? `, created ${r.created} ${r.url}` : ""}`;
-    const notes = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
-    return [head, ...notes].join("\n");
-  }).join("\n");
 }
 
 // src/server/lists.ts
@@ -37770,13 +37846,26 @@ query ListMyWorkItems(${FILTER_VARIABLES}) {
   }
 }`
 );
+var FILTER_SCHEMA = {
+  state: external_exports.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
+  types: external_exports.array(external_exports.enum(["Issue", "Task"])).optional().describe("Default: both"),
+  assignees: external_exports.array(external_exports.string()).optional().describe("Usernames; every one must be assigned"),
+  assignedToMe: external_exports.boolean().optional().describe("Only Work Items assigned to the signed-in user"),
+  author: external_exports.string().optional().describe("Author's username"),
+  labels: external_exports.array(external_exports.string()).optional().describe("Every one of these labels"),
+  excludeLabels: external_exports.array(external_exports.string()).optional().describe("None of these labels"),
+  anyLabels: external_exports.array(external_exports.string()).optional().describe("At least one of these labels"),
+  milestone: external_exports.string().optional().describe("Milestone title"),
+  parent: external_exports.string().optional().describe("The parent Work Item's URL or full reference, to list its children"),
+  search: external_exports.string().optional().describe("Text to find in titles and descriptions")
+};
 function entry(node2) {
-  const widget = (type) => (node2.widgets ?? []).find((w) => w.type === type);
+  const widget = (type) => widgetOf(node2, type);
   return {
     reference: node2.reference,
     title: node2.title,
     type: node2.workItemType?.name ?? "Unknown",
-    state: node2.state === "CLOSED" ? "closed" : "open",
+    state: stateOf(node2.state),
     assignees: (widget("ASSIGNEES")?.assignees?.nodes ?? []).map((a) => a.username),
     labels: (widget("LABELS")?.labels?.nodes ?? []).map((l) => l.title),
     milestone: widget("MILESTONE")?.milestone?.title ?? null,
@@ -37786,10 +37875,12 @@ function entry(node2) {
   };
 }
 var Lists = class {
-  constructor(gateway2, instance2) {
+  constructor(config3, gateway2, instance2) {
+    this.config = config3;
     this.gateway = gateway2;
     this.instance = instance2;
   }
+  config;
   gateway;
   instance;
   async variables(filters) {
@@ -37815,7 +37906,7 @@ var Lists = class {
     };
   }
   /** Lists a project's or group's Work Items, subgroups and projects included. */
-  async namespace(fullPath, filters, limit = DEFAULT_LIMIT, after) {
+  async within(fullPath, filters, limit = DEFAULT_LIMIT, after) {
     await this.instance.requireSupported();
     const base = { fullPath, includeDescendants: true, ...await this.variables(filters) };
     return this.pages(limit, after, async (first, cursor) => {
@@ -37833,7 +37924,7 @@ var Lists = class {
       return data?.currentUser?.workItems ?? null;
     }, "Your Work Items");
   }
-  async pages(limit, after, fetchPage, scope) {
+  async pages(limit, after, fetchPage, what) {
     const wanted = Math.min(Math.max(1, Math.floor(limit)), MAX_LIMIT);
     const items = [];
     let cursor = after;
@@ -37841,7 +37932,7 @@ var Lists = class {
     let endCursor = null;
     while (items.length < wanted) {
       const connection = await fetchPage(Math.min(PAGE_MAX, wanted - items.length), cursor);
-      if (!connection) throw new GitLabError(`${scope}: not found, or your token can't see it.`, "not-found");
+      if (!connection) throw notFound(what, this.config);
       items.push(...(connection.nodes ?? []).map(entry));
       hasMore = Boolean(connection.pageInfo?.hasNextPage);
       endCursor = connection.pageInfo?.endCursor ?? null;
@@ -37894,8 +37985,8 @@ async function probes(config3, project, deps) {
   let first;
   results.push(
     await probe("List query", async () => {
-      const list2 = await deps.lists.namespace(project, { types: ["Issue"] }, 1);
-      first = list2.items[0]?.reference;
+      const list = await deps.lists.within(project, { types: ["Issue"] }, 1);
+      first = list.items[0]?.reference;
       return first ?? "no open Issues to list";
     })
   );
@@ -37913,7 +38004,7 @@ async function probes(config3, project, deps) {
 }
 async function status(config3, gateway2, instance2, deps, project) {
   const glabVersion = await gateway2.glabVersion();
-  const glabOk = glabMeetsMinimum(glabVersion);
+  const glabOk = atLeast(glabVersion, MINIMUM_GLAB);
   const tokenSource = await gateway2.source();
   const info = await instance2.probe();
   const checks = project && info.meetsMinimumVersion ? await probes(config3, project, deps) : void 0;
@@ -37934,7 +38025,7 @@ async function status(config3, gateway2, instance2, deps, project) {
     `Signed in as: ${info.username}`,
     `Token from: ${tokenSource}`,
     glabOk ? `glab: ${glabVersion}` : `glab: ${glabVersion}, too old. The plugin needs glab ${MINIMUM_GLAB} or later.`,
-    info.meetsMinimumVersion ? `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: met` : `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: NOT met. This Instance runs ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB_TEXT} or later.`,
+    info.meetsMinimumVersion ? `Minimum GitLab ${MINIMUM_GITLAB}: met` : `Minimum GitLab ${MINIMUM_GITLAB}: NOT met. This Instance runs ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`,
     ...checks ? [`Read-only probes in ${project}:`, ...checks.map((c) => `  ${c.ok ? "ok" : "FAILED"} ${c.probe}: ${c.detail}`)] : []
   ];
   return answer(lines.join("\n"), data);
@@ -37943,10 +38034,8 @@ async function status(config3, gateway2, instance2, deps, project) {
 // src/server/tools/fetch.ts
 var MR_LIMIT = 10;
 function focusOf(item, noteId) {
-  if (!noteId) return void 0;
-  const commentId = `gid://gitlab/Note/${noteId}`;
-  const thread = item.threads.find((t) => t.comments.some((c) => c.id === commentId));
-  return thread ? { threadId: thread.id, commentId } : void 0;
+  const found = noteId ? threadWithComment(item, noteId) : void 0;
+  return found ? { threadId: found.thread.id, commentId: found.commentId } : void 0;
 }
 function threadText(thread, index) {
   const status2 = thread.resolvable ? thread.resolved ? "resolved" : "unresolved" : "comment";
@@ -38036,28 +38125,19 @@ function listAnswer(heading, result) {
   const text = [`${heading}: ${result.items.length} shown`, ...lines, footer].join("\n");
   return answer(text, { ...result });
 }
+async function listWorkItems(config3, reader2, lists2, { fullPath, limit, after, parent, ...filters }) {
+  const parentId = parent ? (await reader2.resolve(parseReference(parent, config3))).id : void 0;
+  return listAnswer(`Work Items in ${fullPath}`, await lists2.within(fullPath, { ...filters, parentId }, limit, after));
+}
 
 // src/server/main.ts
 var config2 = readConfig();
 var gateway = new Gateway(config2);
 var instance = new Instance(gateway);
 var reader = new Reader(config2, gateway, instance);
-var lists = new Lists(gateway, instance);
+var lists = new Lists(config2, gateway, instance);
 var lookups = new Lookups(gateway);
 var writes = new Writes(config2, gateway, instance, reader, lookups);
-var FILTER_SCHEMA = {
-  state: external_exports.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
-  types: external_exports.array(external_exports.enum(["Issue", "Task"])).optional().describe("Default: both"),
-  assignees: external_exports.array(external_exports.string()).optional().describe("Usernames; every one must be assigned"),
-  assignedToMe: external_exports.boolean().optional().describe("Only Work Items assigned to the signed-in user"),
-  author: external_exports.string().optional().describe("Author's username"),
-  labels: external_exports.array(external_exports.string()).optional().describe("Every one of these labels"),
-  excludeLabels: external_exports.array(external_exports.string()).optional().describe("None of these labels"),
-  anyLabels: external_exports.array(external_exports.string()).optional().describe("At least one of these labels"),
-  milestone: external_exports.string().optional().describe("Milestone title"),
-  parent: external_exports.string().optional().describe("The parent Work Item's URL or full reference, to list its children"),
-  search: external_exports.string().optional().describe("Text to find in titles and descriptions")
-};
 var server = new McpServer({ name: "gitlab-work-items", version: "0.1.0" });
 server.registerTool(
   "status",
@@ -38085,17 +38165,14 @@ server.registerTool(
     title: "List GitLab Work Items",
     description: "Lists Issues and Tasks in a project or group (subgroups and projects included) as compact summaries, most recently updated first. 20 by default; ask for more with limit (up to 200) or continue with after.",
     inputSchema: {
-      scope: external_exports.string().describe("Full path of the project or group, e.g. acme/app or acme"),
+      fullPath: external_exports.string().describe("Full path of the project or group, e.g. acme/app or acme"),
       limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to return (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
       after: external_exports.string().optional().describe("Cursor from a previous list, to continue it"),
       ...FILTER_SCHEMA
     },
     annotations: { readOnlyHint: true }
   },
-  guarded(async ({ scope, limit, after, parent, ...filters }) => {
-    const parentId = parent ? (await reader.resolve(parseReference(parent, config2))).id : void 0;
-    return listAnswer(`Work Items in ${scope}`, await lists.namespace(scope, { ...filters, parentId }, limit, after));
-  })
+  guarded(async (args) => listWorkItems(config2, reader, lists, args))
 );
 server.registerTool(
   "my_work_items",
@@ -38129,56 +38206,6 @@ var confirmWithUser = async (preview) => {
   });
   return response.action === "accept" && response.content?.confirm === true;
 };
-var WRITE_SCHEMA = external_exports.discriminatedUnion("kind", [
-  external_exports.object({
-    kind: external_exports.literal("edit"),
-    reference: external_exports.string().describe("Work Item URL or full reference"),
-    title: external_exports.string().optional(),
-    description: external_exports.string().optional().describe("The whole new description"),
-    addLabels: external_exports.array(external_exports.string()).optional(),
-    removeLabels: external_exports.array(external_exports.string()).optional(),
-    assignees: external_exports.array(external_exports.string()).optional().describe("Usernames; replaces the current assignees"),
-    milestone: external_exports.string().nullable().optional().describe("Milestone title, or null to clear it"),
-    state: external_exports.enum(["close", "reopen"]).optional(),
-    dueDate: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().describe("YYYY-MM-DD, or null to clear it"),
-    weight: external_exports.number().int().min(0).nullable().optional().describe("Needs GitLab EE Premium; null clears it"),
-    parent: external_exports.string().nullable().optional().describe("The parent's Reference (a Task's parent Issue), or null to remove it"),
-    addLinks: external_exports.array(external_exports.object({ reference: external_exports.string(), linkType: external_exports.enum(["relates_to", "blocks", "is_blocked_by"]) })).optional().describe("blocks and is_blocked_by need GitLab Premium"),
-    removeLinks: external_exports.array(external_exports.string()).optional().describe("References of Linked Items to unlink")
-  }),
-  external_exports.object({
-    kind: external_exports.literal("comment"),
-    reference: external_exports.string().describe("Work Item URL or full reference"),
-    body: external_exports.string().min(1).describe("The Comment, in Markdown"),
-    internal: external_exports.boolean().optional().describe("Internal Comment; public unless the user asks"),
-    startThread: external_exports.boolean().optional().describe("Start a resolvable Thread instead of a plain Comment; only when the user asks")
-  }),
-  external_exports.object({
-    kind: external_exports.literal("reply"),
-    reference: external_exports.string().describe("A Comment link, or the Work Item's Reference together with thread"),
-    thread: external_exports.string().optional().describe("The Thread's ID from a Fetch"),
-    body: external_exports.string().min(1).describe("The reply, in Markdown")
-  }),
-  external_exports.object({
-    kind: external_exports.literal("create"),
-    type: external_exports.enum(["Issue", "Task"]),
-    project: external_exports.string().optional().describe("For an Issue: the project's full path"),
-    parent: external_exports.string().optional().describe("For a Task: the parent Issue's Reference"),
-    title: external_exports.string().min(1),
-    description: external_exports.string().optional(),
-    labels: external_exports.array(external_exports.string()).optional(),
-    assignees: external_exports.array(external_exports.string()).optional(),
-    milestone: external_exports.string().optional(),
-    dueDate: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    weight: external_exports.number().int().min(0).optional(),
-    confidential: external_exports.boolean().optional().describe("Only when the user asks")
-  }),
-  external_exports.object({
-    kind: external_exports.literal("resolve"),
-    reference: external_exports.string().describe("A Comment link, or the Work Item's Reference together with thread"),
-    thread: external_exports.string().optional().describe("The Thread's ID from a Fetch")
-  })
-]);
 server.registerTool(
   "prepare_writes",
   {

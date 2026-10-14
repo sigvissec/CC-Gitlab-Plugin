@@ -16,6 +16,11 @@ export function refused(message: string): GitLabError {
   return new GitLabError(message, "refused");
 }
 
+/** Something GitLab didn't return. It may not exist or the token may not see it; GitLab doesn't say which. */
+export function notFound(what: string, config: Config): GitLabError {
+  return new GitLabError(`${what} on ${config.baseUrl}: not found, or your token can't see it.`, "not-found");
+}
+
 const EPIC = "Epics aren't supported: the plugin works with Issues and Tasks only.";
 const mergeRequest = (reference: string) =>
   `${reference} is a merge request. The plugin shows the merge requests linked to a Work Item, but doesn't work on merge requests themselves.`;

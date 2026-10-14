@@ -1,15 +1,13 @@
 import type { Config } from "../config.js";
-import type { Reader, Thread, WorkItem } from "../reader.js";
+import { threadWithComment, type Reader, type Thread, type WorkItem } from "../reader.js";
 import { parseReference } from "../references.js";
 import { answer } from "../result.js";
 
 const MR_LIMIT = 10;
 
 function focusOf(item: WorkItem, noteId: string | undefined): { threadId: string; commentId: string } | undefined {
-  if (!noteId) return undefined;
-  const commentId = `gid://gitlab/Note/${noteId}`;
-  const thread = item.threads.find((t) => t.comments.some((c) => c.id === commentId));
-  return thread ? { threadId: thread.id, commentId } : undefined;
+  const found = noteId ? threadWithComment(item, noteId) : undefined;
+  return found ? { threadId: found.thread.id, commentId: found.commentId } : undefined;
 }
 
 function threadText(thread: Thread, index: number): string {

@@ -1,6 +1,7 @@
 import type { Config } from "../config.js";
-import { GitLabError, MINIMUM_GLAB, glabMeetsMinimum, type Gateway } from "../gateway.js";
-import { MINIMUM_GITLAB_TEXT, type Instance } from "../instance.js";
+import { GitLabError, type Gateway } from "../gateway.js";
+import type { Instance } from "../instance.js";
+import { MINIMUM_GITLAB, MINIMUM_GLAB, atLeast } from "../versions.js";
 import type { Lists } from "../lists.js";
 import type { Lookups } from "../lookups.js";
 import type { Reader } from "../reader.js";
@@ -35,7 +36,7 @@ async function probes(config: Config, project: string, deps: { lookups: Lookups;
   let first: string | undefined;
   results.push(
     await probe("List query", async () => {
-      const list = await deps.lists.namespace(project, { types: ["Issue"] }, 1);
+      const list = await deps.lists.within(project, { types: ["Issue"] }, 1);
       first = list.items[0]?.reference;
       return first ?? "no open Issues to list";
     }),
@@ -61,7 +62,7 @@ export async function status(
   project?: string,
 ) {
   const glabVersion = await gateway.glabVersion();
-  const glabOk = glabMeetsMinimum(glabVersion);
+  const glabOk = atLeast(glabVersion, MINIMUM_GLAB);
   const tokenSource = await gateway.source();
   const info = await instance.probe();
   const checks = project && info.meetsMinimumVersion ? await probes(config, project, deps) : undefined;
@@ -83,8 +84,8 @@ export async function status(
     `Token from: ${tokenSource}`,
     glabOk ? `glab: ${glabVersion}` : `glab: ${glabVersion}, too old. The plugin needs glab ${MINIMUM_GLAB} or later.`,
     info.meetsMinimumVersion
-      ? `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: met`
-      : `Minimum GitLab ${MINIMUM_GITLAB_TEXT}: NOT met. This Instance runs ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB_TEXT} or later.`,
+      ? `Minimum GitLab ${MINIMUM_GITLAB}: met`
+      : `Minimum GitLab ${MINIMUM_GITLAB}: NOT met. This Instance runs ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`,
     ...(checks ? [`Read-only probes in ${project}:`, ...checks.map((c) => `  ${c.ok ? "ok" : "FAILED"} ${c.probe}: ${c.detail}`)] : []),
   ];
   return answer(lines.join("\n"), data);

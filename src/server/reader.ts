@@ -1,9 +1,10 @@
 // Fetches one Work Item with everything Claude needs: fields, Hierarchy, Linked Items,
 // Threads, and the merge requests associated with it.
 import type { Config } from "./config.js";
-import { GitLabError, type Gateway } from "./gateway.js";
+import type { Gateway } from "./gateway.js";
 import type { Instance } from "./instance.js";
-import { SUPPORTED_TYPES, fullReference, refused, type WorkItemRef } from "./references.js";
+import { stateOf, widgetOf } from "./nodes.js";
+import { SUPPORTED_TYPES, fullReference, notFound, refused, type WorkItemRef } from "./references.js";
 
 export interface Comment {
   id: string;
@@ -150,9 +151,6 @@ query FetchWorkItemLinks($fullPath: ID!, $iid: String!, $after: String!) {
   },
 ] as const;
 
-const widgetOf = (node: any, type: string) => (node?.widgets ?? []).find((w: any) => w.type === type);
-
-const lower = (state: string): "open" | "closed" => (state === "CLOSED" ? "closed" : "open");
 
 function summary(node: any): ItemSummary {
   return {
@@ -160,7 +158,7 @@ function summary(node: any): ItemSummary {
     reference: node.reference,
     title: node.title,
     type: node.workItemType?.name ?? "Unknown",
-    state: lower(node.state),
+    state: stateOf(node.state),
     url: node.webUrl,
   };
 }
@@ -206,7 +204,7 @@ function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
     iid: node.iid,
     title: node.title,
     type: node.workItemType?.name ?? "Unknown",
-    state: lower(node.state),
+    state: stateOf(node.state),
     confidential: Boolean(node.confidential),
     author: node.author?.username ?? "",
     description: node.description ?? "",
@@ -252,6 +250,13 @@ export interface ResolvedRef {
   type: string;
 }
 
+/** The Thread holding a Comment, by the Comment's note number from a Comment link. */
+export function threadWithComment(item: WorkItem, noteId: string): { thread: Thread; commentId: string } | undefined {
+  const commentId = `gid://gitlab/Note/${noteId}`;
+  const thread = item.threads.find((t) => t.comments.some((c) => c.id === commentId));
+  return thread ? { thread, commentId } : undefined;
+}
+
 export class Reader {
   /** When each Work Item was last updated, as of the version Claude was last shown. */
   private readonly seen = new Map<string, string>();
@@ -263,10 +268,6 @@ export class Reader {
     private readonly gateway: Gateway,
     private readonly instance: Instance,
   ) {}
-
-  private missing(ref: WorkItemRef): GitLabError {
-    return new GitLabError(`${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`, "not-found");
-  }
 
   private requireSupportedType(reference: string, type: string): void {
     if (!(SUPPORTED_TYPES as readonly string[]).includes(type)) {
@@ -280,14 +281,21 @@ export class Reader {
     for (const thread of item.threads) this.seenThreads.set(thread.id, thread.commentCount);
   }
 
-  /** How many Comments a Thread had when Claude last saw it, if it has. */
-  seenThreadSize(threadId: string): number | undefined {
-    return this.seenThreads.get(threadId);
+  /** How many Comments a Thread had in the version Claude was last shown; its count now if never shown. */
+  commentsSeen(thread: Thread): number {
+    return this.seenThreads.get(thread.id) ?? thread.commentCount;
   }
 
-  /** The `updatedAt` of the version Claude last saw, if any. */
-  seenVersion(id: string): string | undefined {
-    return this.seen.get(id);
+  /**
+   * Fetches a Work Item and says whether it changed since the version Claude was last shown.
+   * A changed Work Item counts as shown from here on, so callers must show its new state.
+   */
+  async fetchSinceSeen(ref: WorkItemRef): Promise<{ item: WorkItem; changed: boolean }> {
+    const item = await this.fetch(ref);
+    const seen = this.seen.get(item.id);
+    const changed = seen !== undefined && seen !== item.updatedAt;
+    if (changed) this.remember(item);
+    return { item, changed };
   }
 
   /** Looks up a Work Item's global ID without fetching the rest of it. */
@@ -295,7 +303,7 @@ export class Reader {
     await this.instance.requireSupported();
     const data = await this.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
     const node = data?.namespace?.workItem;
-    if (!node) throw this.missing(ref);
+    if (!node) throw notFound(fullReference(ref), this.config);
     const resolved = { id: node.id, reference: node.reference ?? fullReference(ref), type: node.workItemType?.name ?? "Unknown" };
     this.requireSupportedType(resolved.reference, resolved.type);
     return resolved;
@@ -322,7 +330,7 @@ export class Reader {
       iid: ref.iid,
     });
     const node = data?.namespace?.workItem;
-    if (!node) throw this.missing(ref);
+    if (!node) throw notFound(fullReference(ref), this.config);
     for (const paged of PAGED) {
       const connection = widgetOf(node, paged.widget)?.[paged.field];
       if (connection) connection.nodes = [...(connection.nodes ?? []), ...(await this.laterPages(ref, paged, connection.pageInfo))];

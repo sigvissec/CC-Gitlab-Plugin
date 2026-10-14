@@ -2,21 +2,18 @@
 // Write wherever the client can't ask the user directly, so apply_writes always asks,
 // even if the user once chose "always allow". The read-only tools never prompt.
 import { readFileSync } from "node:fs";
-
-export const PREFIX = "mcp__plugin_gitlab-work-items_gitlab__";
-const WRITE_TOOLS = new Set(["apply_writes"]);
-const READ_TOOLS = new Set(["status", "fetch_work_item", "list_work_items", "my_work_items", "prepare_writes"]);
+import { TOOLS, TOOL_PREFIX } from "../tool-names.js";
 
 function decide(toolName: string): { permissionDecision: "ask" | "allow"; permissionDecisionReason: string } | undefined {
-  if (!toolName.startsWith(PREFIX)) return undefined;
-  const tool = toolName.slice(PREFIX.length);
-  if (WRITE_TOOLS.has(tool)) {
+  if (!toolName.startsWith(TOOL_PREFIX)) return undefined;
+  const kind = (TOOLS as Record<string, "read" | "write">)[toolName.slice(TOOL_PREFIX.length)];
+  if (kind === "write") {
     return {
       permissionDecision: "ask",
       permissionDecisionReason: "This sends the previewed Writes to GitLab. Only approve it if you've reviewed the preview.",
     };
   }
-  if (READ_TOOLS.has(tool)) {
+  if (kind === "read") {
     return { permissionDecision: "allow", permissionDecisionReason: "Reading from GitLab changes nothing." };
   }
   return undefined;

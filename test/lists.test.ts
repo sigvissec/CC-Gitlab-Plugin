@@ -23,7 +23,7 @@ describe("listing Work Items", () => {
       ]),
     );
 
-    const result = await s.call("list_work_items", { scope: "acme/app" });
+    const result = await s.call("list_work_items", { fullPath: "acme/app" });
 
     expect(result.isError).toBe(false);
     expect(result.data.items).toEqual([
@@ -77,7 +77,7 @@ describe("listing Work Items", () => {
     );
 
     const result = await s.call("list_work_items", {
-      scope: "acme",
+      fullPath: "acme",
       state: "closed",
       types: ["Task"],
       assignees: ["bob"],
@@ -96,7 +96,7 @@ describe("listing Work Items", () => {
   it("filters by \"assigned to me\" using the signed-in username", async () => {
     const s = await withPages(listPage({ fullPath: "acme/app", ...LIST_DEFAULTS, assigneeUsernames: ["alice"] }, [{ reference: "acme/app#12" }]));
 
-    const result = await s.call("list_work_items", { scope: "acme/app", assignedToMe: true });
+    const result = await s.call("list_work_items", { fullPath: "acme/app", assignedToMe: true });
 
     expect(result.isError).toBe(false);
     expect(result.data.items).toHaveLength(1);
@@ -108,7 +108,7 @@ describe("listing Work Items", () => {
       listPage({ fullPath: "acme/app", ...LIST_DEFAULTS, parentIds: ["gid://gitlab/WorkItem/1012"] }, [{ reference: "acme/app#13", type: "Task" }]),
     );
 
-    const result = await s.call("list_work_items", { scope: "acme/app", parent: "https://gitlab.example.com/acme/app/-/work_items/12" });
+    const result = await s.call("list_work_items", { fullPath: "acme/app", parent: "https://gitlab.example.com/acme/app/-/work_items/12" });
 
     expect(result.isError).toBe(false);
     expect(result.data.items.map((i: { reference: string }) => i.reference)).toEqual(["acme/app#13"]);
@@ -122,7 +122,7 @@ describe("listing Work Items", () => {
       listPage({ fullPath: "acme/app", ...LIST_DEFAULTS, first: 50, after: "c1" }, page(101, 50), { hasNextPage: true, endCursor: "c2" }),
     );
 
-    const result = await s.call("list_work_items", { scope: "acme/app", limit: 150 });
+    const result = await s.call("list_work_items", { fullPath: "acme/app", limit: 150 });
 
     expect(result.data.items).toHaveLength(150);
     expect(result.data).toMatchObject({ hasMore: true, endCursor: "c2" });
@@ -131,19 +131,19 @@ describe("listing Work Items", () => {
 
   it("refuses more than 200 at once", async () => {
     const s = await withPages();
-    const result = await s.call("list_work_items", { scope: "acme/app", limit: 250 });
+    const result = await s.call("list_work_items", { fullPath: "acme/app", limit: 250 });
     expect(result.isError).toBe(true);
   });
 
   it("continues a list from a cursor", async () => {
     const s = await withPages(listPage({ fullPath: "acme/app", ...LIST_DEFAULTS, after: "c2" }, [{ reference: "acme/app#151" }]));
-    const result = await s.call("list_work_items", { scope: "acme/app", after: "c2" });
+    const result = await s.call("list_work_items", { fullPath: "acme/app", after: "c2" });
     expect(result.data).toMatchObject({ items: [expect.objectContaining({ reference: "acme/app#151" })], hasMore: false, endCursor: null });
   });
 
   it("says when the project or group can't be found", async () => {
     const s = await withPages({ operationName: "ListWorkItems", variables: { fullPath: "nope", ...LIST_DEFAULTS }, response: { body: { data: { namespace: null } } } });
-    const result = await s.call("list_work_items", { scope: "nope" });
+    const result = await s.call("list_work_items", { fullPath: "nope" });
     expect(result.isError).toBe(true);
     expect(result.text).toMatch(/nope.*not found, or your token can't see it/);
   });

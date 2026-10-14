@@ -2,19 +2,29 @@ import { createRequire as __cr } from 'node:module'; const require = __cr(import
 
 // src/hook/write-guard.ts
 import { readFileSync } from "node:fs";
-var PREFIX = "mcp__plugin_gitlab-work-items_gitlab__";
-var WRITE_TOOLS = /* @__PURE__ */ new Set(["apply_writes"]);
-var READ_TOOLS = /* @__PURE__ */ new Set(["status", "fetch_work_item", "list_work_items", "my_work_items", "prepare_writes"]);
+
+// src/tool-names.ts
+var TOOL_PREFIX = "mcp__plugin_gitlab-work-items_gitlab__";
+var TOOLS = {
+  status: "read",
+  fetch_work_item: "read",
+  list_work_items: "read",
+  my_work_items: "read",
+  prepare_writes: "read",
+  apply_writes: "write"
+};
+
+// src/hook/write-guard.ts
 function decide(toolName) {
-  if (!toolName.startsWith(PREFIX)) return void 0;
-  const tool = toolName.slice(PREFIX.length);
-  if (WRITE_TOOLS.has(tool)) {
+  if (!toolName.startsWith(TOOL_PREFIX)) return void 0;
+  const kind = TOOLS[toolName.slice(TOOL_PREFIX.length)];
+  if (kind === "write") {
     return {
       permissionDecision: "ask",
       permissionDecisionReason: "This sends the previewed Writes to GitLab. Only approve it if you've reviewed the preview."
     };
   }
-  if (READ_TOOLS.has(tool)) {
+  if (kind === "read") {
     return { permissionDecision: "allow", permissionDecisionReason: "Reading from GitLab changes nothing." };
   }
   return void 0;
@@ -28,6 +38,3 @@ var decision = typeof input.tool_name === "string" ? decide(input.tool_name) : v
 if (decision) {
   process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: "PreToolUse", ...decision } }));
 }
-export {
-  PREFIX
-};

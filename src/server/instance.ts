@@ -1,8 +1,6 @@
 // What the configured Instance is: GitLab version, edition, and who the token signs in as.
-import { GitLabError, MINIMUM_GLAB, glabMeetsMinimum, type Gateway } from "./gateway.js";
-
-export const MINIMUM_GITLAB = [18, 1] as const;
-export const MINIMUM_GITLAB_TEXT = "18.1";
+import { GitLabError, type Gateway } from "./gateway.js";
+import { MINIMUM_GITLAB, MINIMUM_GLAB, atLeast } from "./versions.js";
 
 export interface InstanceInfo {
   version: string;
@@ -17,11 +15,6 @@ const PROBE = /* GraphQL */ `
     currentUser { username }
   }
 `;
-
-export function meetsMinimum(version: string): boolean {
-  const [major = 0, minor = 0] = version.split(/[.-]/).map((part) => Number.parseInt(part, 10));
-  return major > MINIMUM_GITLAB[0] || (major === MINIMUM_GITLAB[0] && minor >= MINIMUM_GITLAB[1]);
-}
 
 export class Instance {
   private info: Promise<InstanceInfo> | undefined;
@@ -41,7 +34,7 @@ export class Instance {
         version: data.metadata.version,
         enterprise: Boolean(data.metadata.enterprise),
         username: data.currentUser.username,
-        meetsMinimumVersion: meetsMinimum(data.metadata.version),
+        meetsMinimumVersion: atLeast(data.metadata.version, MINIMUM_GITLAB),
       };
     });
     return this.info;
@@ -52,7 +45,7 @@ export class Instance {
   /** Throws unless glab and the Instance are new enough; every tool but `status` calls this first. */
   async requireSupported(): Promise<InstanceInfo> {
     this.glabChecked ??= this.gateway.glabVersion().then((version) => {
-      if (!glabMeetsMinimum(version)) {
+      if (!atLeast(version, MINIMUM_GLAB)) {
         throw new GitLabError(`glab ${version} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`, "not-set-up");
       }
     });
@@ -60,7 +53,7 @@ export class Instance {
     const info = await this.probe();
     if (!info.meetsMinimumVersion) {
       throw new GitLabError(
-        `This Instance runs GitLab ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB_TEXT} or later.`,
+        `This Instance runs GitLab ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`,
         "not-set-up",
       );
     }
