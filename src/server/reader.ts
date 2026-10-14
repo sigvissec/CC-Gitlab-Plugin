@@ -210,6 +210,8 @@ export interface ResolvedRef {
 export class Reader {
   /** When each Work Item was last updated, as of the version Claude was last shown. */
   private readonly seen = new Map<string, string>();
+  /** How many Comments each Thread had in the version Claude was last shown. */
+  private readonly seenThreads = new Map<string, number>();
 
   constructor(
     private readonly config: Config,
@@ -230,6 +232,12 @@ export class Reader {
   /** Records the version of a Work Item that Claude has now seen. */
   remember(item: WorkItem): void {
     this.seen.set(item.id, item.updatedAt);
+    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.comments.length);
+  }
+
+  /** How many Comments a Thread had when Claude last saw it, if it has. */
+  seenThreadSize(threadId: string): number | undefined {
+    return this.seenThreads.get(threadId);
   }
 
   /** The `updatedAt` of the version Claude last saw, if any. */

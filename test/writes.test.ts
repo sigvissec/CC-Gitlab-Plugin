@@ -302,3 +302,50 @@ describe("an Edit", () => {
     expect(prepared.text).toMatch(/can't change its parent, or change its Linked Items/);
   });
 });
+
+describe("a plan", () => {
+  it("lets the user drop Writes before applying; the rest still apply, and dropped ones aren't sent", async () => {
+    const one = fetchWorkItem({ iid: "12", labels: [] });
+    const two = fetchWorkItem({ iid: "13", id: 1013, labels: [] });
+    const s = await withGitLab([
+      one, lookupLabel("acme/app", "p1", 9), two, lookupLabel("acme/app", "p1", 9),
+      two, mutation("UpdateWorkItem", { id: "gid://gitlab/WorkItem/1013", labelsWidget: { addLabelIds: ["gid://gitlab/ProjectLabel/9"], removeLabelIds: [] } }, { workItem: { id: "x" } }),
+      fetchWorkItem({ iid: "13", id: 1013, labels: ["p1"], updatedAt: "2026-10-02T08:00:00Z" }),
+    ], { elicit: () => ({ action: "accept", content: { confirm: true } }) });
+    const prepared = await s.call("prepare_writes", {
+      writes: [
+        { kind: "edit", reference: "acme/app#12", addLabels: ["p1"] },
+        { kind: "edit", reference: "acme/app#13", addLabels: ["p1"] },
+      ],
+    });
+
+    const applied = await s.call("apply_writes", { planId: prepared.data.planId, drop: [1] });
+
+    expect(s.elicitations[0]!.message).not.toContain("acme/app#12");
+    expect(s.elicitations[0]!.message).toMatch(/^2\. Edit acme\/app#13/m);
+    expect(applied.data.results).toEqual([
+      expect.objectContaining({ index: 1, outcome: "not applied", detail: expect.stringMatching(/dropped/i) }),
+      expect.objectContaining({ index: 2, outcome: "done" }),
+    ]);
+  });
+
+  it("holds at most 20 Writes", async () => {
+    const s = await withGitLab([]);
+    const writes = Array.from({ length: 21 }, (_, i) => ({ kind: "comment", reference: `acme/app#${i + 1}`, body: "x" }));
+    const prepared = await s.call("prepare_writes", { writes });
+    expect(prepared.isError).toBe(true);
+    expect(prepared.text).toMatch(/at most 20.*Split/);
+  });
+
+  it("can only be applied once", async () => {
+    const s = await withGitLab([fetchWorkItem(), mutation("CreateNote", { noteableId: ID, body: "Hi\n\n_Posted with Claude Code_", internal: false }, { note: { id: "n" } })]);
+    const prepared = await s.call("prepare_writes", { writes: [{ kind: "comment", reference: "acme/app#12", body: "Hi" }] });
+    await s.call("apply_writes", { planId: prepared.data.planId });
+
+    const again = await s.call("apply_writes", { planId: prepared.data.planId });
+
+    expect(again.isError).toBe(true);
+    expect(again.text).toMatch(/no prepared plan/);
+    expect(s.glabCalls().filter((c) => c.body?.operationName === "CreateNote")).toHaveLength(1);
+  });
+});

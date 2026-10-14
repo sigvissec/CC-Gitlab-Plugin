@@ -299,3 +299,11 @@ export function mutation(operationName: string, input: Record<string, unknown>, 
   }[operationName]!;
   return { operationName, variables: { input }, response: { body: { data: { [field]: { ...payload, errors } } } } };
 }
+
+export function projectPermissions(fullPath: string, createWorkItem = true): Interaction {
+  return {
+    operationName: "CheckProject",
+    variables: { fullPath },
+    response: { body: { data: { project: { id: "gid://gitlab/Project/1", userPermissions: { createWorkItem } } } } },
+  };
+}

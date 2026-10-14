@@ -20,7 +20,7 @@ const gateway = new Gateway(config);
 const instance = new Instance(gateway);
 const reader = new Reader(config, gateway, instance);
 const lists = new Lists(gateway, instance);
-const writes = new Writes(config, gateway, reader, new Lookups(gateway));
+const writes = new Writes(config, gateway, instance, reader, new Lookups(gateway));
 
 const FILTER_SCHEMA = {
   state: z.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
@@ -137,6 +137,38 @@ const WRITE_SCHEMA = z.discriminatedUnion("kind", [
       .describe("blocks and is_blocked_by need GitLab Premium"),
     removeLinks: z.array(z.string()).optional().describe("References of Linked Items to unlink"),
   }),
+  z.object({
+    kind: z.literal("comment"),
+    reference: z.string().describe("Work Item URL or full reference"),
+    body: z.string().min(1).describe("The Comment, in Markdown"),
+    internal: z.boolean().optional().describe("Internal Comment; public unless the user asks"),
+    startThread: z.boolean().optional().describe("Start a resolvable Thread instead of a plain Comment; only when the user asks"),
+  }),
+  z.object({
+    kind: z.literal("reply"),
+    reference: z.string().describe("A Comment link, or the Work Item's Reference together with thread"),
+    thread: z.string().optional().describe("The Thread's ID from a Fetch"),
+    body: z.string().min(1).describe("The reply, in Markdown"),
+  }),
+  z.object({
+    kind: z.literal("create"),
+    type: z.enum(["Issue", "Task"]),
+    project: z.string().optional().describe("For an Issue: the project's full path"),
+    parent: z.string().optional().describe("For a Task: the parent Issue's Reference"),
+    title: z.string().min(1),
+    description: z.string().optional(),
+    labels: z.array(z.string()).optional(),
+    assignees: z.array(z.string()).optional(),
+    milestone: z.string().optional(),
+    dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    weight: z.number().int().min(0).optional(),
+    confidential: z.boolean().optional().describe("Only when the user asks"),
+  }),
+  z.object({
+    kind: z.literal("resolve"),
+    reference: z.string().describe("A Comment link, or the Work Item's Reference together with thread"),
+    thread: z.string().optional().describe("The Thread's ID from a Fetch"),
+  }),
 ]);
 
 server.registerTool(
@@ -157,12 +189,16 @@ server.registerTool(
   "apply_writes",
   {
     title: "Apply prepared GitLab Writes",
-    description: "Applies a plan from prepare_writes after the user confirms it. The only tool that changes GitLab.",
-    inputSchema: { planId: z.string() },
+    description:
+      "Applies a plan from prepare_writes after the user confirms it. The only tool that changes GitLab. To leave out Writes the user dropped, list their numbers from the preview in drop.",
+    inputSchema: {
+      planId: z.string(),
+      drop: z.array(z.number().int().min(1)).optional().describe("Preview numbers of Writes the user dropped"),
+    },
     annotations: { destructiveHint: true },
   },
-  guarded(async ({ planId }) => {
-    const { results, report } = await writes.apply(planId, confirmWithUser);
+  guarded(async ({ planId, drop }) => {
+    const { results, report } = await writes.apply(planId, confirmWithUser, drop);
     return answer(report, { results });
   }),
 );

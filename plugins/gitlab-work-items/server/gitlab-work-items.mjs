@@ -36947,6 +36947,8 @@ var Reader = class {
   instance;
   /** When each Work Item was last updated, as of the version Claude was last shown. */
   seen = /* @__PURE__ */ new Map();
+  /** How many Comments each Thread had in the version Claude was last shown. */
+  seenThreads = /* @__PURE__ */ new Map();
   missing(ref) {
     return new GitLabError(`${fullReference(ref)} on ${this.config.baseUrl}: not found, or your token can't see it.`, "not-found");
   }
@@ -36958,6 +36960,11 @@ var Reader = class {
   /** Records the version of a Work Item that Claude has now seen. */
   remember(item) {
     this.seen.set(item.id, item.updatedAt);
+    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.comments.length);
+  }
+  /** How many Comments a Thread had when Claude last saw it, if it has. */
+  seenThreadSize(threadId) {
+    return this.seenThreads.get(threadId);
   }
   /** The `updatedAt` of the version Claude last saw, if any. */
   seenVersion(id) {
@@ -37090,6 +37097,7 @@ function lineDiff(before, after) {
 
 // src/server/writes.ts
 var MAX_WRITES = 20;
+var FOOTER = "_Posted with Claude Code_";
 var ADD_LINKS = (
   /* GraphQL */
   `
@@ -37105,6 +37113,41 @@ mutation RemoveLinkedItems($input: WorkItemRemoveLinkedItemsInput!) {
 }`
 );
 var LINK_TYPES = { relates_to: "RELATED", blocks: "BLOCKS", is_blocked_by: "BLOCKED_BY" };
+var CREATE_NOTE = (
+  /* GraphQL */
+  `
+mutation CreateNote($input: CreateNoteInput!) {
+  createNote(input: $input) { note { id url } errors }
+}`
+);
+var CREATE_DISCUSSION = (
+  /* GraphQL */
+  `
+mutation CreateDiscussion($input: CreateDiscussionInput!) {
+  createDiscussion(input: $input) { note { id url } errors }
+}`
+);
+var RESOLVE_THREAD = (
+  /* GraphQL */
+  `
+mutation ResolveThread($input: DiscussionToggleResolveInput!) {
+  discussionToggleResolve(input: $input) { discussion { id resolved } errors }
+}`
+);
+var CREATE = (
+  /* GraphQL */
+  `
+mutation CreateWorkItem($input: WorkItemCreateInput!) {
+  workItemCreate(input: $input) { workItem { id reference(full: true) webUrl } errors }
+}`
+);
+var CHECK_PROJECT = (
+  /* GraphQL */
+  `
+query CheckProject($fullPath: ID!) {
+  project(fullPath: $fullPath) { id userPermissions { createWorkItem } }
+}`
+);
 var UPDATE = (
   /* GraphQL */
   `
@@ -37114,14 +37157,16 @@ mutation UpdateWorkItem($input: WorkItemUpdateInput!) {
 );
 var list = (values) => values.length ? values.join(", ") : "none";
 var Writes = class {
-  constructor(config3, gateway2, reader2, lookups) {
+  constructor(config3, gateway2, instance2, reader2, lookups) {
     this.config = config3;
     this.gateway = gateway2;
+    this.instance = instance2;
     this.reader = reader2;
     this.lookups = lookups;
   }
   config;
   gateway;
+  instance;
   reader;
   lookups;
   plans = /* @__PURE__ */ new Map();
@@ -37131,10 +37176,170 @@ var Writes = class {
       throw refused(`That's ${requests.length} Writes; one preview holds at most ${MAX_WRITES}. Split them into smaller batches.`);
     }
     const writes2 = [];
-    for (const request of requests) writes2.push(await this.planEdit(request));
+    for (const [i, request] of requests.entries()) writes2.push({ ...await this.plan(request), number: i + 1 });
     const plan = { id: randomUUID(), writes: writes2 };
     this.plans.set(plan.id, plan);
     return { plan, preview: renderPreview(plan) };
+  }
+  plan(request) {
+    switch (request.kind) {
+      case "edit":
+        return this.planEdit(request);
+      case "comment":
+        return this.planComment(request);
+      case "reply":
+      case "resolve":
+        return this.planThread(request);
+      case "create":
+        return this.planCreate(request);
+    }
+  }
+  async planCreate(request) {
+    let fullPath;
+    let parent;
+    if (request.type === "Task") {
+      if (!request.parent) throw refused("A Task needs a parent Issue: pass its Reference as parent.");
+      parent = await this.reader.fetch(parseReference(request.parent, this.config));
+      if (parent.type !== "Issue") throw refused(`${parent.reference} is a ${parent.type}; a Task's parent must be an Issue.`);
+      if (!parent.permissions.adminParentLink) throw refused(`Your token can't add Tasks under ${parent.reference}. Nothing was prepared.`);
+      fullPath = parent.fullPath;
+    } else {
+      if (!request.project) throw refused("An Issue needs a project: pass its full path as project, for example acme/app.");
+      if (request.parent) throw refused("An Issue's parent would be an Epic, and Epics aren't supported.");
+      await this.instance.requireSupported();
+      const data = await this.gateway.graphql("CheckProject", CHECK_PROJECT, { fullPath: request.project });
+      if (!data?.project) throw new GitLabError(`${request.project}: not found, or your token can't see it.`, "not-found");
+      if (!data.project.userPermissions?.createWorkItem) throw refused(`Your token can't create Work Items in ${request.project}. Nothing was prepared.`);
+      fullPath = request.project;
+    }
+    if (request.weight !== void 0 && !(await this.instance.probe()).enterprise) {
+      throw refused("Weight isn't available: it needs GitLab EE on Premium or above. Nothing was prepared.");
+    }
+    const description = request.description ? this.withFooter(request.description) : this.config.footer ? FOOTER : void 0;
+    const confidential = request.confidential === true;
+    const input2 = {
+      namespacePath: fullPath,
+      workItemTypeId: await this.lookups.typeId(fullPath, request.type),
+      title: request.title,
+      confidential
+    };
+    const expect = { title: request.title };
+    const preview = [
+      request.type === "Task" ? `Create a Task under ${parent.reference} (${parent.url})` : `Create an Issue in ${fullPath}`,
+      `  title: ${request.title}`
+    ];
+    if (description !== void 0) {
+      input2.descriptionWidget = { description };
+      expect.description = description;
+      preview.push("  description:", ...quote(description));
+    }
+    if (request.labels?.length) {
+      input2.labelsWidget = { labelIds: await Promise.all(request.labels.map((t) => this.lookups.labelId(fullPath, t))) };
+      expect.labelsInclude = request.labels;
+      preview.push(`  labels: ${list(request.labels)}`);
+    }
+    if (request.assignees?.length) {
+      input2.assigneesWidget = { assigneeIds: await this.lookups.userIds(request.assignees) };
+      expect.assignees = request.assignees;
+      preview.push(`  assignees: ${list(request.assignees)}`);
+    }
+    if (request.milestone) {
+      input2.milestoneWidget = { milestoneId: await this.lookups.milestoneId(fullPath, request.milestone) };
+      expect.milestone = request.milestone;
+      preview.push(`  milestone: ${request.milestone}`);
+    }
+    if (request.dueDate) {
+      input2.startAndDueDateWidget = { dueDate: request.dueDate };
+      expect.dueDate = request.dueDate;
+      preview.push(`  due date: ${request.dueDate}`);
+    }
+    if (request.weight !== void 0) {
+      input2.weightWidget = { weight: request.weight };
+      expect.weight = request.weight;
+      preview.push(`  weight: ${request.weight}`);
+    }
+    if (parent) {
+      input2.hierarchyWidget = { parentId: parent.id };
+      expect.parent = parent.reference;
+    }
+    preview.push(`  confidential: ${confidential ? "yes" : "no"}`);
+    return {
+      summary: request.type === "Task" ? `Create a Task under ${parent.reference}` : `Create an Issue in ${fullPath}`,
+      preview,
+      target: { ref: { fullPath, iid: "" }, id: "", reference: "", updatedAt: "" },
+      creates: true,
+      guard: { kind: "none" },
+      steps: [{ operationName: "CreateWorkItem", query: CREATE, input: input2, field: "workItemCreate" }],
+      expect
+    };
+  }
+  withFooter(body) {
+    return this.config.footer ? `${body}
+
+${FOOTER}` : body;
+  }
+  async planComment(request) {
+    const ref = parseReference(request.reference, this.config);
+    const item = await this.reader.fetch(ref);
+    if (!item.permissions.createNote) throw refused(`On ${item.reference}, your token can't post Comments. Nothing was prepared.`);
+    const internal = request.internal === true;
+    if (internal && !item.permissions.markNoteAsInternal) {
+      throw refused(
+        `Your role on ${item.reference} can't post internal Comments (that needs Reporter or higher). Ask the user whether to post it publicly instead, or cancel. Nothing was prepared.`
+      );
+    }
+    const body = this.withFooter(request.body);
+    const what = request.startThread ? "New Thread" : "Comment";
+    return {
+      summary: `${what} on ${item.reference}`,
+      preview: [`${what} on ${item.reference} (${internal ? "internal" : "public"}) ${item.url}`, ...quote(body)],
+      target: targetOf(ref, item),
+      guard: { kind: "none" },
+      steps: [
+        request.startThread ? { operationName: "CreateDiscussion", query: CREATE_DISCUSSION, input: { noteableId: item.id, body, internal }, field: "createDiscussion" } : { operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, body, internal }, field: "createNote" }
+      ],
+      expect: {}
+    };
+  }
+  async planThread(request) {
+    const ref = parseReference(request.reference, this.config);
+    const item = await this.reader.fetch(ref);
+    const thread = findThread(item, request.thread, ref.noteId);
+    const first = thread.comments[0];
+    const internal = Boolean(first?.internal);
+    const comments = this.reader.seenThreadSize(thread.id) ?? thread.comments.length;
+    if (thread.comments.length !== comments) {
+      throw refused(
+        `That Thread on ${item.reference} has new Comments since you fetched it. Fetch ${item.reference} again and show the user the new Comments first. Nothing was prepared.`
+      );
+    }
+    const guard = { kind: "thread", threadId: thread.id, comments };
+    const replies = thread.comments.length - 1;
+    const about = `"${excerpt(first?.body ?? "")}" by ${first?.author ?? "unknown"}, ${replies} repl${replies === 1 ? "y" : "ies"}`;
+    if (request.kind === "reply") {
+      if (!request.body) throw refused("A reply needs a body.");
+      if (!item.permissions.createNote) throw refused(`On ${item.reference}, your token can't post Comments. Nothing was prepared.`);
+      const body = this.withFooter(request.body);
+      return {
+        summary: `Reply on ${item.reference}`,
+        preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) in the Thread ${about}`, ...quote(body)],
+        target: targetOf(ref, item),
+        guard,
+        steps: [{ operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, discussionId: thread.replyId, body }, field: "createNote" }],
+        expect: {}
+      };
+    }
+    if (!thread.resolvable) throw refused(`That's a plain Comment on ${item.reference}, not a Thread, so it can't be resolved.`);
+    if (thread.resolved) throw refused(`That Thread on ${item.reference} is already resolved.`);
+    if (!thread.canResolve) throw refused(`On ${item.reference}, your token can't resolve that Thread. Nothing was prepared.`);
+    return {
+      summary: `Resolve a Thread on ${item.reference}`,
+      preview: [`Resolve the Thread on ${item.reference}: ${about}`],
+      target: targetOf(ref, item),
+      guard,
+      steps: [{ operationName: "ResolveThread", query: RESOLVE_THREAD, input: { id: thread.id, resolve: true }, field: "discussionToggleResolve" }],
+      expect: {}
+    };
   }
   async planEdit(request) {
     const ref = parseReference(request.reference, this.config);
@@ -37224,13 +37429,7 @@ var Writes = class {
       steps.push({ operationName: "RemoveLinkedItems", query: REMOVE_LINKS, input: { id: item.id, workItemsIds: unlink }, field: "workItemRemoveLinkedItems" });
     }
     if (steps.length === 0) throw refused(`The Edit to ${item.reference} doesn't change anything.`);
-    return {
-      summary: `Edit ${item.reference}`,
-      preview,
-      target: { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt },
-      steps,
-      expect
-    };
+    return { summary: `Edit ${item.reference}`, preview, target: targetOf(ref, item), guard: { kind: "version" }, steps, expect };
   }
   /** Fetches a Work Item for a Write, refusing if it changed since Claude last saw it. */
   async current(ref) {
@@ -37248,58 +37447,88 @@ var Writes = class {
     }
     return item;
   }
-  async apply(planId, confirm) {
-    const plan = this.plans.get(planId);
-    if (!plan) throw refused("There's no prepared plan with that ID. Prepare the Writes again.");
+  async apply(planId, confirm, drop = []) {
+    const stored = this.plans.get(planId);
+    if (!stored) throw refused("There's no prepared plan with that ID. Prepare the Writes again.");
     this.plans.delete(planId);
+    const dropped = new Set(drop);
+    const plan = { id: stored.id, writes: stored.writes.filter((_, i) => !dropped.has(i + 1)) };
+    const droppedResults = stored.writes.map((w, i) => ({ w, index: i + 1 })).filter(({ index }) => dropped.has(index)).map(({ w, index }) => ({ index, summary: w.summary, outcome: "not applied", didNotStick: [], detail: "Dropped by the user before applying." }));
+    if (plan.writes.length === 0) {
+      return { results: droppedResults, report: renderReport(droppedResults) };
+    }
+    const originalIndex = (i) => plan.writes[i].number;
     const confirmed = await confirm(`${renderPreview(plan)}
 
 Apply ${plan.writes.length === 1 ? "this Write" : `these ${plan.writes.length} Writes`} to GitLab?`);
     if (confirmed === false) {
       const results2 = plan.writes.map((w, i) => ({
-        index: i + 1,
+        index: originalIndex(i),
         summary: w.summary,
         outcome: "not applied",
         didNotStick: [],
         detail: "The user didn't confirm, so nothing was sent."
       }));
-      return { results: results2, report: `The user didn't confirm the plan, so nothing was sent to GitLab.
-${renderReport(results2)}` };
+      const all2 = byIndex([...results2, ...droppedResults]);
+      return { results: all2, report: `The user didn't confirm the plan, so nothing was sent to GitLab.
+${renderReport(all2)}` };
     }
     const results = [];
     const expected = /* @__PURE__ */ new Map();
     let stopped = false;
     for (const [i, write] of plan.writes.entries()) {
-      const index = i + 1;
+      const index = originalIndex(i);
       if (stopped) {
         results.push({ index, summary: write.summary, outcome: "not applied", didNotStick: [] });
         continue;
       }
       try {
-        const now = await this.reader.fetch(write.target.ref);
-        if (now.updatedAt !== (expected.get(write.target.id) ?? write.target.updatedAt)) {
+        const changed = await this.changedSincePreview(write, expected);
+        if (changed) {
           stopped = true;
-          results.push({
-            index,
-            summary: write.summary,
-            outcome: "not applied",
-            didNotStick: [],
-            detail: `${write.target.reference} changed in GitLab since it was fetched (updated ${now.updatedAt}). Nothing was written to it; fetch it again and prepare a new plan.`
-          });
+          results.push({ index, summary: write.summary, outcome: "not applied", didNotStick: [], detail: changed });
           continue;
         }
-        for (const step of write.steps) await this.run(step);
-        const after = await this.reader.fetch(write.target.ref);
+        let created;
+        for (const step of write.steps) {
+          const payload = await this.run(step);
+          if (write.creates) created = payload?.workItem;
+        }
+        const ref = created ? parseReference(created.reference, this.config) : write.target.ref;
+        const after = await this.reader.fetch(ref);
         this.reader.remember(after);
-        expected.set(write.target.id, after.updatedAt);
-        results.push({ index, summary: write.summary, outcome: "done", didNotStick: didNotStick(write.expect, after) });
+        expected.set(after.id, after.updatedAt);
+        results.push({
+          index,
+          summary: write.summary,
+          outcome: "done",
+          didNotStick: didNotStick(write.expect, after),
+          ...created ? { created: after.reference, url: after.url } : {}
+        });
       } catch (error62) {
         if (!(error62 instanceof GitLabError)) throw error62;
         stopped = true;
         results.push({ index, summary: write.summary, outcome: "failed", didNotStick: [], detail: error62.message });
       }
     }
-    return { results, report: renderReport(results) };
+    const all = byIndex([...results, ...droppedResults]);
+    return { results: all, report: renderReport(all) };
+  }
+  /** Why a Write mustn't be sent now, or undefined when it may. */
+  async changedSincePreview(write, expected) {
+    const { guard, target } = write;
+    if (guard.kind === "none") return void 0;
+    const now = await this.reader.fetch(target.ref);
+    if (guard.kind === "version" && now.updatedAt !== (expected.get(target.id) ?? target.updatedAt)) {
+      return `${target.reference} changed in GitLab since it was fetched (updated ${now.updatedAt}). Nothing was written to it; fetch it again and prepare a new plan.`;
+    }
+    if (guard.kind === "thread") {
+      const thread = now.threads.find((t) => t.id === guard.threadId);
+      if (!thread || thread.comments.length !== guard.comments) {
+        return `The Thread on ${target.reference} has new Comments since it was fetched. Nothing was written; fetch it again and show the user the new Comments first.`;
+      }
+    }
+    return void 0;
   }
   async run(step) {
     const data = await this.gateway.graphql(step.operationName, step.query, { input: step.input });
@@ -37323,6 +37552,29 @@ function requirePermissions(item, request) {
   );
   const denied = needs.filter(([wanted, permission]) => wanted && !item.permissions[permission]).map(([, , what]) => what);
   if (denied.length) throw refused(`On ${item.reference}, your token can't ${denied.join(", or ")}. Nothing was prepared.`);
+}
+function byIndex(results) {
+  return [...results].sort((a, b) => a.index - b.index);
+}
+function targetOf(ref, item) {
+  return { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt };
+}
+function quote(body) {
+  return body.split("\n").map((line) => `  > ${line}`);
+}
+function excerpt(body, length = 80) {
+  const line = body.replace(/\s+/g, " ").trim();
+  return line.length > length ? `${line.slice(0, length - 1)}\u2026` : line;
+}
+function findThread(item, threadId, noteId) {
+  const wanted = threadId && !threadId.startsWith("gid://") ? `gid://gitlab/Discussion/${threadId}` : threadId;
+  const thread = wanted ? item.threads.find((t) => t.id === wanted) : noteId ? item.threads.find((t) => t.comments.some((c) => c.id === `gid://gitlab/Note/${noteId}`)) : void 0;
+  if (!thread) {
+    throw refused(
+      wanted || noteId ? `That Thread isn't on ${item.reference}, or your token can't see it.` : `Say which Thread on ${item.reference}: pass its ID from a Fetch, or use a link to one of its Comments.`
+    );
+  }
+  return thread;
 }
 function stateLines(item) {
   return [
@@ -37363,14 +37615,14 @@ function didNotStick(expect, after) {
 }
 function renderPreview(plan) {
   const lines = [`Plan ${plan.id}: ${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}. Nothing has been sent yet.`];
-  for (const [i, write] of plan.writes.entries()) {
-    lines.push(`${i + 1}. ${write.preview[0]}`, ...write.preview.slice(1));
+  for (const write of plan.writes) {
+    lines.push(`${write.number}. ${write.preview[0]}`, ...write.preview.slice(1));
   }
   return lines.join("\n");
 }
 function renderReport(results) {
   return results.map((r) => {
-    const head = `${r.index}. ${r.summary}: ${r.outcome}`;
+    const head = `${r.index}. ${r.summary}: ${r.outcome}${r.created ? `, created ${r.created} ${r.url}` : ""}`;
     const notes = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
     return [head, ...notes].join("\n");
   }).join("\n");
@@ -37648,7 +37900,7 @@ var gateway = new Gateway(config2);
 var instance = new Instance(gateway);
 var reader = new Reader(config2, gateway, instance);
 var lists = new Lists(gateway, instance);
-var writes = new Writes(config2, gateway, reader, new Lookups(gateway));
+var writes = new Writes(config2, gateway, instance, reader, new Lookups(gateway));
 var FILTER_SCHEMA = {
   state: external_exports.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
   types: external_exports.array(external_exports.enum(["Issue", "Task"])).optional().describe("Default: both"),
@@ -37748,6 +38000,38 @@ var WRITE_SCHEMA = external_exports.discriminatedUnion("kind", [
     parent: external_exports.string().nullable().optional().describe("The parent's Reference (a Task's parent Issue), or null to remove it"),
     addLinks: external_exports.array(external_exports.object({ reference: external_exports.string(), linkType: external_exports.enum(["relates_to", "blocks", "is_blocked_by"]) })).optional().describe("blocks and is_blocked_by need GitLab Premium"),
     removeLinks: external_exports.array(external_exports.string()).optional().describe("References of Linked Items to unlink")
+  }),
+  external_exports.object({
+    kind: external_exports.literal("comment"),
+    reference: external_exports.string().describe("Work Item URL or full reference"),
+    body: external_exports.string().min(1).describe("The Comment, in Markdown"),
+    internal: external_exports.boolean().optional().describe("Internal Comment; public unless the user asks"),
+    startThread: external_exports.boolean().optional().describe("Start a resolvable Thread instead of a plain Comment; only when the user asks")
+  }),
+  external_exports.object({
+    kind: external_exports.literal("reply"),
+    reference: external_exports.string().describe("A Comment link, or the Work Item's Reference together with thread"),
+    thread: external_exports.string().optional().describe("The Thread's ID from a Fetch"),
+    body: external_exports.string().min(1).describe("The reply, in Markdown")
+  }),
+  external_exports.object({
+    kind: external_exports.literal("create"),
+    type: external_exports.enum(["Issue", "Task"]),
+    project: external_exports.string().optional().describe("For an Issue: the project's full path"),
+    parent: external_exports.string().optional().describe("For a Task: the parent Issue's Reference"),
+    title: external_exports.string().min(1),
+    description: external_exports.string().optional(),
+    labels: external_exports.array(external_exports.string()).optional(),
+    assignees: external_exports.array(external_exports.string()).optional(),
+    milestone: external_exports.string().optional(),
+    dueDate: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    weight: external_exports.number().int().min(0).optional(),
+    confidential: external_exports.boolean().optional().describe("Only when the user asks")
+  }),
+  external_exports.object({
+    kind: external_exports.literal("resolve"),
+    reference: external_exports.string().describe("A Comment link, or the Work Item's Reference together with thread"),
+    thread: external_exports.string().optional().describe("The Thread's ID from a Fetch")
   })
 ]);
 server.registerTool(
@@ -37767,12 +38051,15 @@ server.registerTool(
   "apply_writes",
   {
     title: "Apply prepared GitLab Writes",
-    description: "Applies a plan from prepare_writes after the user confirms it. The only tool that changes GitLab.",
-    inputSchema: { planId: external_exports.string() },
+    description: "Applies a plan from prepare_writes after the user confirms it. The only tool that changes GitLab. To leave out Writes the user dropped, list their numbers from the preview in drop.",
+    inputSchema: {
+      planId: external_exports.string(),
+      drop: external_exports.array(external_exports.number().int().min(1)).optional().describe("Preview numbers of Writes the user dropped")
+    },
     annotations: { destructiveHint: true }
   },
-  guarded(async ({ planId }) => {
-    const { results, report } = await writes.apply(planId, confirmWithUser);
+  guarded(async ({ planId, drop }) => {
+    const { results, report } = await writes.apply(planId, confirmWithUser, drop);
     return answer(report, { results });
   })
 );
