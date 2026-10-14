@@ -1,0 +1,20 @@
+{
+ "label": "ee-18.1",
+ "url": "http://localhost:8929",
+ "version": "18.1.6-ee",
+ "edition": "EE",
+ "project": "acme/app",
+ "group": "acme",
+ "issue": "acme/app#1",
+ "task": "acme/app#2",
+ "related": "acme/app#3",
+ "plain": "acme/app#4",
+ "mergeRequest": "acme/app!1",
+ "mentioningMergeRequest": "acme/app!2",
+ "milestone": "18.2",
+ "threadNoteUrl": "http://localhost:8929/acme/app/-/work_items/1#note_5",
+ "users": [
+  "alice",
+  "bob"
+ ]
+}
