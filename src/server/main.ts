@@ -121,8 +121,21 @@ const WRITE_SCHEMA = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("edit"),
     reference: z.string().describe("Work Item URL or full reference"),
+    title: z.string().optional(),
+    description: z.string().optional().describe("The whole new description"),
     addLabels: z.array(z.string()).optional(),
     removeLabels: z.array(z.string()).optional(),
+    assignees: z.array(z.string()).optional().describe("Usernames; replaces the current assignees"),
+    milestone: z.string().nullable().optional().describe("Milestone title, or null to clear it"),
+    state: z.enum(["close", "reopen"]).optional(),
+    dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().describe("YYYY-MM-DD, or null to clear it"),
+    weight: z.number().int().min(0).nullable().optional().describe("Needs GitLab EE Premium; null clears it"),
+    parent: z.string().nullable().optional().describe("The parent's Reference (a Task's parent Issue), or null to remove it"),
+    addLinks: z
+      .array(z.object({ reference: z.string(), linkType: z.enum(["relates_to", "blocks", "is_blocked_by"]) }))
+      .optional()
+      .describe("blocks and is_blocked_by need GitLab Premium"),
+    removeLinks: z.array(z.string()).optional().describe("References of Linked Items to unlink"),
   }),
 ]);
 

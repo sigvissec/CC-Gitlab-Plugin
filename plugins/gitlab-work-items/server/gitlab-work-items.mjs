@@ -37058,7 +37058,53 @@ var Lookups = class {
 
 // src/server/writes.ts
 import { randomUUID } from "node:crypto";
+
+// src/server/diff.ts
+function lineDiff(before, after) {
+  const a = before.split("\n");
+  const b = after.split("\n");
+  const lcs = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i2 = a.length - 1; i2 >= 0; i2--) {
+    for (let j2 = b.length - 1; j2 >= 0; j2--) {
+      lcs[i2][j2] = a[i2] === b[j2] ? lcs[i2 + 1][j2 + 1] + 1 : Math.max(lcs[i2 + 1][j2], lcs[i2][j2 + 1]);
+    }
+  }
+  const out = [];
+  let i = 0;
+  let j = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      out.push(`  ${a[i]}`);
+      i++;
+      j++;
+    } else if (lcs[i + 1][j] >= lcs[i][j + 1]) {
+      out.push(`- ${a[i++]}`);
+    } else {
+      out.push(`+ ${b[j++]}`);
+    }
+  }
+  while (i < a.length) out.push(`- ${a[i++]}`);
+  while (j < b.length) out.push(`+ ${b[j++]}`);
+  return out;
+}
+
+// src/server/writes.ts
 var MAX_WRITES = 20;
+var ADD_LINKS = (
+  /* GraphQL */
+  `
+mutation AddLinkedItems($input: WorkItemAddLinkedItemsInput!) {
+  workItemAddLinkedItems(input: $input) { workItem { id } errors }
+}`
+);
+var REMOVE_LINKS = (
+  /* GraphQL */
+  `
+mutation RemoveLinkedItems($input: WorkItemRemoveLinkedItemsInput!) {
+  workItemRemoveLinkedItems(input: $input) { workItem { id } errors }
+}`
+);
+var LINK_TYPES = { relates_to: "RELATED", blocks: "BLOCKS", is_blocked_by: "BLOCKED_BY" };
 var UPDATE = (
   /* GraphQL */
   `
@@ -37093,9 +37139,20 @@ var Writes = class {
   async planEdit(request) {
     const ref = parseReference(request.reference, this.config);
     const item = await this.current(ref);
+    requirePermissions(item, request);
     const preview = [`Edit ${item.reference} (${item.url})`];
     const input2 = { id: item.id };
     const expect = {};
+    if (request.title !== void 0 && request.title !== item.title) {
+      preview.push(`  title: ${item.title} \u2192 ${request.title}`);
+      input2.title = request.title;
+      expect.title = request.title;
+    }
+    if (request.description !== void 0 && request.description !== item.description) {
+      preview.push("  description:", ...lineDiff(item.description, request.description).map((line) => `    ${line}`));
+      input2.descriptionWidget = { description: request.description };
+      expect.description = request.description;
+    }
     const add = request.addLabels ?? [];
     const remove = request.removeLabels ?? [];
     if (add.length || remove.length) {
@@ -37109,12 +37166,69 @@ var Writes = class {
       expect.labelsInclude = add;
       expect.labelsExclude = remove;
     }
-    if (Object.keys(input2).length === 1) throw refused(`The Edit to ${item.reference} doesn't change anything.`);
+    if (request.assignees !== void 0) {
+      preview.push(`  assignees: ${list(item.assignees.map((a) => a.username))} \u2192 ${list(request.assignees)}`);
+      input2.assigneesWidget = { assigneeIds: await this.lookups.userIds(request.assignees) };
+      expect.assignees = request.assignees;
+    }
+    if (request.milestone !== void 0) {
+      preview.push(`  milestone: ${item.milestone?.title ?? "none"} \u2192 ${request.milestone ?? "none"}`);
+      input2.milestoneWidget = { milestoneId: request.milestone === null ? null : await this.lookups.milestoneId(ref.fullPath, request.milestone) };
+      expect.milestone = request.milestone;
+    }
+    if (request.state !== void 0) {
+      const target = request.state === "close" ? "closed" : "open";
+      preview.push(`  state: ${item.state} \u2192 ${target}`);
+      input2.stateEvent = request.state === "close" ? "CLOSE" : "REOPEN";
+      expect.state = target;
+    }
+    if (request.dueDate !== void 0) {
+      preview.push(`  due date: ${item.dueDate ?? "none"} \u2192 ${request.dueDate ?? "none"}`);
+      input2.startAndDueDateWidget = { dueDate: request.dueDate };
+      expect.dueDate = request.dueDate;
+    }
+    if (request.weight !== void 0) {
+      if (item.weight === void 0) {
+        throw refused(`On ${item.reference}, weight isn't available: it needs GitLab EE on Premium or above. Nothing was prepared.`);
+      }
+      preview.push(`  weight: ${item.weight ?? "none"} \u2192 ${request.weight ?? "none"}`);
+      input2.weightWidget = { weight: request.weight };
+      expect.weight = request.weight;
+    }
+    if (request.parent !== void 0) {
+      const parent = request.parent === null ? null : await this.reader.resolve(parseReference(request.parent, this.config));
+      preview.push(`  parent: ${item.parent?.reference ?? "none"} \u2192 ${parent?.reference ?? "none"}`);
+      input2.hierarchyWidget = { parentId: parent?.id ?? null };
+      expect.parent = parent?.reference ?? null;
+    }
+    const steps = [];
+    if (Object.keys(input2).length > 1) steps.push({ operationName: "UpdateWorkItem", query: UPDATE, input: input2, field: "workItemUpdate" });
+    const byType = /* @__PURE__ */ new Map();
+    for (const link of request.addLinks ?? []) {
+      const target = await this.reader.resolve(parseReference(link.reference, this.config));
+      preview.push(`  link: ${link.linkType.replaceAll("_", " ")} ${target.reference}`);
+      byType.set(LINK_TYPES[link.linkType], [...byType.get(LINK_TYPES[link.linkType]) ?? [], target.id]);
+      (expect.linksInclude ??= []).push(target.reference);
+    }
+    for (const [linkType, ids] of byType) {
+      steps.push({ operationName: "AddLinkedItems", query: ADD_LINKS, input: { id: item.id, workItemsIds: ids, linkType }, field: "workItemAddLinkedItems" });
+    }
+    const unlink = [];
+    for (const reference of request.removeLinks ?? []) {
+      const target = await this.reader.resolve(parseReference(reference, this.config));
+      preview.push(`  unlink: ${target.reference}`);
+      unlink.push(target.id);
+      (expect.linksExclude ??= []).push(target.reference);
+    }
+    if (unlink.length) {
+      steps.push({ operationName: "RemoveLinkedItems", query: REMOVE_LINKS, input: { id: item.id, workItemsIds: unlink }, field: "workItemRemoveLinkedItems" });
+    }
+    if (steps.length === 0) throw refused(`The Edit to ${item.reference} doesn't change anything.`);
     return {
       summary: `Edit ${item.reference}`,
       preview,
       target: { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt },
-      steps: [{ operationName: "UpdateWorkItem", query: UPDATE, input: input2, field: "workItemUpdate" }],
+      steps,
       expect
     };
   }
@@ -37194,6 +37308,22 @@ ${renderReport(results2)}` };
     return payload;
   }
 };
+function requirePermissions(item, request) {
+  const needs = [
+    [request.title !== void 0 || request.description !== void 0 || request.state !== void 0, "updateWorkItem", "edit its title, description, or state"],
+    [
+      Boolean(request.addLabels?.length || request.removeLabels?.length) || request.assignees !== void 0 || request.milestone !== void 0 || request.dueDate !== void 0 || request.weight !== void 0,
+      "setWorkItemMetadata",
+      "change its labels, assignees, milestone, or dates"
+    ]
+  ];
+  needs.push(
+    [request.parent !== void 0, "adminParentLink", "change its parent"],
+    [Boolean(request.addLinks?.length || request.removeLinks?.length), "adminWorkItemLink", "change its Linked Items"]
+  );
+  const denied = needs.filter(([wanted, permission]) => wanted && !item.permissions[permission]).map(([, , what]) => what);
+  if (denied.length) throw refused(`On ${item.reference}, your token can't ${denied.join(", or ")}. Nothing was prepared.`);
+}
 function stateLines(item) {
   return [
     `  ${item.title} [${item.type}, ${item.state}]`,
@@ -37204,6 +37334,27 @@ function stateLines(item) {
 }
 function didNotStick(expect, after) {
   const problems = [];
+  if (expect.title !== void 0 && after.title !== expect.title) problems.push(`title: GitLab kept "${after.title}"`);
+  if (expect.description !== void 0 && after.description !== expect.description) problems.push("description: GitLab kept a different description");
+  if (expect.assignees !== void 0) {
+    const kept2 = after.assignees.map((a) => a.username);
+    const same = kept2.length === expect.assignees.length && expect.assignees.every((u) => kept2.includes(u));
+    if (!same) problems.push(`assignees: asked for ${list(expect.assignees)}; GitLab kept ${list(kept2)}`);
+  }
+  if (expect.milestone !== void 0 && (after.milestone?.title ?? null) !== expect.milestone) {
+    problems.push(`milestone: GitLab kept ${after.milestone?.title ?? "none"}`);
+  }
+  if (expect.state !== void 0 && after.state !== expect.state) problems.push(`state: GitLab kept ${after.state}`);
+  if (expect.dueDate !== void 0 && after.dueDate !== expect.dueDate) problems.push(`due date: GitLab kept ${after.dueDate ?? "none"}`);
+  if (expect.weight !== void 0 && (after.weight ?? null) !== expect.weight) problems.push(`weight: GitLab kept ${after.weight ?? "none"}`);
+  if (expect.parent !== void 0 && (after.parent?.reference ?? null) !== expect.parent) {
+    problems.push(`parent: GitLab kept ${after.parent?.reference ?? "none"}`);
+  }
+  const linked = after.linkedItems.map((l) => l.reference);
+  const notLinked = (expect.linksInclude ?? []).filter((r) => !linked.includes(r));
+  const stillLinked = (expect.linksExclude ?? []).filter((r) => linked.includes(r));
+  if (notLinked.length) problems.push(`links: not linked to ${list(notLinked)}`);
+  if (stillLinked.length) problems.push(`links: still linked to ${list(stillLinked)}`);
   const labels = after.labels.map((l) => l.title);
   const missing = (expect.labelsInclude ?? []).filter((t) => !labels.includes(t));
   const kept = (expect.labelsExclude ?? []).filter((t) => labels.includes(t));
@@ -37585,8 +37736,18 @@ var WRITE_SCHEMA = external_exports.discriminatedUnion("kind", [
   external_exports.object({
     kind: external_exports.literal("edit"),
     reference: external_exports.string().describe("Work Item URL or full reference"),
+    title: external_exports.string().optional(),
+    description: external_exports.string().optional().describe("The whole new description"),
     addLabels: external_exports.array(external_exports.string()).optional(),
-    removeLabels: external_exports.array(external_exports.string()).optional()
+    removeLabels: external_exports.array(external_exports.string()).optional(),
+    assignees: external_exports.array(external_exports.string()).optional().describe("Usernames; replaces the current assignees"),
+    milestone: external_exports.string().nullable().optional().describe("Milestone title, or null to clear it"),
+    state: external_exports.enum(["close", "reopen"]).optional(),
+    dueDate: external_exports.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional().describe("YYYY-MM-DD, or null to clear it"),
+    weight: external_exports.number().int().min(0).nullable().optional().describe("Needs GitLab EE Premium; null clears it"),
+    parent: external_exports.string().nullable().optional().describe("The parent's Reference (a Task's parent Issue), or null to remove it"),
+    addLinks: external_exports.array(external_exports.object({ reference: external_exports.string(), linkType: external_exports.enum(["relates_to", "blocks", "is_blocked_by"]) })).optional().describe("blocks and is_blocked_by need GitLab Premium"),
+    removeLinks: external_exports.array(external_exports.string()).optional().describe("References of Linked Items to unlink")
   })
 ]);
 server.registerTool(
