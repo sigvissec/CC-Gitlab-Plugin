@@ -4,7 +4,7 @@ Brings GitLab Issues and Tasks into Claude Code. Paste a Work Item's URL or Refe
 
 ## Requirements
 
-- Claude Code on your own machine: the desktop app, the `claude` command in a terminal, or the VS Code or JetBrains extension. Claude Code on the web isn't supported.
+- Claude Code on your own machine: the desktop app (local and SSH sessions; its WSL sessions don't load plugins), the `claude` command in a terminal, or the VS Code or JetBrains extension. Claude Code on the web doesn't load plugins installed on your machine.
 - [`glab`](https://gitlab.com/gitlab-org/cli) 1.123.0 or later, and Node 20 or later, on your `PATH`.
 - GitLab 18.1 or later: gitlab.com or a self-managed Instance, CE or EE, any tier. Weight needs EE on Premium; "blocks" links need Premium.
 
@@ -14,6 +14,8 @@ Brings GitLab Issues and Tasks into Claude Code. Paste a Work Item's URL or Refe
 claude plugin marketplace add sigvissec/CC-Gitlab-Plugin
 claude plugin install gitlab-work-items@gitlab-work-items --config instance_url=https://gitlab.example.com
 ```
+
+`claude plugin install` doesn't prompt for the other options; set them as below, or with `/plugin configure gitlab-work-items@gitlab-work-items` in a session.
 
 Releases pin their version; update deliberately with `claude plugin update gitlab-work-items@gitlab-work-items`.
 
@@ -28,10 +30,10 @@ Pick one:
    glab auth login --hostname example.com --api-host example.com:8080 --api-protocol http
    ```
 
-   The plugin itself always uses the address in its `instance_url` setting.
-2. **A token in the plugin's settings**: open `/plugin`, choose gitlab-work-items, and set the token option, or run `claude plugin configure gitlab-work-items@gitlab-work-items`. It's stored in your system keychain. Use a personal access token with the `api` scope (`read_api` if you only want to read).
+   Sign in to such an Instance with a token (glab asks for one, or pass `--stdin`), not through the browser: glab's browser sign-in always uses https and ignores `--api-host`. The plugin itself always uses the address in its `instance_url` setting.
+2. **A token in the plugin's settings**: run `/plugin configure gitlab-work-items@gitlab-work-items` in a session, or open `/plugin`, choose gitlab-work-items, and set the token option. Claude Code keeps it in the macOS Keychain, or in `~/.claude/.credentials.json` where there's no supported keychain. Use a personal access token with the `api` scope (`read_api` if you only want to read; Writes then fail when sent).
 
-The plugin uses its own setting first, then glab's login for the configured Instance, then `GITLAB_TOKEN`. `GITLAB_TOKEN` works when it reaches the plugin (for example in a terminal session), but on macOS the desktop app doesn't pass on variables exported in your shell profile. Token variables the plugin didn't choose are never passed to glab, so a token meant for another GitLab isn't sent to yours.
+The plugin uses its own setting first, then glab's login for the configured Instance, then `GITLAB_TOKEN`. `GITLAB_TOKEN` works when it reaches the plugin (for example in a terminal session), but on macOS the desktop app doesn't pass on variables exported in your shell profile. Token and other credential variables the plugin didn't choose are never passed to glab, so a token meant for another GitLab, or a CI job token, isn't sent to yours.
 
 Then check everything: `/gitlab-work-items:status acme/app` shows the Instance, token source, versions, and runs read-only probes in that project.
 
@@ -46,13 +48,13 @@ Commands, to drive the plugin directly:
 | `/gitlab-work-items:fetch <reference>` | Fetch one Work Item and show its digest |
 | `/gitlab-work-items:list <what you want>` | A filtered list, described in plain words |
 | `/gitlab-work-items:mine` | Your open Work Items across the Instance |
-| `/gitlab-work-items:comment <reference> <what to say>` | Comment, or reply in a Thread when given a Comment link; quoted text is posted word for word |
+| `/gitlab-work-items:comment <reference> <what to say>` | Comment, or reply in a Thread when given a Comment link; quoted text is posted word for word, except lines GitLab runs as quick actions (such as `/close`), which the preview points out |
 | `/gitlab-work-items:status [project]` | Setup check, plus read-only probes in a project |
 
 ## How Writes stay safe
 
-- Every Write is previewed first: fields as before → after, descriptions as a diff, Comments exactly as they'll appear.
-- Only you can confirm. Where Claude Code supports it, the plugin asks you directly in a dialog; elsewhere Claude Code's approval prompt for applying Writes appears every time, even if you once chose "always allow". Reading never prompts.
+- Every Write is previewed first: fields as before → after, descriptions as a diff, Comments exactly as they'll appear. Lines GitLab would run as quick actions (such as `/close`) are pointed out.
+- Only you can confirm. Claude Code asks you to approve applying Writes every time, even if you once chose "always allow" or use a mode that skips prompts, and the plugin then shows you the full preview in a dialog to confirm. Where no dialog can be shown, as in `claude -p`, nothing is sent. Reading never prompts.
 - Before sending, the plugin checks your token's permissions and that the Work Item (or Thread) hasn't changed since it was fetched. After sending, it re-reads and tells you about anything GitLab didn't keep, such as a second assignee on Free.
 - The plugin never deletes anything. One preview holds at most 20 Writes.
 - Comments are public unless you ask for internal. Comments, replies, and new Work Items carry a "_Posted with Claude Code_" footer; turn it off with the footer option.
@@ -61,8 +63,8 @@ Commands, to drive the plugin directly:
 
 These behaviours couldn't be checked when the plugin was built, so watch for them:
 
-- **Desktop app and IDE extensions:** whether the settings prompt appears after install, whether the confirmation dialog renders (if it doesn't, Claude Code's approval prompt still guards every Write), and whether the plugin finds `glab` and your token when the desktop app is launched from the Dock on macOS.
-- **Premium and your own Instance:** reads were checked against gitlab.com, and every Write runs in CI against throwaway Instances (GitLab 18.1 EE, the newest EE, and the newest CE, all on Free). Premium-only Writes (weight, "blocks" links) haven't run against real GitLab yet. Before relying on Writes, try them on a scratch project on your Instance:
+- **Desktop app and IDE extensions:** whether the confirmation dialog renders there. If it doesn't, nothing is sent.
+- **Premium and your own Instance:** reads were checked against gitlab.com, and every Write runs in CI against throwaway Instances (GitLab 18.1 and the newest release, each as EE and CE, all on Free). Premium-only Writes (weight, "blocks" links) haven't run against real GitLab yet. Before relying on Writes, try them on a scratch project on your Instance:
   1. `/gitlab-work-items:status <project>`: every probe passes.
   2. Fetch an Issue, then ask Claude to retitle it, add a label, and set a due date. Confirm, and check the result in GitLab.
   3. Ask Claude to start a Thread on it, then to reply in that Thread by the link to its first Comment, then to resolve the Thread.

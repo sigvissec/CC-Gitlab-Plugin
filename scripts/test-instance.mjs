@@ -14,6 +14,7 @@ import { join, resolve } from "node:path";
 
 const INSTANCES = {
   "ee-18.1": { image: "gitlab/gitlab-ee:18.1.6-ee.0", edition: "EE" },
+  "ce-18.1": { image: "gitlab/gitlab-ce:18.1.6-ce.0", edition: "CE" },
   "ee-newest": { image: "gitlab/gitlab-ee:19.4.2-ee.0", edition: "EE" },
   "ce-newest": { image: "gitlab/gitlab-ce:19.4.2-ce.0", edition: "CE" },
 };

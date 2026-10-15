@@ -25,4 +25,6 @@ npm test          # builds the bundles, then runs every test
 
 The bundles in `plugins/gitlab-work-items/` are committed, so installing the plugin downloads nothing. Run `npm run build` and commit them with any source change.
 
+To release, raise `version` in `plugins/gitlab-work-items/.claude-plugin/plugin.json`: installed copies stay on the version they have until it changes, whatever is committed after it.
+
 Tests sit at two seams: the MCP server's tool interface (the tests are an MCP client; GitLab sits behind whatever `glab` is first on `PATH`), and the write-guard hook's input and output.

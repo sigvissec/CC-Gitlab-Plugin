@@ -46,6 +46,7 @@ Every Write follows the same loop, with no exceptions:
 Choices inside a Write:
 
 - Post a plain Comment by default; start a Thread (`startThread`) only when the user asks for one.
+- If a preview flags lines GitLab will run as quick actions, check the user means them; otherwise reword so no line starts with a slash command.
 - Comments are public unless the user asks for internal. If internal is refused for their role, ask whether to post publicly or cancel.
 - Reply or resolve with a Comment link as the Reference, or the Thread ID from a Fetch.
 - When a Write is refused because the Work Item or Thread changed, show the user what changed before preparing again.

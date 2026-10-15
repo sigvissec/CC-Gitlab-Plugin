@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        instance: [ee-18.1, ee-newest, ce-newest]
+        instance: [ee-18.1, ce-18.1, ee-newest, ce-newest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
