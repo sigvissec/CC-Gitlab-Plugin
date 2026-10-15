@@ -37945,8 +37945,9 @@ var Lists = class {
 };
 
 // src/server/result.ts
+var DATA_KEY = "gitlab-work-items/data";
 function answer(text, data) {
-  return { content: [{ type: "text", text }], ...data ? { structuredContent: data } : {} };
+  return { content: [{ type: "text", text }], ...data ? { _meta: { [DATA_KEY]: data } } : {} };
 }
 function failure2(text, data) {
   return { ...answer(text, data), isError: true };

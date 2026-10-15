@@ -305,6 +305,21 @@ describe("an Edit", () => {
 });
 
 describe("a plan", () => {
+  it("reaches Claude as the preview text alone, so Claude can show it, and so does the report", async () => {
+    const s = await withGitLab(
+      [fetchWorkItem(), lookupLabel("acme/app", "p1", 9), fetchWorkItem(), mutation("UpdateWorkItem", { id: ID, labelsWidget: { addLabelIds: ["gid://gitlab/ProjectLabel/9"], removeLabelIds: [] } }, { workItem: { id: ID } }), fetchWorkItem({ labels: ["bug", "p1"], updatedAt: "2026-10-02T08:00:00Z" })],
+    );
+
+    const prepared = await s.call("prepare_writes", { writes: [{ kind: "edit", reference: "acme/app#12", addLabels: ["p1"] }] });
+    const applied = await s.call("apply_writes", { planId: prepared.data.planId });
+
+    expect(prepared.structured).toBeUndefined();
+    expect(prepared.text).toMatch(/labels: .* → .*p1/);
+    expect(applied.structured).toBeUndefined();
+    expect(applied.text).toMatch(/1\. Edit acme\/app#12: done/);
+  });
+
+
   it("lets the user drop Writes before applying; the rest still apply, and dropped ones aren't sent", async () => {
     const one = fetchWorkItem({ iid: "12", labels: [] });
     const two = fetchWorkItem({ iid: "13", id: 1013, labels: [] });

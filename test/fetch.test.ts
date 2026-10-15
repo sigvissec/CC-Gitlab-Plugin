@@ -62,6 +62,18 @@ describe("fetching one Work Item", () => {
     expect(result.text).toContain("Can you add logs?");
   });
 
+  it("answers in text alone, so Claude Code shows Claude the description and Threads, not just the fields", async () => {
+    const s = await withItems([
+      fetchWorkItem({ description: "Steps:\n1. Log in", threads: [{ id: "d1", notes: [{ id: 101, author: "bob", body: "Can you add logs?" }] }] }),
+    ]);
+
+    const result = await s.call("fetch_work_item", { reference: "acme/app#12" });
+
+    expect(result.structured).toBeUndefined();
+    expect(result.text).toContain("1. Log in");
+    expect(result.text).toContain("Can you add logs?");
+  });
+
   it("accepts a full reference and the older /-/issues/ URL", async () => {
     const s = await withItems([fetchWorkItem({ fullPath: "acme/platform/app", iid: "7" })]);
 

@@ -22,8 +22,12 @@ export interface Session {
 }
 
 export interface ToolResult {
+  /** What Claude reads. */
   text: string;
+  /** The same facts as data, from the result's `_meta`. */
   data: any;
+  /** The result's structuredContent, which Claude Code shows the model in place of the text. */
+  structured: unknown;
   isError: boolean;
 }
 
@@ -102,7 +106,7 @@ export async function start(options: StartOptions): Promise<Session> {
         .filter((c: any) => c.type === "text")
         .map((c: any) => c.text)
         .join("\n");
-      return { text, data: result.structuredContent, isError: Boolean(result.isError) };
+      return { text, data: result._meta?.["gitlab-work-items/data"], structured: result.structuredContent, isError: Boolean(result.isError) };
     },
     glabCalls() {
       if (!existsSync(logPath)) return [];

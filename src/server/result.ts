@@ -1,15 +1,23 @@
-// How tools answer Claude: readable text, plus the same facts as structured content.
+// How tools answer Claude: readable text, which is all Claude reads.
+//
+// The same facts go along as data in `_meta` for other MCP clients. They aren't sent as
+// structuredContent, because Claude Code shows the model the structured content in place of
+// the text when a result has both, and the text carries what Claude needs: descriptions,
+// Comments, previews.
 import { GitLabError } from "./gateway.js";
+
+/** Where in a result's `_meta` the data rides. */
+export const DATA_KEY = "gitlab-work-items/data";
 
 export interface ToolAnswer {
   [key: string]: unknown;
   content: { type: "text"; text: string }[];
-  structuredContent?: Record<string, unknown>;
+  _meta?: Record<string, unknown>;
   isError?: boolean;
 }
 
 export function answer(text: string, data?: Record<string, unknown>): ToolAnswer {
-  return { content: [{ type: "text", text }], ...(data ? { structuredContent: data } : {}) };
+  return { content: [{ type: "text", text }], ...(data ? { _meta: { [DATA_KEY]: data } } : {}) };
 }
 
 export function failure(text: string, data?: Record<string, unknown>): ToolAnswer {
