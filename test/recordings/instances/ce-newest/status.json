@@ -293,7 +293,7 @@
           "title": "An Issue for Edits",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/work_items/4",
-          "updatedAt": "2026-10-14T20:12:49Z",
+          "updatedAt": "2026-10-15T16:17:02Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -323,7 +323,7 @@
         ],
         "pageInfo": {
          "hasNextPage": true,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNCAyMDoxMjo0OS4xNjQ1NTYwMDAgKzAwMDAiLCJpZCI6IjQifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzowMi43MzM4MjMwMDAgKzAwMDAiLCJpZCI6IjQifQ"
         }
        }
       }
@@ -352,8 +352,8 @@
         "confidential": false,
         "description": null,
         "webUrl": "http://localhost:8929/acme/app/-/work_items/4",
-        "createdAt": "2026-10-14T20:12:49Z",
-        "updatedAt": "2026-10-14T20:12:49Z",
+        "createdAt": "2026-10-15T16:17:02Z",
+        "updatedAt": "2026-10-15T16:17:02Z",
         "workItemType": {
          "name": "Issue"
         },

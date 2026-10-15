@@ -368,8 +368,8 @@
         "confidential": false,
         "description": "_Posted with Claude Code_",
         "webUrl": "http://localhost:8929/acme/app/-/work_items/5",
-        "createdAt": "2026-10-14T20:13:08Z",
-        "updatedAt": "2026-10-14T20:13:08Z",
+        "createdAt": "2026-10-15T16:17:20Z",
+        "updatedAt": "2026-10-15T16:17:20Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -514,8 +514,8 @@
         "confidential": false,
         "description": "_Posted with Claude Code_",
         "webUrl": "http://localhost:8929/acme/app/-/work_items/5",
-        "createdAt": "2026-10-14T20:13:08Z",
-        "updatedAt": "2026-10-14T20:13:08Z",
+        "createdAt": "2026-10-15T16:17:20Z",
+        "updatedAt": "2026-10-15T16:17:20Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -693,8 +693,8 @@
         "confidential": false,
         "description": "_Posted with Claude Code_",
         "webUrl": "http://localhost:8929/acme/app/-/work_items/6",
-        "createdAt": "2026-10-14T20:13:09Z",
-        "updatedAt": "2026-10-14T20:13:09Z",
+        "createdAt": "2026-10-15T16:17:21Z",
+        "updatedAt": "2026-10-15T16:17:21Z",
         "workItemType": {
          "name": "Task"
         },

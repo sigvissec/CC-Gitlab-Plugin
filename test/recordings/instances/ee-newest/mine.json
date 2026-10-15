@@ -1,0 +1,173 @@
+{
+ "interactions": [
+  {
+   "operationName": "InstanceProbe",
+   "variables": {},
+   "queryHash": "9668d405252f9f7f1be81837660d96f2eb96159d9d47ff5bd142441180df6e9a",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "metadata": {
+       "version": "19.4.2-ee",
+       "enterprise": true
+      },
+      "currentUser": {
+       "username": "root"
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ListMyWorkItems",
+   "variables": {
+    "state": "opened",
+    "types": [
+     "ISSUE",
+     "TASK"
+    ],
+    "sort": "UPDATED_DESC",
+    "assigneeUsernames": [
+     "root"
+    ],
+    "first": 20
+   },
+   "queryHash": "b307ad877ab5dcbdc0784c13514407d0d2023369fe5db197e57b5ca4aa8d7574",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "currentUser": {
+       "workItems": {
+        "nodes": [
+         {
+          "id": "gid://gitlab/WorkItem/3",
+          "reference": "acme/app#3",
+          "title": "Session cookie expires early",
+          "state": "OPEN",
+          "webUrl": "http://localhost:8929/acme/app/-/work_items/3",
+          "updatedAt": "2026-10-15T16:17:48Z",
+          "workItemType": {
+           "name": "Issue"
+          },
+          "widgets": [
+           {
+            "type": "ASSIGNEES",
+            "assignees": {
+             "nodes": [
+              {
+               "username": "root"
+              }
+             ]
+            }
+           },
+           {
+            "type": "HIERARCHY",
+            "parent": null
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": []
+            }
+           },
+           {
+            "type": "MILESTONE",
+            "milestone": null
+           }
+          ]
+         }
+        ],
+        "pageInfo": {
+         "hasNextPage": false,
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzo0OC44NTMwMTkwMDAgKzAwMDAiLCJpZCI6IjMifQ"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ListMyWorkItems",
+   "variables": {
+    "state": "opened",
+    "types": [
+     "ISSUE"
+    ],
+    "sort": "UPDATED_DESC",
+    "assigneeUsernames": [
+     "root"
+    ],
+    "search": "cookie",
+    "in": [
+     "TITLE",
+     "DESCRIPTION"
+    ],
+    "first": 20
+   },
+   "queryHash": "b307ad877ab5dcbdc0784c13514407d0d2023369fe5db197e57b5ca4aa8d7574",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "currentUser": {
+       "workItems": {
+        "nodes": [
+         {
+          "id": "gid://gitlab/WorkItem/3",
+          "reference": "acme/app#3",
+          "title": "Session cookie expires early",
+          "state": "OPEN",
+          "webUrl": "http://localhost:8929/acme/app/-/work_items/3",
+          "updatedAt": "2026-10-15T16:17:48Z",
+          "workItemType": {
+           "name": "Issue"
+          },
+          "widgets": [
+           {
+            "type": "ASSIGNEES",
+            "assignees": {
+             "nodes": [
+              {
+               "username": "root"
+              }
+             ]
+            }
+           },
+           {
+            "type": "HIERARCHY",
+            "parent": null
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": []
+            }
+           },
+           {
+            "type": "MILESTONE",
+            "milestone": null
+           }
+          ]
+         }
+        ],
+        "pageInfo": {
+         "hasNextPage": false,
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzo0OC44NTMwMTkwMDAgKzAwMDAiLCJpZCI6IjMifQ"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ ],
+ "glabVersion": "1.123.0",
+ "auth": {
+  "localhost": {
+   "loggedIn": true
+  }
+ }
+}

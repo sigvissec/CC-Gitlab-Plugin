@@ -12,7 +12,7 @@
  "mergeRequest": "acme/app!1",
  "mentioningMergeRequest": "acme/app!2",
  "milestone": "18.2",
- "threadNoteUrl": "http://localhost:8929/acme/app/-/work_items/1#note_5",
+ "threadNoteUrl": "http://localhost:8929/acme/app/-/work_items/1#note_6",
  "users": [
   "alice",
   "bob"

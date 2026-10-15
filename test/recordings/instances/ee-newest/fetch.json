@@ -40,8 +40,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/work_items/1",
-        "createdAt": "2026-10-14T20:14:19Z",
-        "updatedAt": "2026-10-14T20:14:19Z",
+        "createdAt": "2026-10-15T16:17:47Z",
+        "updatedAt": "2026-10-15T16:17:47Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -191,8 +191,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/b07afa463de80c588d7b711310bc75803d78c8bd",
-             "replyId": "gid://gitlab/Discussion/b07afa463de80c588d7b711310bc75803d78c8bd",
+             "id": "gid://gitlab/Discussion/a3d191d401b2ce1119f029c23886929c5af7c337",
+             "replyId": "gid://gitlab/Discussion/a3d191d401b2ce1119f029c23886929c5af7c337",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -202,11 +202,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/DiscussionNote/5",
+                "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-14T20:14:21Z",
-                "url": "http://localhost:8929/acme/app/-/work_items/1#note_5",
+                "createdAt": "2026-10-15T16:17:49Z",
+                "url": "http://localhost:8929/acme/app/-/work_items/1#note_6",
                 "author": {
                  "username": "root"
                 }

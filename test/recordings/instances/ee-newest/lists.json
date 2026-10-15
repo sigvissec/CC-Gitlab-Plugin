@@ -49,7 +49,7 @@
           "title": "Login times out after 30 seconds",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/work_items/1",
-          "updatedAt": "2026-10-14T20:14:19Z",
+          "updatedAt": "2026-10-15T16:17:47Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -83,7 +83,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNCAyMDoxNDoxOS4xNjM3ODAwMDAgKzAwMDAiLCJpZCI6IjEifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzo0Ny41OTMzNDAwMDAgKzAwMDAiLCJpZCI6IjEifQ"
         }
        }
       }
@@ -123,7 +123,7 @@
           "title": "Login times out after 30 seconds",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/work_items/1",
-          "updatedAt": "2026-10-14T20:14:19Z",
+          "updatedAt": "2026-10-15T16:17:47Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -157,7 +157,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNCAyMDoxNDoxOS4xNjM3ODAwMDAgKzAwMDAiLCJpZCI6IjEifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzo0Ny41OTMzNDAwMDAgKzAwMDAiLCJpZCI6IjEifQ"
         }
        }
       }
@@ -219,7 +219,7 @@
           "title": "Write a repro test",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
-          "updatedAt": "2026-10-14T20:14:20Z",
+          "updatedAt": "2026-10-15T16:17:48Z",
           "workItemType": {
            "name": "Task"
           },
@@ -251,7 +251,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNCAyMDoxNDoyMC4wMzUxNTMwMDAgKzAwMDAiLCJpZCI6IjIifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzo0OC4zNTkyNTUwMDAgKzAwMDAiLCJpZCI6IjIifQ"
         }
        }
       }
