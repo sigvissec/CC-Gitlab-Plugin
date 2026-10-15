@@ -36601,7 +36601,7 @@ function readConfig() {
     endpoint: {
       GITLAB_API_HOST: url2.host,
       GLAB_API_PROTOCOL: url2.protocol.replace(":", ""),
-      GITLAB_SUBFOLDER: path.replace(/^\/+/, "")
+      GITLAB_SUBFOLDER: path.replace(/^\/+/, "") || "/"
     },
     settingToken: (env.GITLAB_WORK_ITEMS_TOKEN ?? "").trim(),
     footer: (env.GITLAB_WORK_ITEMS_FOOTER ?? "true").trim().toLowerCase() !== "false"
@@ -36610,7 +36610,19 @@ function readConfig() {
 
 // src/server/gateway.ts
 import { spawn } from "node:child_process";
-var TOKEN_VARIABLES = ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"];
+var REMOVED_VARIABLES = [
+  "GITLAB_TOKEN",
+  "GITLAB_ACCESS_TOKEN",
+  "OAUTH_TOKEN",
+  "JOB_TOKEN",
+  "CI_JOB_TOKEN",
+  "GLAB_IS_OAUTH2",
+  // With GITLAB_CI=true it signs in from CI variables and ignores the endpoint variables.
+  "GLAB_ENABLE_CI_AUTOLOGIN",
+  "GLAB_SKIP_TLS_VERIFY",
+  "SKIP_TLS_VERIFY"
+];
+var QUIET = { GLAB_CHECK_UPDATE: "false", GLAB_SEND_TELEMETRY: "false", GLAB_SHOW_WHATS_NEW: "false" };
 var GitLabError = class extends Error {
   constructor(message, kind) {
     super(message);
@@ -36635,8 +36647,8 @@ function run(args, env, input2) {
   });
 }
 function scrubbed(base) {
-  const env = { ...base };
-  for (const name of TOKEN_VARIABLES) delete env[name];
+  const env = { ...base, ...QUIET };
+  for (const name of REMOVED_VARIABLES) delete env[name];
   return env;
 }
 function loginCommand(config3) {
@@ -36645,7 +36657,7 @@ function loginCommand(config3) {
   if (GITLAB_API_HOST !== config3.glabHost) parts.push(`--api-host ${GITLAB_API_HOST}`);
   if (GLAB_API_PROTOCOL !== "https") parts.push(`--api-protocol ${GLAB_API_PROTOCOL}`);
   const login = parts.join(" ");
-  return GITLAB_SUBFOLDER ? `${login}\`, then \`glab config set subfolder ${GITLAB_SUBFOLDER} --host ${config3.glabHost}` : login;
+  return GITLAB_SUBFOLDER === "/" ? login : `glab config set subfolder ${GITLAB_SUBFOLDER} --host ${config3.glabHost}\`, then \`${login}`;
 }
 var Gateway = class {
   constructor(config3) {

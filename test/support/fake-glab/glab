@@ -12,8 +12,14 @@ const args = process.argv.slice(2);
 const cassettePath = process.env.FAKE_GLAB_CASSETTE;
 const cassette = cassettePath ? JSON.parse(readFileSync(cassettePath, "utf8")) : { interactions: [] };
 const statePath = cassettePath ? `${cassettePath}.state.json` : undefined;
-const TOKEN_VARS = ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"];
+// Every variable glab 1.123.0 reads that decides which credential it sends, how, or whether
+// it checks TLS (glab's internal/config/schema.go, config_mapping.go and client.go).
+const TOKEN_VARS = [
+  "GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN", "JOB_TOKEN", "CI_JOB_TOKEN",
+  "GLAB_IS_OAUTH2", "GLAB_ENABLE_CI_AUTOLOGIN", "GLAB_SKIP_TLS_VERIFY", "SKIP_TLS_VERIFY",
+];
 const ENDPOINT_VARS = ["GITLAB_API_HOST", "GLAB_API_PROTOCOL", "GITLAB_SUBFOLDER"];
+const QUIET_VARS = ["GLAB_CHECK_UPDATE", "GLAB_SEND_TELEMETRY", "GLAB_SHOW_WHATS_NEW"];
 
 function flag(name) {
   const i = args.indexOf(name);
@@ -26,7 +32,9 @@ function log(entry) {
   for (const name of TOKEN_VARS) if (process.env[name] !== undefined) env[name] = process.env[name];
   const endpoint = {};
   for (const name of ENDPOINT_VARS) if (process.env[name] !== undefined) endpoint[name] = process.env[name];
-  appendFileSync(process.env.FAKE_GLAB_LOG, JSON.stringify({ args, env, endpoint, ...entry }) + "\n");
+  const quiet = {};
+  for (const name of QUIET_VARS) if (process.env[name] !== undefined) quiet[name] = process.env[name];
+  appendFileSync(process.env.FAKE_GLAB_LOG, JSON.stringify({ args, env, endpoint, quiet, ...entry }) + "\n");
 }
 
 function canonical(value) {

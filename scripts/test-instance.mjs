@@ -47,7 +47,7 @@ function run(command, args, options = {}) {
 }
 
 /** glab runs with its own throwaway config and none of the caller's token variables. */
-const glabEnv = { ...process.env, GLAB_CONFIG_DIR, GITLAB_API_HOST: API_HOST, GLAB_API_PROTOCOL: "http", GITLAB_SUBFOLDER: "" };
+const glabEnv = { ...process.env, GLAB_CONFIG_DIR, GITLAB_API_HOST: API_HOST, GLAB_API_PROTOCOL: "http", GITLAB_SUBFOLDER: "/" };
 for (const name of ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"]) delete glabEnv[name];
 
 /** The recorder runs with a minimal PATH, so it needs glab's absolute path. */

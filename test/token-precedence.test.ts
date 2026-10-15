@@ -26,6 +26,36 @@ describe("token precedence", () => {
     for (const call of calls) expect(call.env).toEqual({ GITLAB_TOKEN: "setting-token" });
   });
 
+  it("passes glab no job token, OAuth switch, CI auto-login or TLS skip, whatever the user's environment has", async () => {
+    session = await start({
+      token: "setting-token",
+      env: {
+        JOB_TOKEN: "job",
+        CI_JOB_TOKEN: "ci-job",
+        GLAB_IS_OAUTH2: "true",
+        GLAB_ENABLE_CI_AUTOLOGIN: "true",
+        GITLAB_CI: "true",
+        GLAB_SKIP_TLS_VERIFY: "true",
+        SKIP_TLS_VERIFY: "true",
+      },
+      cassette: cassette({ auth: loggedIn(), interactions: [instanceProbe()] }),
+    });
+
+    await session.call("status");
+
+    for (const call of graphqlCalls(session)) expect(call.env).toEqual({ GITLAB_TOKEN: "setting-token" });
+  });
+
+  it("keeps glab quiet: no update checks, telemetry, or what's-new notes", async () => {
+    session = await start({ cassette: cassette({ auth: loggedIn(), interactions: [instanceProbe()] }) });
+
+    await session.call("status");
+
+    for (const call of session.glabCalls()) {
+      expect(call.quiet).toEqual({ GLAB_CHECK_UPDATE: "false", GLAB_SEND_TELEMETRY: "false", GLAB_SHOW_WHATS_NEW: "false" });
+    }
+  });
+
   it("prefers glab's saved login over GITLAB_TOKEN, and hides GITLAB_TOKEN from glab", async () => {
     session = await start({
       env: { GITLAB_TOKEN: "token-for-another-instance" },
@@ -61,10 +91,22 @@ describe("token precedence", () => {
     expect(result.text).not.toMatch(/paste/i);
   });
 
+  it("explains signing in to a sub-path Instance in the order glab needs: subfolder first", async () => {
+    session = await start({ baseUrl: "http://example.com:8080/gitlab", cassette: cassette({ interactions: [instanceProbe()] }) });
+
+    const result = await session.call("status");
+
+    expect(result.text).toContain(
+      "`glab config set subfolder gitlab --host example.com`, then `glab auth login --hostname example.com --api-host example.com:8080 --api-protocol http`",
+    );
+  });
+
+  // An empty variable counts as unset in glab, so a root Instance sends "/" to override any
+  // subfolder left in the user's own glab config.
   it.each([
     ["a sub-path", "https://example.com/gitlab/", "example.com", { GITLAB_API_HOST: "example.com", GLAB_API_PROTOCOL: "https", GITLAB_SUBFOLDER: "gitlab" }],
-    ["a port over http", "http://localhost:8929", "localhost", { GITLAB_API_HOST: "localhost:8929", GLAB_API_PROTOCOL: "http", GITLAB_SUBFOLDER: "" }],
-    ["the root of gitlab.com", "https://gitlab.com", "gitlab.com", { GITLAB_API_HOST: "gitlab.com", GLAB_API_PROTOCOL: "https", GITLAB_SUBFOLDER: "" }],
+    ["a port over http", "http://localhost:8929", "localhost", { GITLAB_API_HOST: "localhost:8929", GLAB_API_PROTOCOL: "http", GITLAB_SUBFOLDER: "/" }],
+    ["the root of gitlab.com", "https://gitlab.com", "gitlab.com", { GITLAB_API_HOST: "gitlab.com", GLAB_API_PROTOCOL: "https", GITLAB_SUBFOLDER: "/" }],
   ])("points glab at exactly the configured Instance on %s", async (_, baseUrl, hostname, endpoint) => {
     session = await start({ baseUrl, cassette: cassette({ auth: loggedIn(hostname), interactions: [instanceProbe()] }) });
 

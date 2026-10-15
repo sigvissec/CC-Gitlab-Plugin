@@ -33,10 +33,12 @@ export interface ToolResult {
 
 export interface GlabCall {
   args: string[];
-  /** The token variables glab received. */
+  /** The credential, identity and TLS variables glab received. */
   env: Record<string, string>;
   /** The variables telling glab which endpoint to call. */
   endpoint: Record<string, string>;
+  /** The variables turning off glab's update checks, telemetry and what's-new notes. */
+  quiet: Record<string, string>;
   host?: string;
   body?: { query: string; operationName?: string; variables?: Record<string, unknown> };
 }

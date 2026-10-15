@@ -3,7 +3,26 @@
 import { spawn } from "node:child_process";
 import type { Config } from "./config.js";
 
-export const TOKEN_VARIABLES = ["GITLAB_TOKEN", "GITLAB_ACCESS_TOKEN", "OAUTH_TOKEN"] as const;
+/**
+ * Variables glab reads that decide which credential it sends, how, or whether it checks TLS.
+ * glab never sees any the plugin didn't choose itself, so nothing meant for another tool or
+ * another GitLab reaches this one (glab 1.123.0: internal/config/schema.go, config_mapping.go).
+ */
+const REMOVED_VARIABLES = [
+  "GITLAB_TOKEN",
+  "GITLAB_ACCESS_TOKEN",
+  "OAUTH_TOKEN",
+  "JOB_TOKEN",
+  "CI_JOB_TOKEN",
+  "GLAB_IS_OAUTH2",
+  // With GITLAB_CI=true it signs in from CI variables and ignores the endpoint variables.
+  "GLAB_ENABLE_CI_AUTOLOGIN",
+  "GLAB_SKIP_TLS_VERIFY",
+  "SKIP_TLS_VERIFY",
+] as const;
+
+/** No update checks, telemetry, or what's-new notes on stderr from glab runs the plugin starts. */
+const QUIET = { GLAB_CHECK_UPDATE: "false", GLAB_SEND_TELEMETRY: "false", GLAB_SHOW_WHATS_NEW: "false" };
 
 export type TokenSource = "plugin setting" | "glab login" | "GITLAB_TOKEN";
 
@@ -39,10 +58,10 @@ function run(args: string[], env: NodeJS.ProcessEnv, input?: string): Promise<Ru
   });
 }
 
-/** The environment glab runs with: the server's own, minus every token variable. */
+/** The environment glab runs with: the server's own, minus the removed variables, kept quiet. */
 function scrubbed(base: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-  const env = { ...base };
-  for (const name of TOKEN_VARIABLES) delete env[name];
+  const env: NodeJS.ProcessEnv = { ...base, ...QUIET };
+  for (const name of REMOVED_VARIABLES) delete env[name];
   return env;
 }
 
@@ -53,7 +72,8 @@ function loginCommand(config: Config): string {
   if (GITLAB_API_HOST !== config.glabHost) parts.push(`--api-host ${GITLAB_API_HOST}`);
   if (GLAB_API_PROTOCOL !== "https") parts.push(`--api-protocol ${GLAB_API_PROTOCOL}`);
   const login = parts.join(" ");
-  return GITLAB_SUBFOLDER ? `${login}\`, then \`glab config set subfolder ${GITLAB_SUBFOLDER} --host ${config.glabHost}` : login;
+  // glab's login checks the token against the API, which needs the subfolder already set.
+  return GITLAB_SUBFOLDER === "/" ? login : `glab config set subfolder ${GITLAB_SUBFOLDER} --host ${config.glabHost}\`, then \`${login}`;
 }
 
 export class Gateway {

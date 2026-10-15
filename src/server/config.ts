@@ -7,7 +7,8 @@ export interface Config {
   glabHost: string;
   /**
    * Where glab sends requests for this Instance. Passed to glab on every call, so the
-   * configured base URL wins over anything in glab's own configuration.
+   * configured base URL wins over anything in glab's own configuration. glab ignores an empty
+   * variable, so an Instance at the root sends a subfolder of "/", which glab trims to none.
    */
   endpoint: { GITLAB_API_HOST: string; GLAB_API_PROTOCOL: string; GITLAB_SUBFOLDER: string };
   /** A token from the plugin's own settings; empty when not set. */
@@ -26,7 +27,7 @@ export function readConfig(): Config {
     endpoint: {
       GITLAB_API_HOST: url.host,
       GLAB_API_PROTOCOL: url.protocol.replace(":", ""),
-      GITLAB_SUBFOLDER: path.replace(/^\/+/, ""),
+      GITLAB_SUBFOLDER: path.replace(/^\/+/, "") || "/",
     },
     settingToken: (env.GITLAB_WORK_ITEMS_TOKEN ?? "").trim(),
     footer: (env.GITLAB_WORK_ITEMS_FOOTER ?? "true").trim().toLowerCase() !== "false",
