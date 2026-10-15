@@ -327,6 +327,17 @@ describe("an Edit", () => {
   });
 });
 
+describe("applying", () => {
+  it("is the one tool Claude Code must ask the user about on every call, whatever their permission mode", async () => {
+    const s = await withGitLab([]);
+
+    const tools = await s.tools();
+
+    const asking = tools.filter((t) => t._meta?.["anthropic/requiresUserInteraction"] === true).map((t) => t.name);
+    expect(asking).toEqual(["apply_writes"]);
+  });
+});
+
 describe("a plan", () => {
   it("reaches Claude as the preview text alone, so Claude can show it, and so does the report", async () => {
     const s = await withGitLab(

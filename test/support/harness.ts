@@ -16,6 +16,8 @@ const RECORDING_GLAB_DIR = join(ROOT, "test/support/recording-glab");
 export interface Session {
   call(tool: string, args?: Record<string, unknown>): Promise<ToolResult>;
   glabCalls(): GlabCall[];
+  /** The tools the server lists, with their `_meta`. */
+  tools(): Promise<{ name: string; _meta?: Record<string, unknown> }[]>;
   /** Elicitation requests the server sent, with the answer the test gave. */
   elicitations: { message: string }[];
   close(): Promise<void>;
@@ -109,6 +111,9 @@ export async function start(options: StartOptions): Promise<Session> {
         .map((c: any) => c.text)
         .join("\n");
       return { text, data: result._meta?.["gitlab-work-items/data"], structured: result.structuredContent, isError: Boolean(result.isError) };
+    },
+    async tools() {
+      return (await client.listTools()).tools;
     },
     glabCalls() {
       if (!existsSync(logPath)) return [];

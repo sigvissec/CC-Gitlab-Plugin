@@ -38267,7 +38267,10 @@ server.registerTool(
       planId: external_exports.string(),
       drop: external_exports.array(external_exports.number().int().min(1)).optional().describe("Preview numbers of Writes the user dropped")
     },
-    annotations: { destructiveHint: true }
+    annotations: { destructiveHint: true },
+    // Claude Code shows its permission prompt for this tool on every call, even under allow
+    // rules or a permission mode that skips prompts. The write-guard hook asks as well.
+    _meta: { "anthropic/requiresUserInteraction": true }
   },
   guarded(async ({ planId, drop }) => {
     const { results, report } = await writes.apply(planId, confirmWithUser, drop);
