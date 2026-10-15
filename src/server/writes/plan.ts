@@ -8,7 +8,7 @@ import type { Lookups } from "../lookups.js";
 import { threadWithComment, type Reader, type Thread, type WorkItem } from "../reader.js";
 import { lineDiff } from "../diff.js";
 import { notFound, parseReference, refused, type WorkItemRef } from "../references.js";
-import { excerpt, joinOrNone, quote, stateLines } from "./render.js";
+import { excerpt, joinOrNone, quickActionWarning, quote, stateLines } from "./render.js";
 import type { CommentRequest, CreateRequest, EditRequest, ThreadRequest, WriteRequest } from "./requests.js";
 
 export const FOOTER = "_Posted with Claude Code_";
@@ -69,6 +69,15 @@ const REMOVE_LINKS = /* GraphQL */ `
 mutation RemoveLinkedItems($input: WorkItemRemoveLinkedItemsInput!) {
   workItemRemoveLinkedItems(input: $input) { workItem { id } errors }
 }`;
+
+/** GitLab links or unlinks at most this many Work Items per request. */
+const LINKS_PER_REQUEST = 10;
+
+function batches(ids: string[]): string[][] {
+  const out: string[][] = [];
+  for (let i = 0; i < ids.length; i += LINKS_PER_REQUEST) out.push(ids.slice(i, i + LINKS_PER_REQUEST));
+  return out;
+}
 
 const LINK_TYPES = { relates_to: "RELATED", blocks: "BLOCKS", is_blocked_by: "BLOCKED_BY" } as const;
 
@@ -161,7 +170,7 @@ export class Planner {
     if (description !== undefined) {
       input.descriptionWidget = { description };
       expect.description = description;
-      preview.push("  description:", ...quote(description));
+      preview.push("  description:", ...quote(description), ...quickActionWarning(description, "saving"));
     }
     if (request.labels?.length) {
       input.labelsWidget = { labelIds: await Promise.all(request.labels.map((t) => this.lookups.labelId(fullPath, t))) };
@@ -216,14 +225,14 @@ export class Planner {
     const internal = request.internal === true;
     if (internal && !item.permissions.markNoteAsInternal) {
       throw refused(
-        `Your role on ${item.reference} can't post internal Comments (that needs Reporter or higher). Ask the user whether to post it publicly instead, or cancel. Nothing was prepared.`,
+        `Your role on ${item.reference} can't post internal Comments (that needs the Planner role or higher). Ask the user whether to post it publicly instead, or cancel. Nothing was prepared.`,
       );
     }
     const body = this.withFooter(request.body);
     const what = request.startThread ? "New Thread" : "Comment";
     return {
       summary: `${what} on ${item.reference}`,
-      preview: [`${what} on ${item.reference} (${internal ? "internal" : "public"}) ${item.url}`, ...quote(body)],
+      preview: [`${what} on ${item.reference} (${internal ? "internal" : "public"}) ${item.url}`, ...quote(body), ...quickActionWarning(body, "posting")],
       target: targetOf(ref, item),
       guard: { kind: "none" },
       steps: [
@@ -256,7 +265,7 @@ export class Planner {
       const body = this.withFooter(request.body);
       return {
         summary: `Reply on ${item.reference}`,
-        preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) ${item.url}`, `  in the Thread ${about}`, ...quote(body)],
+        preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) ${item.url}`, `  in the Thread ${about}`, ...quote(body), ...quickActionWarning(body, "posting")],
         target: targetOf(ref, item),
         guard,
         steps: [{ operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, discussionId: thread.replyId, body }, field: "createNote" }],
@@ -292,7 +301,11 @@ export class Planner {
     }
 
     if (request.description !== undefined && request.description !== item.description) {
-      preview.push("  description:", ...lineDiff(item.description, request.description).map((line) => `    ${line}`));
+      preview.push(
+        "  description:",
+        ...lineDiff(item.description, request.description).map((line) => `    ${line}`),
+        ...quickActionWarning(request.description, "saving"),
+      );
       input.descriptionWidget = { description: request.description };
       expect.description = request.description;
     }
@@ -368,7 +381,9 @@ export class Planner {
       (expect.linksInclude ??= []).push(target.reference);
     }
     for (const [linkType, ids] of byType) {
-      steps.push({ operationName: "AddLinkedItems", query: ADD_LINKS, input: { id: item.id, workItemsIds: ids, linkType }, field: "workItemAddLinkedItems" });
+      for (const batch of batches(ids)) {
+        steps.push({ operationName: "AddLinkedItems", query: ADD_LINKS, input: { id: item.id, workItemsIds: batch, linkType }, field: "workItemAddLinkedItems" });
+      }
     }
     const unlink: string[] = [];
     for (const reference of request.removeLinks ?? []) {
@@ -377,8 +392,8 @@ export class Planner {
       unlink.push(target.id);
       (expect.linksExclude ??= []).push(target.reference);
     }
-    if (unlink.length) {
-      steps.push({ operationName: "RemoveLinkedItems", query: REMOVE_LINKS, input: { id: item.id, workItemsIds: unlink }, field: "workItemRemoveLinkedItems" });
+    for (const batch of batches(unlink)) {
+      steps.push({ operationName: "RemoveLinkedItems", query: REMOVE_LINKS, input: { id: item.id, workItemsIds: batch }, field: "workItemRemoveLinkedItems" });
     }
 
     if (steps.length === 0) throw refused(`The Edit to ${item.reference} doesn't change anything.`);

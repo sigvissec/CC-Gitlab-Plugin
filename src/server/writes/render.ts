@@ -5,6 +5,23 @@ import type { WriteResult } from "./writes.js";
 
 export const joinOrNone = (values: string[]) => (values.length ? values.join(", ") : "none");
 
+/** Lines GitLab runs as quick actions (a slash command starting a line, outside code blocks). */
+function quickActions(text: string): string[] {
+  const found: string[] = [];
+  let fenced = false;
+  for (const line of text.split("\n")) {
+    if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+    else if (!fenced && /^\/[a-z_]+(\s|$)/.test(line)) found.push(line.trim());
+  }
+  return found;
+}
+
+/** A preview line warning that GitLab will run some lines instead of posting or saving them. */
+export function quickActionWarning(text: string, verb: "posting" | "saving"): string[] {
+  const lines = quickActions(text);
+  return lines.length ? [`  ! GitLab runs these lines as quick actions instead of ${verb} them: ${lines.join(", ")}`] : [];
+}
+
 export function quote(body: string): string[] {
   return body.split("\n").map((line) => `  > ${line}`);
 }

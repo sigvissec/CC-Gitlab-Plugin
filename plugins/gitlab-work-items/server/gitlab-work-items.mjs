@@ -37209,6 +37209,19 @@ function lineDiff(before, after) {
 
 // src/server/writes/render.ts
 var joinOrNone = (values) => values.length ? values.join(", ") : "none";
+function quickActions(text) {
+  const found = [];
+  let fenced = false;
+  for (const line of text.split("\n")) {
+    if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+    else if (!fenced && /^\/[a-z_]+(\s|$)/.test(line)) found.push(line.trim());
+  }
+  return found;
+}
+function quickActionWarning(text, verb) {
+  const lines = quickActions(text);
+  return lines.length ? [`  ! GitLab runs these lines as quick actions instead of ${verb} them: ${lines.join(", ")}`] : [];
+}
 function quote(body) {
   return body.split("\n").map((line) => `  > ${line}`);
 }
@@ -37255,6 +37268,12 @@ mutation RemoveLinkedItems($input: WorkItemRemoveLinkedItemsInput!) {
   workItemRemoveLinkedItems(input: $input) { workItem { id } errors }
 }`
 );
+var LINKS_PER_REQUEST = 10;
+function batches(ids) {
+  const out = [];
+  for (let i = 0; i < ids.length; i += LINKS_PER_REQUEST) out.push(ids.slice(i, i + LINKS_PER_REQUEST));
+  return out;
+}
 var LINK_TYPES = { relates_to: "RELATED", blocks: "BLOCKS", is_blocked_by: "BLOCKED_BY" };
 var CREATE_NOTE = (
   /* GraphQL */
@@ -37359,7 +37378,7 @@ var Planner = class {
     if (description !== void 0) {
       input2.descriptionWidget = { description };
       expect.description = description;
-      preview.push("  description:", ...quote(description));
+      preview.push("  description:", ...quote(description), ...quickActionWarning(description, "saving"));
     }
     if (request.labels?.length) {
       input2.labelsWidget = { labelIds: await Promise.all(request.labels.map((t) => this.lookups.labelId(fullPath, t))) };
@@ -37413,14 +37432,14 @@ ${FOOTER}` : body;
     const internal = request.internal === true;
     if (internal && !item.permissions.markNoteAsInternal) {
       throw refused(
-        `Your role on ${item.reference} can't post internal Comments (that needs Reporter or higher). Ask the user whether to post it publicly instead, or cancel. Nothing was prepared.`
+        `Your role on ${item.reference} can't post internal Comments (that needs the Planner role or higher). Ask the user whether to post it publicly instead, or cancel. Nothing was prepared.`
       );
     }
     const body = this.withFooter(request.body);
     const what = request.startThread ? "New Thread" : "Comment";
     return {
       summary: `${what} on ${item.reference}`,
-      preview: [`${what} on ${item.reference} (${internal ? "internal" : "public"}) ${item.url}`, ...quote(body)],
+      preview: [`${what} on ${item.reference} (${internal ? "internal" : "public"}) ${item.url}`, ...quote(body), ...quickActionWarning(body, "posting")],
       target: targetOf(ref, item),
       guard: { kind: "none" },
       steps: [
@@ -37449,7 +37468,7 @@ ${FOOTER}` : body;
       const body = this.withFooter(request.body);
       return {
         summary: `Reply on ${item.reference}`,
-        preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) ${item.url}`, `  in the Thread ${about}`, ...quote(body)],
+        preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) ${item.url}`, `  in the Thread ${about}`, ...quote(body), ...quickActionWarning(body, "posting")],
         target: targetOf(ref, item),
         guard,
         steps: [{ operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, discussionId: thread.replyId, body }, field: "createNote" }],
@@ -37481,7 +37500,11 @@ ${FOOTER}` : body;
       expect.title = request.title;
     }
     if (request.description !== void 0 && request.description !== item.description) {
-      preview.push("  description:", ...lineDiff(item.description, request.description).map((line) => `    ${line}`));
+      preview.push(
+        "  description:",
+        ...lineDiff(item.description, request.description).map((line) => `    ${line}`),
+        ...quickActionWarning(request.description, "saving")
+      );
       input2.descriptionWidget = { description: request.description };
       expect.description = request.description;
     }
@@ -37547,7 +37570,9 @@ ${FOOTER}` : body;
       (expect.linksInclude ??= []).push(target.reference);
     }
     for (const [linkType, ids] of byType) {
-      steps.push({ operationName: "AddLinkedItems", query: ADD_LINKS, input: { id: item.id, workItemsIds: ids, linkType }, field: "workItemAddLinkedItems" });
+      for (const batch of batches(ids)) {
+        steps.push({ operationName: "AddLinkedItems", query: ADD_LINKS, input: { id: item.id, workItemsIds: batch, linkType }, field: "workItemAddLinkedItems" });
+      }
     }
     const unlink = [];
     for (const reference of request.removeLinks ?? []) {
@@ -37556,8 +37581,8 @@ ${FOOTER}` : body;
       unlink.push(target.id);
       (expect.linksExclude ??= []).push(target.reference);
     }
-    if (unlink.length) {
-      steps.push({ operationName: "RemoveLinkedItems", query: REMOVE_LINKS, input: { id: item.id, workItemsIds: unlink }, field: "workItemRemoveLinkedItems" });
+    for (const batch of batches(unlink)) {
+      steps.push({ operationName: "RemoveLinkedItems", query: REMOVE_LINKS, input: { id: item.id, workItemsIds: batch }, field: "workItemRemoveLinkedItems" });
     }
     if (steps.length === 0) throw refused(`The Edit to ${item.reference} doesn't change anything.`);
     return { summary: `Edit ${item.reference}`, preview, target: targetOf(ref, item), guard: { kind: "version" }, steps, expect };

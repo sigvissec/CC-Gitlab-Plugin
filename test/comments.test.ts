@@ -51,6 +51,18 @@ describe("a Comment", () => {
     const prepared = await s.call("prepare_writes", { writes: [{ kind: "comment", reference: "acme/app#12", body: "x", internal: true }] });
     expect(prepared.isError).toBe(true);
     expect(prepared.text).toMatch(/can't post internal Comments.*publicly instead, or cancel/s);
+    expect(prepared.text).toMatch(/Planner role or higher/);
+  });
+
+  it("warns in the preview that GitLab runs quick-action lines instead of posting them", async () => {
+    const s = await withGitLab([fetchWorkItem()]);
+
+    const prepared = await s.call("prepare_writes", {
+      writes: [{ kind: "comment", reference: "acme/app#12", body: "Fixed in !34.\n/close\n/label ~done\n```\n/not-run\n```" }],
+    });
+
+    expect(prepared.text).toMatch(/GitLab runs these lines as quick actions.*: \/close, \/label ~done$/m);
+    expect(prepared.text).not.toMatch(/quick actions.*not-run/);
   });
 
   it("leaves the footer off when the setting is off", async () => {

@@ -296,6 +296,29 @@ describe("an Edit", () => {
     expect(s.glabCalls().some((c) => c.body?.operationName === "UpdateWorkItem")).toBe(false);
   });
 
+  it("links more than 10 Work Items in batches of 10, GitLab's limit per request", async () => {
+    const targets = Array.from({ length: 11 }, (_, i) => ({ iid: String(100 + i), id: 2000 + i }));
+    const s = await withGitLab([
+      fetchWorkItem(),
+      ...targets.map((t) => resolveWorkItem("acme/app", t.iid, t.id)),
+      fetchWorkItem(),
+      mutation("AddLinkedItems", { id: ID, workItemsIds: targets.slice(0, 10).map((t) => `gid://gitlab/WorkItem/${t.id}`), linkType: "RELATED" }, { workItem: { id: ID } }),
+      mutation("AddLinkedItems", { id: ID, workItemsIds: [`gid://gitlab/WorkItem/${targets[10]!.id}`], linkType: "RELATED" }, { workItem: { id: ID } }),
+      fetchWorkItem({
+        linked: targets.map((t) => ({ linkType: "relates_to", reference: `acme/app#${t.iid}`, title: "Linked" })),
+        updatedAt: "2026-10-02T08:00:00Z",
+      }),
+    ]);
+    const prepared = await s.call("prepare_writes", {
+      writes: [{ kind: "edit", reference: "acme/app#12", addLinks: targets.map((t) => ({ reference: `acme/app#${t.iid}`, linkType: "relates_to" })) }],
+    });
+
+    const applied = await s.call("apply_writes", { planId: prepared.data.planId });
+
+    expect(applied.data.results[0]).toMatchObject({ outcome: "done", didNotStick: [] });
+    expect(s.glabCalls().filter((c) => c.body?.operationName === "AddLinkedItems")).toHaveLength(2);
+  });
+
   it("refuses parent and link changes the token can't make", async () => {
     const s = await withGitLab([fetchWorkItem({ permissions: { adminParentLink: false, adminWorkItemLink: false } })]);
     const prepared = await s.call("prepare_writes", { writes: [{ kind: "edit", reference: "acme/app#12", parent: null, removeLinks: ["acme/app#30"] }] });
