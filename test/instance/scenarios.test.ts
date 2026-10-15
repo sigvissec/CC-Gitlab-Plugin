@@ -78,6 +78,8 @@ function changeBehindTheServersBack(target: Target, iid: string, title: string) 
 }
 
 const iidOf = (reference: string) => reference.split("#")[1]!;
+/** Whether a scenario can run: always when recording, and on replay once it has been recorded. */
+const recorded = (target: Target, name: string) => recording || existsSync(join(target.dir, `${name}.json`));
 const referencesIn = (result: ToolResult) => (result.data?.items ?? []).map((i: { reference: string }) => i.reference);
 
 /** Fails with the tool's own message, so a failed recording says what GitLab answered. */
@@ -124,6 +126,15 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
     expect(referencesIn(ok(byLabel)), byLabel.text).toContain(seed.issue);
     expect(referencesIn(ok(byText)), byText.text).toContain(seed.issue);
     expect(referencesIn(ok(children)), children.text).toEqual([seed.task]);
+  });
+
+  it.runIf(recorded(target, "mine"))("lists my Work Items across the Instance, with and without a filter", async () => {
+    const s = await session(target, "mine");
+    const all = await s.call("my_work_items", {});
+    const filtered = await s.call("my_work_items", { search: "cookie", types: ["Issue"] });
+    await s.close();
+    expect(referencesIn(ok(all)), all.text).toContain(seed.related);
+    expect(referencesIn(ok(filtered)), filtered.text).toEqual([seed.related]);
   });
 
   it("edits fields, and reports a second assignee GitLab drops on Free", async () => {

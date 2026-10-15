@@ -155,7 +155,9 @@ async function seed() {
     "mutation($input: WorkItemCreateInput!) { workItemCreate(input: $input) { workItem { iid } errors } }",
     { input: { namespacePath: "acme/app", workItemTypeId: taskType, title: "Write a repro test", hierarchyWidget: { parentId: issueGid } } },
   ).workItemCreate.workItem;
-  const related = rest("POST", `projects/${project.id}/issues`, { title: "Session cookie expires early" });
+  // Assigned to the signed-in user, so "my Work Items" has something to list.
+  const me = rest("GET", "user");
+  const related = rest("POST", `projects/${project.id}/issues`, { title: "Session cookie expires early", assignee_id: me.id });
   const plain = rest("POST", `projects/${project.id}/issues`, { title: "An Issue for Edits" });
   rest("POST", `projects/${project.id}/issues/${issue.iid}/links`, { target_project_id: project.id, target_issue_iid: related.iid });
   const thread = rest("POST", `projects/${project.id}/issues/${issue.iid}/discussions`, { body: "Which browser?" });
