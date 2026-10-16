@@ -40,8 +40,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -191,8 +191,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -205,7 +205,7 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
@@ -258,8 +258,8 @@
      "data": {
       "createNote": {
        "note": {
-        "id": "gid://gitlab/Note/12",
-        "url": "http://localhost:8929/acme/app/-/issues/1#note_12"
+        "id": "gid://gitlab/Note/17",
+        "url": "http://localhost:8929/acme/app/-/issues/1#note_17"
        },
        "errors": []
       }
@@ -288,8 +288,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -439,8 +439,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -453,7 +453,7 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
@@ -463,8 +463,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -474,11 +474,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -535,8 +535,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -686,8 +686,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -700,7 +700,7 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
@@ -710,8 +710,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -721,11 +721,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -782,8 +782,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -933,8 +933,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -947,7 +947,7 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
@@ -957,8 +957,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -968,11 +968,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -1029,8 +1029,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -1180,8 +1180,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -1194,7 +1194,7 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
@@ -1204,8 +1204,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -1215,11 +1215,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -1260,7 +1260,7 @@
    "variables": {
     "input": {
      "noteableId": "gid://gitlab/WorkItem/1",
-     "discussionId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+     "discussionId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
      "body": "A reply from the suite\n\n_Posted with Claude Code_"
     }
    },
@@ -1271,8 +1271,8 @@
      "data": {
       "createNote": {
        "note": {
-        "id": "gid://gitlab/DiscussionNote/13",
-        "url": "http://localhost:8929/acme/app/-/issues/1#note_13"
+        "id": "gid://gitlab/DiscussionNote/18",
+        "url": "http://localhost:8929/acme/app/-/issues/1#note_18"
        },
        "errors": []
       }
@@ -1301,8 +1301,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -1452,8 +1452,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -1466,18 +1466,18 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
                 }
                },
                {
-                "id": "gid://gitlab/DiscussionNote/13",
+                "id": "gid://gitlab/DiscussionNote/18",
                 "body": "A reply from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:41Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "createdAt": "2026-10-16T12:45:21Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_18",
                 "author": {
                  "username": "root"
                 }
@@ -1486,8 +1486,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -1497,11 +1497,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -1558,8 +1558,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -1709,8 +1709,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -1723,18 +1723,18 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
                 }
                },
                {
-                "id": "gid://gitlab/DiscussionNote/13",
+                "id": "gid://gitlab/DiscussionNote/18",
                 "body": "A reply from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:41Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "createdAt": "2026-10-16T12:45:21Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_18",
                 "author": {
                  "username": "root"
                 }
@@ -1743,8 +1743,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -1754,11 +1754,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -1815,8 +1815,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -1966,8 +1966,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -1980,18 +1980,18 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
                 }
                },
                {
-                "id": "gid://gitlab/DiscussionNote/13",
+                "id": "gid://gitlab/DiscussionNote/18",
                 "body": "A reply from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:41Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "createdAt": "2026-10-16T12:45:21Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_18",
                 "author": {
                  "username": "root"
                 }
@@ -2000,8 +2000,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -2011,11 +2011,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -2072,8 +2072,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -2223,8 +2223,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": false,
              "userPermissions": {
@@ -2237,18 +2237,18 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
                 }
                },
                {
-                "id": "gid://gitlab/DiscussionNote/13",
+                "id": "gid://gitlab/DiscussionNote/18",
                 "body": "A reply from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:41Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "createdAt": "2026-10-16T12:45:21Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_18",
                 "author": {
                  "username": "root"
                 }
@@ -2257,8 +2257,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -2268,11 +2268,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }
@@ -2312,7 +2312,7 @@
    "operationName": "ResolveThread",
    "variables": {
     "input": {
-     "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+     "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
      "resolve": true
     }
    },
@@ -2323,7 +2323,7 @@
      "data": {
       "discussionToggleResolve": {
        "discussion": {
-        "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+        "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
         "resolved": true
        },
        "errors": []
@@ -2353,8 +2353,8 @@
         "confidential": false,
         "description": "Steps:\n1. Log in\n2. Wait",
         "webUrl": "http://localhost:8929/acme/app/-/issues/1",
-        "createdAt": "2026-10-15T16:17:24Z",
-        "updatedAt": "2026-10-15T16:17:24Z",
+        "createdAt": "2026-10-16T12:44:59Z",
+        "updatedAt": "2026-10-16T12:44:59Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -2504,8 +2504,8 @@
           "discussions": {
            "nodes": [
             {
-             "id": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
-             "replyId": "gid://gitlab/Discussion/3ca7be3c8efef999b08534a64b6ffc548dc36905",
+             "id": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
+             "replyId": "gid://gitlab/Discussion/3d38b16f815648dc12a9f0f85993d7530c7ec54d",
              "resolvable": true,
              "resolved": true,
              "userPermissions": {
@@ -2518,18 +2518,18 @@
                 "id": "gid://gitlab/DiscussionNote/6",
                 "body": "Which browser?",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:26Z",
+                "createdAt": "2026-10-16T12:45:01Z",
                 "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
                 "author": {
                  "username": "root"
                 }
                },
                {
-                "id": "gid://gitlab/DiscussionNote/13",
+                "id": "gid://gitlab/DiscussionNote/18",
                 "body": "A reply from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:41Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "createdAt": "2026-10-16T12:45:21Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_18",
                 "author": {
                  "username": "root"
                 }
@@ -2538,8 +2538,8 @@
              }
             },
             {
-             "id": "gid://gitlab/Discussion/591afc89c1a6aecb0f0e639f55f055964b698572",
-             "replyId": "gid://gitlab/IndividualNoteDiscussion/591afc89c1a6aecb0f0e639f55f055964b698572",
+             "id": "gid://gitlab/Discussion/71b17ed195909c54988879cb3d870b7085e39245",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/71b17ed195909c54988879cb3d870b7085e39245",
              "resolvable": false,
              "resolved": false,
              "userPermissions": {
@@ -2549,11 +2549,11 @@
               "count": 1,
               "nodes": [
                {
-                "id": "gid://gitlab/Note/12",
+                "id": "gid://gitlab/Note/17",
                 "body": "A Comment from the suite\n\n_Posted with Claude Code_",
                 "internal": false,
-                "createdAt": "2026-10-15T16:17:39Z",
-                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "createdAt": "2026-10-16T12:45:19Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_17",
                 "author": {
                  "username": "root"
                 }

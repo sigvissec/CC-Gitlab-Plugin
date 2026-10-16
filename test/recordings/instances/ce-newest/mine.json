@@ -42,12 +42,53 @@
        "workItems": {
         "nodes": [
          {
+          "id": "gid://gitlab/WorkItem/6",
+          "reference": "acme/app#6",
+          "title": "Which cache to use?",
+          "state": "OPEN",
+          "webUrl": "http://localhost:8929/acme/app/-/work_items/6",
+          "updatedAt": "2026-10-16T12:44:46Z",
+          "workItemType": {
+           "name": "Issue"
+          },
+          "widgets": [
+           {
+            "type": "ASSIGNEES",
+            "assignees": {
+             "nodes": [
+              {
+               "username": "root"
+              }
+             ]
+            }
+           },
+           {
+            "type": "HIERARCHY",
+            "parent": null
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": [
+              {
+               "title": "wayfinder:grilling"
+              }
+             ]
+            }
+           },
+           {
+            "type": "MILESTONE",
+            "milestone": null
+           }
+          ]
+         },
+         {
           "id": "gid://gitlab/WorkItem/3",
           "reference": "acme/app#3",
           "title": "Session cookie expires early",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/work_items/3",
-          "updatedAt": "2026-10-15T16:17:02Z",
+          "updatedAt": "2026-10-16T12:44:44Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -81,7 +122,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzowMi41MDgwNDEwMDAgKzAwMDAiLCJpZCI6IjMifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NDo0NC45ODUwMTQwMDAgKzAwMDAiLCJpZCI6IjMifQ"
         }
        }
       }
@@ -121,7 +162,7 @@
           "title": "Session cookie expires early",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/work_items/3",
-          "updatedAt": "2026-10-15T16:17:02Z",
+          "updatedAt": "2026-10-16T12:44:44Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -155,7 +196,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzowMi41MDgwNDEwMDAgKzAwMDAiLCJpZCI6IjMifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NDo0NC45ODUwMTQwMDAgKzAwMDAiLCJpZCI6IjMifQ"
         }
        }
       }
