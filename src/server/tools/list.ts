@@ -21,13 +21,20 @@ export function listAnswer(heading: string, result: ListResult) {
   return answer(text, { ...result });
 }
 
-/** Lists a project's or group's Work Items; a parent given by Reference is resolved first. */
+/** The filters as a tool takes them: a parent by its Reference. */
+export type ToolFilters = Omit<Filters, "parentId"> & { parent?: string };
+
+/** Resolves a parent given by Reference to the global ID GitLab filters on. */
+export async function resolveFilters(config: Config, reader: Reader, { parent, ...filters }: ToolFilters): Promise<Filters> {
+  return parent ? { ...filters, parentId: (await reader.resolve(parseReference(parent, config))).id } : filters;
+}
+
+/** Lists a project's or group's Work Items. */
 export async function listWorkItems(
   config: Config,
   reader: Reader,
   lists: Lists,
-  { fullPath, limit, after, parent, ...filters }: Omit<Filters, "parentId"> & { fullPath: string; limit?: number; after?: string; parent?: string },
+  { fullPath, limit, after, ...filters }: ToolFilters & { fullPath: string; limit?: number; after?: string },
 ) {
-  const parentId = parent ? (await reader.resolve(parseReference(parent, config))).id : undefined;
-  return listAnswer(`Work Items in ${fullPath}`, await lists.within(fullPath, { ...filters, parentId }, limit, after));
+  return listAnswer(`Work Items in ${fullPath}`, await lists.within(fullPath, await resolveFilters(config, reader, filters), limit, after));
 }

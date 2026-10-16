@@ -13,6 +13,7 @@ import { answer, guarded } from "./result.js";
 import { status } from "./tools/status.js";
 import { fetchWorkItem } from "./tools/fetch.js";
 import { listAnswer, listWorkItems } from "./tools/list.js";
+import { pickWorkItem, type Pick } from "./tools/pick.js";
 import { z } from "zod";
 import type { ToolName } from "../tool-names.js";
 
@@ -24,7 +25,7 @@ const lists = new Lists(config, gateway, instance);
 const lookups = new Lookups(gateway);
 const writes = new Writes(config, gateway, instance, reader, lookups);
 
-const server = new McpServer({ name: "gitlab-work-items", version: "0.1.0" });
+const server = new McpServer({ name: "gitlab-work-items", version: "0.2.0" });
 
 server.registerTool(
   "status" satisfies ToolName,
@@ -87,12 +88,52 @@ server.registerTool(
 );
 
 /**
- * How long the confirmation dialog waits for the user. Claude Code waits on an open dialog
- * without limit; the SDK would give up after a minute, too soon to read a long preview.
+ * How long a dialog waits for the user. Claude Code waits on an open dialog without limit;
+ * the SDK would give up after a minute, too soon to read a long preview.
  */
-const CONFIRM_TIMEOUT_MS = 60 * 60 * 1000;
+const DIALOG_TIMEOUT_MS = 60 * 60 * 1000;
 
-/** Asks the user directly through MCP elicitation, when the client supports it. */
+/** Lets the user pick one Work Item from a list through MCP elicitation, when the client supports it. */
+const pickWithUser: Pick = async (entries) => {
+  if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
+  const response = await server.server.elicitInput(
+    {
+      mode: "form",
+      message: "Pick a Work Item to open in full.",
+      requestedSchema: {
+        type: "object",
+        properties: {
+          workItem: {
+            type: "string",
+            title: "Work Item",
+            oneOf: entries.map((entry) => ({ const: entry.reference, title: `${entry.reference} ${entry.title}` })),
+          },
+        },
+        required: ["workItem"],
+      },
+    },
+    { timeout: DIALOG_TIMEOUT_MS },
+  );
+  return response.action === "accept" && typeof response.content?.workItem === "string" ? response.content.workItem : undefined;
+};
+
+server.registerTool(
+  "pick_work_item" satisfies ToolName,
+  {
+    title: "Pick a GitLab Work Item to open",
+    description:
+      "Lists Issues and Tasks in a project or group with the same filters as list_work_items, lets the user pick one in a dialog, and returns the picked Work Item in full, as fetch_work_item does. Use it when the user wants to choose a Work Item to open; show the picked one to them in full.",
+    inputSchema: {
+      fullPath: z.string().describe("Full path of the project or group, e.g. acme/app or acme"),
+      limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to offer (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
+      ...FILTER_SCHEMA,
+    },
+    annotations: { readOnlyHint: true },
+  },
+  guarded(async (args) => pickWorkItem(config, reader, lists, pickWithUser, args)),
+);
+
+/** Asks the user to confirm Writes through MCP elicitation, when the client supports it. */
 const confirmWithUser: Confirm = async (message, writes) => {
   if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
   const response = await server.server.elicitInput(
@@ -112,7 +153,7 @@ const confirmWithUser: Confirm = async (message, writes) => {
         required: ["confirm"],
       },
     },
-    { timeout: CONFIRM_TIMEOUT_MS },
+    { timeout: DIALOG_TIMEOUT_MS },
   );
   return response.action === "accept" && response.content?.confirm === true;
 };

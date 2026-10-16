@@ -9,6 +9,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { start, type Session, type ToolResult } from "../support/harness.js";
+import { repo, runSessionStart, type HookRun } from "../support/session-start-hook.js";
 
 const RECORDINGS = resolve(import.meta.dirname, "../recordings/instances");
 const recording = process.env.SCENARIO_MODE === "record";
@@ -29,6 +30,10 @@ interface Seed {
   milestone: string;
   threadNoteUrl: string;
   users: string[];
+  /** Seeded since the wayfinder scenario; absent from older recordings. */
+  wayfinderMap?: string;
+  claimedTicket?: string;
+  unclaimedTicket?: string;
 }
 
 interface Target {
@@ -49,9 +54,10 @@ function targets(): Target[] {
 }
 
 /** Starts a session that records (live) or replays (from the recording) one scenario. */
-async function session(target: Target, name: string, options: { elicit?: boolean } = {}): Promise<Session> {
+async function session(target: Target, name: string, options: { elicit?: boolean; pick?: string } = {}): Promise<Session> {
   const cassettePath = join(target.dir, `${name}.json`);
-  const elicit = options.elicit ? () => ({ action: "accept" as const, content: { confirm: true } }) : undefined;
+  const answer: Record<string, string | boolean> = options.pick ? { workItem: options.pick } : { confirm: true };
+  const elicit = options.elicit || options.pick ? () => ({ action: "accept" as const, content: answer }) : undefined;
   if (recording) {
     mkdirSync(target.dir, { recursive: true });
     rmSync(cassettePath, { force: true });
@@ -64,6 +70,24 @@ async function session(target: Target, name: string, options: { elicit?: boolean
   }
   return start({ baseUrl: target.seed.url, cassette: JSON.parse(readFileSync(cassettePath, "utf8")), elicit });
 }
+
+/** Runs the session-start hook in a repo cloned from the seeded project, recording or replaying. */
+function sessionStart(target: Target, name: string): HookRun {
+  const cassettePath = join(target.dir, `${name}.json`);
+  const cwd = repo({ origin: `${target.seed.url}/${target.seed.project}.git` });
+  if (recording) {
+    rmSync(cassettePath, { force: true });
+    return runSessionStart({
+      cwd,
+      instanceUrl: target.seed.url,
+      cassette: { interactions: [] },
+      record: { cassettePath, realGlab: process.env.REAL_GLAB!, glabConfigDir: process.env.GLAB_CONFIG_DIR! },
+    });
+  }
+  return runSessionStart({ cwd, instanceUrl: target.seed.url, cassette: JSON.parse(readFileSync(cassettePath, "utf8")) });
+}
+
+const WAYFINDER_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
 
 /** Changes GitLab behind the server's back. Only happens live; replays see its recorded effect. */
 function changeBehindTheServersBack(target: Target, iid: string, title: string) {
@@ -135,6 +159,20 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
     await s.close();
     expect(referencesIn(ok(all)), all.text).toContain(seed.related);
     expect(referencesIn(ok(filtered)), filtered.text).toEqual([seed.related]);
+  });
+
+  it.runIf(recorded(target, "wayfinder"))("shows the wayfinder tickets I've claimed as a session starts, and opens one picked from them in full", async () => {
+    const hook = sessionStart(target, "wayfinder-hook");
+    const s = await session(target, "wayfinder", { pick: seed.claimedTicket });
+    const picked = await s.call("pick_work_item", { fullPath: seed.project, anyLabels: WAYFINDER_LABELS, assignedToMe: true });
+    await s.close();
+    expect(hook.code).toBe(0);
+    expect(hook.shown, hook.shown).toContain(`1. ${seed.claimedTicket} Which cache to use? (grilling, on the map Plan the cache, ${seed.wayfinderMap})`);
+    expect(hook.shown).not.toContain(seed.unclaimedTicket);
+    expect(s.elicitations[0]!.requestedSchema.properties.workItem.oneOf).toEqual([
+      { const: seed.claimedTicket, title: `${seed.claimedTicket} Which cache to use?` },
+    ]);
+    expect(ok(picked).text).toContain("Which cache fits the read path?");
   });
 
   it("edits fields, and reports a second assignee GitLab drops on Free", async () => {

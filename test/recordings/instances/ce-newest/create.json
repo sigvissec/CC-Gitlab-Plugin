@@ -337,9 +337,9 @@
      "data": {
       "workItemCreate": {
        "workItem": {
-        "id": "gid://gitlab/WorkItem/5",
-        "reference": "acme/app#5",
-        "webUrl": "http://localhost:8929/acme/app/-/work_items/5"
+        "id": "gid://gitlab/WorkItem/8",
+        "reference": "acme/app#8",
+        "webUrl": "http://localhost:8929/acme/app/-/work_items/8"
        },
        "errors": []
       }
@@ -351,7 +351,7 @@
    "operationName": "FetchWorkItem",
    "variables": {
     "fullPath": "acme/app",
-    "iid": "5"
+    "iid": "8"
    },
    "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
    "response": {
@@ -360,16 +360,16 @@
      "data": {
       "namespace": {
        "workItem": {
-        "id": "gid://gitlab/WorkItem/5",
-        "iid": "5",
-        "reference": "acme/app#5",
+        "id": "gid://gitlab/WorkItem/8",
+        "iid": "8",
+        "reference": "acme/app#8",
         "title": "Created by the suite",
         "state": "OPEN",
         "confidential": false,
         "description": "_Posted with Claude Code_",
-        "webUrl": "http://localhost:8929/acme/app/-/work_items/5",
-        "createdAt": "2026-10-15T16:17:20Z",
-        "updatedAt": "2026-10-15T16:17:20Z",
+        "webUrl": "http://localhost:8929/acme/app/-/work_items/8",
+        "createdAt": "2026-10-16T12:45:07Z",
+        "updatedAt": "2026-10-16T12:45:07Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -497,7 +497,7 @@
    "operationName": "FetchWorkItem",
    "variables": {
     "fullPath": "acme/app",
-    "iid": "5"
+    "iid": "8"
    },
    "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
    "response": {
@@ -506,16 +506,16 @@
      "data": {
       "namespace": {
        "workItem": {
-        "id": "gid://gitlab/WorkItem/5",
-        "iid": "5",
-        "reference": "acme/app#5",
+        "id": "gid://gitlab/WorkItem/8",
+        "iid": "8",
+        "reference": "acme/app#8",
         "title": "Created by the suite",
         "state": "OPEN",
         "confidential": false,
         "description": "_Posted with Claude Code_",
-        "webUrl": "http://localhost:8929/acme/app/-/work_items/5",
-        "createdAt": "2026-10-15T16:17:20Z",
-        "updatedAt": "2026-10-15T16:17:20Z",
+        "webUrl": "http://localhost:8929/acme/app/-/work_items/8",
+        "createdAt": "2026-10-16T12:45:07Z",
+        "updatedAt": "2026-10-16T12:45:07Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -651,7 +651,7 @@
       "description": "_Posted with Claude Code_"
      },
      "hierarchyWidget": {
-      "parentId": "gid://gitlab/WorkItem/5"
+      "parentId": "gid://gitlab/WorkItem/8"
      }
     }
    },
@@ -662,9 +662,9 @@
      "data": {
       "workItemCreate": {
        "workItem": {
-        "id": "gid://gitlab/WorkItem/6",
-        "reference": "acme/app#6",
-        "webUrl": "http://localhost:8929/acme/app/-/work_items/6"
+        "id": "gid://gitlab/WorkItem/9",
+        "reference": "acme/app#9",
+        "webUrl": "http://localhost:8929/acme/app/-/work_items/9"
        },
        "errors": []
       }
@@ -676,7 +676,7 @@
    "operationName": "FetchWorkItem",
    "variables": {
     "fullPath": "acme/app",
-    "iid": "6"
+    "iid": "9"
    },
    "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
    "response": {
@@ -685,16 +685,16 @@
      "data": {
       "namespace": {
        "workItem": {
-        "id": "gid://gitlab/WorkItem/6",
-        "iid": "6",
-        "reference": "acme/app#6",
+        "id": "gid://gitlab/WorkItem/9",
+        "iid": "9",
+        "reference": "acme/app#9",
         "title": "A Task from the suite",
         "state": "OPEN",
         "confidential": false,
         "description": "_Posted with Claude Code_",
-        "webUrl": "http://localhost:8929/acme/app/-/work_items/6",
-        "createdAt": "2026-10-15T16:17:21Z",
-        "updatedAt": "2026-10-15T16:17:21Z",
+        "webUrl": "http://localhost:8929/acme/app/-/work_items/9",
+        "createdAt": "2026-10-16T12:45:08Z",
+        "updatedAt": "2026-10-16T12:45:08Z",
         "workItemType": {
          "name": "Task"
         },
@@ -744,11 +744,11 @@
          {
           "type": "HIERARCHY",
           "parent": {
-           "id": "gid://gitlab/WorkItem/5",
-           "reference": "acme/app#5",
+           "id": "gid://gitlab/WorkItem/8",
+           "reference": "acme/app#8",
            "title": "Created by the suite",
            "state": "OPEN",
-           "webUrl": "http://localhost:8929/acme/app/-/work_items/5",
+           "webUrl": "http://localhost:8929/acme/app/-/work_items/8",
            "workItemType": {
             "name": "Issue"
            }

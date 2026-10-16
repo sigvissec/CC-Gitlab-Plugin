@@ -10,6 +10,7 @@ var TOOLS = {
   fetch_work_item: "read",
   list_work_items: "read",
   my_work_items: "read",
+  pick_work_item: "read",
   prepare_writes: "read",
   apply_writes: "write"
 };
