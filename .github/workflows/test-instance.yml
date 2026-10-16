@@ -1,0 +1,64 @@
+name: Test Instances
+
+# Records the end-to-end scenarios against real GitLab in containers. Download the
+# recordings artifact (or decode the tarball the job prints) and commit it under
+# test/recordings/instances/ to update the replays.
+on:
+  pull_request:
+    paths:
+      - "src/server/**"
+      - "test/instance/**"
+      - "scripts/test-instance.mjs"
+  schedule:
+    - cron: "17 5 * * 1" # weekly, Monday morning UTC
+  workflow_dispatch:
+
+env:
+  GLAB_VERSION: "1.123.0"
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        instance: [ee-18.1, ce-18.1, ee-newest, ce-newest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install glab
+        run: |
+          mkdir -p "$RUNNER_TEMP/glab"
+          curl -sSL "https://gitlab.com/gitlab-org/cli/-/releases/v${GLAB_VERSION}/downloads/glab_${GLAB_VERSION}_linux_amd64.tar.gz" | tar xz -C "$RUNNER_TEMP/glab"
+          echo "$RUNNER_TEMP/glab/bin" >> "$GITHUB_PATH"
+      - name: Record against a ${{ matrix.instance }} Test Instance
+        run: node scripts/test-instance.mjs ${{ matrix.instance }}
+      - name: Show what GitLab answered in each recording
+        if: failure()
+        run: |
+          for file in test/recordings/instances/${{ matrix.instance }}/*.json; do
+            echo "::group::$file"
+            node -e 'const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+              for (const i of c.interactions ?? [c]) console.log(i.operationName ?? "", JSON.stringify(i.variables ?? {}), "->", JSON.stringify(i.response ?? i).slice(0, 3000));' "$file"
+            echo "::endgroup::"
+          done
+      - name: Print the recordings for sessions that can't download artifacts
+        if: always()
+        run: |
+          if [ -d test/recordings/instances/${{ matrix.instance }} ]; then
+            echo "RECORDINGS-BEGIN"
+            tar czf - -C test/recordings/instances ${{ matrix.instance }} | base64 -w0
+            echo
+            echo "RECORDINGS-END"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recordings-${{ matrix.instance }}
+          path: test/recordings/instances/${{ matrix.instance }}
+          if-no-files-found: ignore

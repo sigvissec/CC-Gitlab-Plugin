@@ -1,25 +1,37 @@
 # GitLab Work Items Plugin
 
-A Claude Code plugin that lets Claude read, review, edit, and comment on GitLab Work Items without leaving the session.
+A Claude Code plugin that brings GitLab Work Items into the session, so Claude can work with them and change them without leaving it.
 
 ## GitLab
 
 **Instance**:
-A single GitLab deployment, either gitlab.com or a self-managed installation, identified by its host.
+A single GitLab deployment, either gitlab.com or a self-managed installation, identified by its base URL (which can include a sub-path).
 _Avoid_: server, host (as a noun for the deployment)
 
 **Work Item**:
 A trackable unit of work in GitLab, of exactly one Work Item Type.
 _Avoid_: issue (when meaning any type), ticket
 
+**Reference**:
+Text that points at one Work Item: its URL, or GitLab's notation such as `group/project#123` (Issue or Task) or `group&45` (Epic), in full or short form.
+_Avoid_: link, ID, ref
+
+**Context**:
+The project or group that a short Reference (such as `#123` or `&45`) is resolved against.
+_Avoid_: default project, scope
+
+**IID**:
+A Work Item's number within its project (Issues and Tasks) or group (Epics), as shown in its Reference.
+_Avoid_: ID, number
+
 **Work Item Type**:
-The kind of a Work Item. Issue, Task, and Epic are supported; other types (objective, key result, incident, test case, requirement) are not.
+The kind of a Work Item. Issue and Task are supported; Epic and the other types (objective, key result, incident, test case, requirement) are not.
 
 **Issue**:
 A Work Item of type Issue, living in a project.
 
 **Task**:
-A Work Item of type Task, always the child of an Issue.
+A Work Item of type Task, usually the child of an Issue.
 
 **Epic**:
 A Work Item of type Epic, living in a group and parenting Issues or other Epics.
@@ -42,12 +54,36 @@ _Avoid_: note
 A Comment together with its replies, which can be resolved as a unit.
 _Avoid_: discussion
 
+## Where it runs
+
+**Desktop**:
+Claude Code running on the user's own Linux machine, whether in a terminal, an IDE extension, or the Claude desktop app. The opposite is Claude Code on the web, which v1 doesn't target.
+_Avoid_: local, on-device
+
+**Test Instance**:
+A throwaway GitLab Instance that Claude or CI runs purely to verify the plugin. The user's own Instance is never a Test Instance.
+_Avoid_: sandbox, staging
+
 ## Plugin actions
 
-**Review**:
-Claude's assessment of a Work Item (its description, Threads, Hierarchy, and Linked Items) for clarity, completeness, and gaps.
-_Avoid_: analysis, audit
+**Fetch**:
+Reading one Work Item, or a filtered list of them, live from an Instance into the session.
+_Avoid_: sync, pull, import
+
+**Write**:
+Any change the plugin makes on an Instance: an Edit, a Comment or reply, resolving a Thread, or creating a Work Item. The plugin never deletes anything.
+_Avoid_: mutation, update, change
 
 **Edit**:
-A change to an existing Work Item's title, description, or fields (labels, assignees, milestone, state, weight, due date, parent).
+A change to an existing Work Item's title, description, fields (labels, assignees, milestone, state, weight, due date, parent), or Linked Items.
 _Avoid_: update, modify
+
+**Command**:
+A slash command the user types to drive the plugin directly. Anything a Command does can also be asked for in conversation.
+_Avoid_: skill, shortcut
+
+## Working with Work Items
+
+**Review**:
+Claude's assessment of a Work Item's clarity, completeness, and gaps, made from its Fetched data when the user asks. It is something Claude does, not a plugin action.
+_Avoid_: analysis, audit

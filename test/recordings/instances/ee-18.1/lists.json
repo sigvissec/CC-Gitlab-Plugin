@@ -1,0 +1,269 @@
+{
+ "interactions": [
+  {
+   "operationName": "InstanceProbe",
+   "variables": {},
+   "queryHash": "9668d405252f9f7f1be81837660d96f2eb96159d9d47ff5bd142441180df6e9a",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "metadata": {
+       "version": "18.1.6-ee",
+       "enterprise": true
+      },
+      "currentUser": {
+       "username": "root"
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ListWorkItems",
+   "variables": {
+    "fullPath": "acme",
+    "includeDescendants": true,
+    "state": "opened",
+    "types": [
+     "ISSUE",
+     "TASK"
+    ],
+    "sort": "UPDATED_DESC",
+    "labelName": [
+     "bug"
+    ],
+    "first": 20
+   },
+   "queryHash": "3deb739b139d918a5c148792e9f090c5d877aa77357f4159c2a1acaee5add079",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItems": {
+        "nodes": [
+         {
+          "id": "gid://gitlab/WorkItem/1",
+          "reference": "acme/app#1",
+          "title": "Login times out after 30 seconds",
+          "state": "OPEN",
+          "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+          "updatedAt": "2026-10-15T16:17:24Z",
+          "workItemType": {
+           "name": "Issue"
+          },
+          "widgets": [
+           {
+            "type": "ASSIGNEES",
+            "assignees": {
+             "nodes": []
+            }
+           },
+           {
+            "type": "HIERARCHY",
+            "parent": null
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": [
+              {
+               "title": "bug"
+              }
+             ]
+            }
+           },
+           {
+            "type": "MILESTONE",
+            "milestone": null
+           }
+          ]
+         }
+        ],
+        "pageInfo": {
+         "hasNextPage": false,
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzoyNC43OTczNjYwMDAgKzAwMDAiLCJpZCI6IjEifQ"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ListWorkItems",
+   "variables": {
+    "fullPath": "acme",
+    "includeDescendants": true,
+    "state": "opened",
+    "types": [
+     "ISSUE",
+     "TASK"
+    ],
+    "sort": "UPDATED_DESC",
+    "search": "seconds",
+    "in": [
+     "TITLE",
+     "DESCRIPTION"
+    ],
+    "first": 20
+   },
+   "queryHash": "3deb739b139d918a5c148792e9f090c5d877aa77357f4159c2a1acaee5add079",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItems": {
+        "nodes": [
+         {
+          "id": "gid://gitlab/WorkItem/1",
+          "reference": "acme/app#1",
+          "title": "Login times out after 30 seconds",
+          "state": "OPEN",
+          "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+          "updatedAt": "2026-10-15T16:17:24Z",
+          "workItemType": {
+           "name": "Issue"
+          },
+          "widgets": [
+           {
+            "type": "ASSIGNEES",
+            "assignees": {
+             "nodes": []
+            }
+           },
+           {
+            "type": "HIERARCHY",
+            "parent": null
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": [
+              {
+               "title": "bug"
+              }
+             ]
+            }
+           },
+           {
+            "type": "MILESTONE",
+            "milestone": null
+           }
+          ]
+         }
+        ],
+        "pageInfo": {
+         "hasNextPage": false,
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzoyNC43OTczNjYwMDAgKzAwMDAiLCJpZCI6IjEifQ"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ResolveWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "59a24c915942baed1656dbc543b28c58ad35ee2f9a06b49dab606e8483d2909e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "reference": "acme/app#1",
+        "workItemType": {
+         "name": "Issue"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ListWorkItems",
+   "variables": {
+    "fullPath": "acme/app",
+    "includeDescendants": true,
+    "state": "opened",
+    "types": [
+     "ISSUE",
+     "TASK"
+    ],
+    "sort": "UPDATED_DESC",
+    "parentIds": [
+     "gid://gitlab/WorkItem/1"
+    ],
+    "first": 20
+   },
+   "queryHash": "3deb739b139d918a5c148792e9f090c5d877aa77357f4159c2a1acaee5add079",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItems": {
+        "nodes": [
+         {
+          "id": "gid://gitlab/WorkItem/2",
+          "reference": "acme/app#2",
+          "title": "Write a repro test",
+          "state": "OPEN",
+          "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+          "updatedAt": "2026-10-15T16:17:25Z",
+          "workItemType": {
+           "name": "Task"
+          },
+          "widgets": [
+           {
+            "type": "ASSIGNEES",
+            "assignees": {
+             "nodes": []
+            }
+           },
+           {
+            "type": "HIERARCHY",
+            "parent": {
+             "reference": "acme/app#1"
+            }
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": []
+            }
+           },
+           {
+            "type": "MILESTONE",
+            "milestone": null
+           }
+          ]
+         }
+        ],
+        "pageInfo": {
+         "hasNextPage": false,
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzoyNS43MjQ2MzIwMDAgKzAwMDAiLCJpZCI6IjIifQ"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ ],
+ "glabVersion": "1.123.0",
+ "auth": {
+  "localhost": {
+   "loggedIn": true
+  }
+ }
+}

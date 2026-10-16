@@ -1,0 +1,23 @@
+{
+  "name": "gitlab-work-items-dev",
+  "private": true,
+  "description": "Development workspace for the gitlab-work-items Claude Code plugin",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && vitest run",
+    "test:instance": "node scripts/test-instance.mjs"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@types/node": "22.20.5",
+    "esbuild": "0.28.2",
+    "typescript": "5.9.3",
+    "vitest": "5.0.4",
+    "zod": "4.6.7"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "gitlab-work-items",
+  "displayName": "GitLab Work Items",
+  "version": "0.1.0",
+  "description": "Brings GitLab Issues and Tasks into Claude Code: fetch them and filtered lists live, see their merge requests, and edit, comment, resolve Threads, and create them after previewing every Write.",
+  "author": {
+    "name": "sigvissec"
+  },
+  "homepage": "https://github.com/sigvissec/CC-Gitlab-Plugin",
+  "repository": "https://github.com/sigvissec/CC-Gitlab-Plugin",
+  "keywords": [
+    "gitlab",
+    "work items",
+    "issues",
+    "tasks",
+    "glab"
+  ],
+  "userConfig": {
+    "instance_url": {
+      "type": "string",
+      "title": "GitLab Instance URL",
+      "description": "Base URL of your GitLab Instance, including any sub-path, for example https://gitlab.example.com or https://example.com/gitlab.",
+      "default": "https://gitlab.com",
+      "required": true
+    },
+    "token": {
+      "type": "string",
+      "title": "GitLab personal access token (optional)",
+      "description": "A token with the api scope (read_api is enough for reading). Leave empty to use your glab login for this Instance, or GITLAB_TOKEN.",
+      "sensitive": true
+    },
+    "footer": {
+      "type": "boolean",
+      "title": "Add a \"Posted with Claude Code\" footer",
+      "description": "Adds a short footer to Comments, replies, and new Work Items' descriptions.",
+      "default": true
+    }
+  }
+}

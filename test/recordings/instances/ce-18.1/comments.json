@@ -1,0 +1,2589 @@
+{
+ "interactions": [
+  {
+   "operationName": "InstanceProbe",
+   "variables": {},
+   "queryHash": "9668d405252f9f7f1be81837660d96f2eb96159d9d47ff5bd142441180df6e9a",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "metadata": {
+       "version": "18.1.6",
+       "enterprise": false
+      },
+      "currentUser": {
+       "username": "root"
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "CreateNote",
+   "variables": {
+    "input": {
+     "noteableId": "gid://gitlab/WorkItem/1",
+     "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+     "internal": false
+    }
+   },
+   "queryHash": "18637013ead0d7191e56881bff88f979276bc1b60cca20f728ad9a8290eda695",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "createNote": {
+       "note": {
+        "id": "gid://gitlab/Note/12",
+        "url": "http://localhost:8929/acme/app/-/issues/1#note_12"
+       },
+       "errors": []
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "CreateNote",
+   "variables": {
+    "input": {
+     "noteableId": "gid://gitlab/WorkItem/1",
+     "discussionId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+     "body": "A reply from the suite\n\n_Posted with Claude Code_"
+    }
+   },
+   "queryHash": "18637013ead0d7191e56881bff88f979276bc1b60cca20f728ad9a8290eda695",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "createNote": {
+       "note": {
+        "id": "gid://gitlab/DiscussionNote/13",
+        "url": "http://localhost:8929/acme/app/-/issues/1#note_13"
+       },
+       "errors": []
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 2,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               },
+               {
+                "id": "gid://gitlab/DiscussionNote/13",
+                "body": "A reply from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:10Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 2,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               },
+               {
+                "id": "gid://gitlab/DiscussionNote/13",
+                "body": "A reply from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:10Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 2,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               },
+               {
+                "id": "gid://gitlab/DiscussionNote/13",
+                "body": "A reply from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:10Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 2,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               },
+               {
+                "id": "gid://gitlab/DiscussionNote/13",
+                "body": "A reply from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:10Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ResolveThread",
+   "variables": {
+    "input": {
+     "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+     "resolve": true
+    }
+   },
+   "queryHash": "aac59b77eac0e42becb411b7f5b3c5620ddeb992f2a66881cae77da8a3573a09",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "discussionToggleResolve": {
+       "discussion": {
+        "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+        "resolved": true
+       },
+       "errors": []
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "1"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/1",
+        "iid": "1",
+        "reference": "acme/app#1",
+        "title": "Login times out after 30 seconds",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Steps:\n1. Log in\n2. Wait",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/1",
+        "createdAt": "2026-10-15T16:15:58Z",
+        "updatedAt": "2026-10-15T16:15:58Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 1,
+           "nodes": [
+            {
+             "fromMrDescription": true,
+             "mergeRequest": {
+              "id": "gid://gitlab/MergeRequest/1",
+              "reference": "acme/app!1",
+              "title": "Fix the login timeout",
+              "state": "opened",
+              "draft": false,
+              "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/MergeRequest/2",
+             "reference": "acme/app!2",
+             "title": "Log session timeouts",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/2"
+            },
+            {
+             "id": "gid://gitlab/MergeRequest/1",
+             "reference": "acme/app!1",
+             "title": "Fix the login timeout",
+             "state": "opened",
+             "draft": false,
+             "webUrl": "http://localhost:8929/acme/app/-/merge_requests/1"
+            }
+           ]
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": true,
+          "children": {
+           "count": 1,
+           "nodes": [
+            {
+             "id": "gid://gitlab/WorkItem/2",
+             "reference": "acme/app#2",
+             "title": "Write a repro test",
+             "state": "OPEN",
+             "webUrl": "http://localhost:8929/acme/app/-/work_items/2",
+             "workItemType": {
+              "name": "Task"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/1",
+             "title": "bug"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "replyId": "gid://gitlab/Discussion/e3f8905c02ca6e064e16bac147783e011d86cd4a",
+             "resolvable": true,
+             "resolved": true,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 2,
+              "nodes": [
+               {
+                "id": "gid://gitlab/DiscussionNote/6",
+                "body": "Which browser?",
+                "internal": false,
+                "createdAt": "2026-10-15T16:15:59Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_6",
+                "author": {
+                 "username": "root"
+                }
+               },
+               {
+                "id": "gid://gitlab/DiscussionNote/13",
+                "body": "A reply from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:10Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_13",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            },
+            {
+             "id": "gid://gitlab/Discussion/12e46567a064f62d816d15391ffcf85454272449",
+             "replyId": "gid://gitlab/IndividualNoteDiscussion/12e46567a064f62d816d15391ffcf85454272449",
+             "resolvable": false,
+             "resolved": false,
+             "userPermissions": {
+              "resolveNote": true
+             },
+             "notes": {
+              "count": 1,
+              "nodes": [
+               {
+                "id": "gid://gitlab/Note/12",
+                "body": "A Comment from the suite\n\n_Posted with Claude Code_",
+                "internal": false,
+                "createdAt": "2026-10-15T16:16:09Z",
+                "url": "http://localhost:8929/acme/app/-/issues/1#note_12",
+                "author": {
+                 "username": "root"
+                }
+               }
+              ]
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ ],
+ "glabVersion": "1.123.0",
+ "auth": {
+  "localhost": {
+   "loggedIn": true
+  }
+ }
+}

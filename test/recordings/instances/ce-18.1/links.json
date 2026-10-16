@@ -1,0 +1,1076 @@
+{
+ "interactions": [
+  {
+   "operationName": "InstanceProbe",
+   "variables": {},
+   "queryHash": "9668d405252f9f7f1be81837660d96f2eb96159d9d47ff5bd142441180df6e9a",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "metadata": {
+       "version": "18.1.6",
+       "enterprise": false
+      },
+      "currentUser": {
+       "username": "root"
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "4"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4",
+        "iid": "4",
+        "reference": "acme/app#4",
+        "title": "Renamed by the suite",
+        "state": "OPEN",
+        "confidential": false,
+        "description": null,
+        "webUrl": "http://localhost:8929/acme/app/-/issues/4",
+        "createdAt": "2026-10-15T16:15:59Z",
+        "updatedAt": "2026-10-15T16:16:08Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/User/2",
+             "username": "alice"
+            }
+           ]
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 0,
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "count": 0,
+           "nodes": []
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/2",
+             "title": "blocked"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": {
+           "id": "gid://gitlab/Milestone/1",
+           "title": "18.2"
+          }
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": "2027-01-31",
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ResolveWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "3"
+   },
+   "queryHash": "59a24c915942baed1656dbc543b28c58ad35ee2f9a06b49dab606e8483d2909e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/3",
+        "reference": "acme/app#3",
+        "workItemType": {
+         "name": "Issue"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "4"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4",
+        "iid": "4",
+        "reference": "acme/app#4",
+        "title": "Renamed by the suite",
+        "state": "OPEN",
+        "confidential": false,
+        "description": null,
+        "webUrl": "http://localhost:8929/acme/app/-/issues/4",
+        "createdAt": "2026-10-15T16:15:59Z",
+        "updatedAt": "2026-10-15T16:16:08Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/User/2",
+             "username": "alice"
+            }
+           ]
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 0,
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "count": 0,
+           "nodes": []
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/2",
+             "title": "blocked"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": {
+           "id": "gid://gitlab/Milestone/1",
+           "title": "18.2"
+          }
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": "2027-01-31",
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "AddLinkedItems",
+   "variables": {
+    "input": {
+     "id": "gid://gitlab/WorkItem/4",
+     "workItemsIds": [
+      "gid://gitlab/WorkItem/3"
+     ],
+     "linkType": "RELATED"
+    }
+   },
+   "queryHash": "0d65fbdf031e4ab6ee54f19fe4581d814921ef9165b67aaf3c5b49739add4121",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "workItemAddLinkedItems": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4"
+       },
+       "errors": []
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "4"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4",
+        "iid": "4",
+        "reference": "acme/app#4",
+        "title": "Renamed by the suite",
+        "state": "OPEN",
+        "confidential": false,
+        "description": null,
+        "webUrl": "http://localhost:8929/acme/app/-/issues/4",
+        "createdAt": "2026-10-15T16:15:59Z",
+        "updatedAt": "2026-10-15T16:16:08Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/User/2",
+             "username": "alice"
+            }
+           ]
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 0,
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "count": 0,
+           "nodes": []
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/2",
+             "title": "blocked"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": {
+           "id": "gid://gitlab/Milestone/1",
+           "title": "18.2"
+          }
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": "2027-01-31",
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "4"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4",
+        "iid": "4",
+        "reference": "acme/app#4",
+        "title": "Renamed by the suite",
+        "state": "OPEN",
+        "confidential": false,
+        "description": null,
+        "webUrl": "http://localhost:8929/acme/app/-/issues/4",
+        "createdAt": "2026-10-15T16:15:59Z",
+        "updatedAt": "2026-10-15T16:16:08Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/User/2",
+             "username": "alice"
+            }
+           ]
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 0,
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "count": 0,
+           "nodes": []
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/2",
+             "title": "blocked"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": {
+           "id": "gid://gitlab/Milestone/1",
+           "title": "18.2"
+          }
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": "2027-01-31",
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ResolveWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "3"
+   },
+   "queryHash": "59a24c915942baed1656dbc543b28c58ad35ee2f9a06b49dab606e8483d2909e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/3",
+        "reference": "acme/app#3",
+        "workItemType": {
+         "name": "Issue"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "4"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4",
+        "iid": "4",
+        "reference": "acme/app#4",
+        "title": "Renamed by the suite",
+        "state": "OPEN",
+        "confidential": false,
+        "description": null,
+        "webUrl": "http://localhost:8929/acme/app/-/issues/4",
+        "createdAt": "2026-10-15T16:15:59Z",
+        "updatedAt": "2026-10-15T16:16:08Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/User/2",
+             "username": "alice"
+            }
+           ]
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 0,
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "count": 0,
+           "nodes": []
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/2",
+             "title": "blocked"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [
+            {
+             "linkType": "relates_to",
+             "workItem": {
+              "id": "gid://gitlab/WorkItem/3",
+              "reference": "acme/app#3",
+              "title": "Session cookie expires early",
+              "state": "OPEN",
+              "webUrl": "http://localhost:8929/acme/app/-/issues/3",
+              "workItemType": {
+               "name": "Issue"
+              }
+             }
+            }
+           ],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "MQ"
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": {
+           "id": "gid://gitlab/Milestone/1",
+           "title": "18.2"
+          }
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": "2027-01-31",
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "RemoveLinkedItems",
+   "variables": {
+    "input": {
+     "id": "gid://gitlab/WorkItem/4",
+     "workItemsIds": [
+      "gid://gitlab/WorkItem/3"
+     ]
+    }
+   },
+   "queryHash": "c77bb67227a42c41f189a604f6f057f4dc96ac1b13cb370bc97985e00851040f",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "workItemRemoveLinkedItems": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4"
+       },
+       "errors": []
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "4"
+   },
+   "queryHash": "262243a090664f6520ee8bba5fedf4f530d6b5dd64df3019ab31cf6fea5bf10e",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/4",
+        "iid": "4",
+        "reference": "acme/app#4",
+        "title": "Renamed by the suite",
+        "state": "OPEN",
+        "confidential": false,
+        "description": null,
+        "webUrl": "http://localhost:8929/acme/app/-/issues/4",
+        "createdAt": "2026-10-15T16:15:59Z",
+        "updatedAt": "2026-10-15T16:16:08Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/User/2",
+             "username": "alice"
+            }
+           ]
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 0,
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "count": 0,
+           "nodes": []
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/2",
+             "title": "blocked"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": {
+           "id": "gid://gitlab/Milestone/1",
+           "title": "18.2"
+          }
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": "2027-01-31",
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ ],
+ "glabVersion": "1.123.0",
+ "auth": {
+  "localhost": {
+   "loggedIn": true
+  }
+ }
+}

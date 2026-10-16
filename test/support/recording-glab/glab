@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+// Wraps the real glab and records what GitLab answered, so the same scenario can later be
+// replayed by the fake glab. Put first on PATH by the Test Instance suite.
+//
+// Environment:
+//   REAL_GLAB            path to the real glab binary
+//   RECORD_CASSETTE      cassette JSON to append to (created if missing)
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+
+const args = process.argv.slice(2);
+const stdin = args[0] === "api" ? readFileSync(0, "utf8") : "";
+const result = spawnSync(process.env.REAL_GLAB, args, { input: stdin, encoding: "utf8", env: process.env, maxBuffer: 64 * 1024 * 1024 });
+const path = process.env.RECORD_CASSETTE;
+const cassette = existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : { interactions: [] };
+const flag = (name) => args[args.indexOf(name) + 1];
+
+if (args[0] === "version") {
+  cassette.glabVersion = /(\d+\.\d+\.\d+)/.exec(result.stdout)?.[1];
+} else if (args[0] === "auth" && args[1] === "status") {
+  (cassette.auth ??= {})[flag("--hostname")] = { loggedIn: result.status === 0 };
+} else if (args[0] === "api" && args[1] === "graphql") {
+  const body = JSON.parse(stdin);
+  let parsed;
+  try {
+    parsed = JSON.parse(result.stdout);
+  } catch {
+    parsed = undefined;
+  }
+  cassette.interactions.push({
+    operationName: body.operationName,
+    variables: body.variables ?? {},
+    queryHash: createHash("sha256").update(body.query).digest("hex"),
+    response: parsed === undefined ? { exitCode: result.status, body: null, stderr: result.stderr } : { exitCode: result.status, body: parsed },
+  });
+}
+writeFileSync(path, JSON.stringify(cassette, null, 1));
+
+process.stdout.write(result.stdout ?? "");
+process.stderr.write(result.stderr ?? "");
+process.exit(result.status ?? 1);
