@@ -32,7 +32,14 @@ The plugin is a thin bridge: its tools Fetch Work Items live from the configured
 - `list_work_items` lists a project or group (subgroups and projects included); `my_work_items` lists the user's own Work Items across the Instance.
 - Turn the user's words into the tools' filters, and say how you read anything ambiguous.
 - Number the entries and keep each one's Reference, so the user can open one by its number, Reference, or title; then Fetch it and show it in full.
+- For the user to choose one in a dialog, call `pick_work_item` with the same filters: it shows them a pick-list and returns the Work Item they pick, which you show in full.
 - Lists return 20 by default. Offer more when the result says more exist, continuing with `after` or raising `limit` (200 at most).
+
+## Wayfinder tickets
+
+- A wayfinder ticket is an Issue labelled `wayfinder:research`, `wayfinder:prototype`, `wayfinder:grilling`, or `wayfinder:task`; its map is the Issue its description names on a `Part of #<map>` line, labelled `wayfinder:map`.
+- A wayfinder session claims a ticket by assigning it, so the user's active tickets are the open ones assigned to them: filter with `anyLabels` set to those four labels and `assignedToMe`.
+- At session start the plugin shows the user their claimed tickets in the repo's project, numbered; when they name one by its number, Fetch it and show it in full.
 
 ## Writes
 

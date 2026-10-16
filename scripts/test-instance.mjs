@@ -162,6 +162,16 @@ async function seed() {
   const plain = rest("POST", `projects/${project.id}/issues`, { title: "An Issue for Edits" });
   rest("POST", `projects/${project.id}/issues/${issue.iid}/links`, { target_project_id: project.id, target_issue_iid: related.iid });
   const thread = rest("POST", `projects/${project.id}/issues/${issue.iid}/discussions`, { body: "Which browser?" });
+  // A wayfinder map with one ticket the signed-in user has claimed, and one nobody has.
+  for (const name of ["wayfinder:map", "wayfinder:grilling", "wayfinder:research"]) rest("POST", `projects/${project.id}/labels`, { name, color: "#3366cc" });
+  const map = rest("POST", `projects/${project.id}/issues`, { title: "Plan the cache", labels: "wayfinder:map" });
+  const claimed = rest("POST", `projects/${project.id}/issues`, {
+    title: "Which cache to use?",
+    description: `Part of #${map.iid}\n\n## Question\n\nWhich cache fits the read path?`,
+    labels: "wayfinder:grilling",
+    assignee_id: me.id,
+  });
+  const unclaimed = rest("POST", `projects/${project.id}/issues`, { title: "Measure cache hit rates", description: `Part of #${map.iid}`, labels: "wayfinder:research" });
 
   const mergeRequest = (branch, title, description) => {
     rest("POST", `projects/${project.id}/repository/commits`, {
@@ -192,6 +202,9 @@ async function seed() {
     mentioningMergeRequest: `acme/app!${mention.iid}`,
     milestone: milestone.title,
     threadNoteUrl: `${URL_BASE}/acme/app/-/work_items/${issue.iid}#note_${thread.notes[0].id}`,
+    wayfinderMap: `acme/app#${map.iid}`,
+    claimedTicket: `acme/app#${claimed.iid}`,
+    unclaimedTicket: `acme/app#${unclaimed.iid}`,
     users: users.map((u) => u.username),
   };
 }

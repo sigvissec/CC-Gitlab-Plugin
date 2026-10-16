@@ -36592,7 +36592,10 @@ var StdioServerTransport = class {
 // src/server/config.ts
 function readConfig() {
   const env = process.env;
-  const raw = (env.GITLAB_WORK_ITEMS_URL || "https://gitlab.com").trim();
+  return configOf(env.GITLAB_WORK_ITEMS_URL, env.GITLAB_WORK_ITEMS_TOKEN, env.GITLAB_WORK_ITEMS_FOOTER);
+}
+function configOf(instanceUrl, token, footer) {
+  const raw = (instanceUrl || "https://gitlab.com").trim();
   const url2 = new URL(raw.includes("://") ? raw : `https://${raw}`);
   const path = url2.pathname.replace(/\/+$/, "");
   return {
@@ -36603,8 +36606,8 @@ function readConfig() {
       GLAB_API_PROTOCOL: url2.protocol.replace(":", ""),
       GITLAB_SUBFOLDER: path.replace(/^\/+/, "") || "/"
     },
-    settingToken: (env.GITLAB_WORK_ITEMS_TOKEN ?? "").trim(),
-    footer: (env.GITLAB_WORK_ITEMS_FOOTER ?? "true").trim().toLowerCase() !== "false"
+    settingToken: (token ?? "").trim(),
+    footer: (footer ?? "true").trim().toLowerCase() !== "false"
   };
 }
 
@@ -38166,9 +38169,25 @@ function listAnswer(heading, result) {
   const text = [`${heading}: ${result.items.length} shown`, ...lines, footer].join("\n");
   return answer(text, { ...result });
 }
-async function listWorkItems(config3, reader2, lists2, { fullPath, limit, after, parent, ...filters }) {
-  const parentId = parent ? (await reader2.resolve(parseReference(parent, config3))).id : void 0;
-  return listAnswer(`Work Items in ${fullPath}`, await lists2.within(fullPath, { ...filters, parentId }, limit, after));
+async function resolveFilters(config3, reader2, { parent, ...filters }) {
+  return parent ? { ...filters, parentId: (await reader2.resolve(parseReference(parent, config3))).id } : filters;
+}
+async function listWorkItems(config3, reader2, lists2, { fullPath, limit, after, ...filters }) {
+  return listAnswer(`Work Items in ${fullPath}`, await lists2.within(fullPath, await resolveFilters(config3, reader2, filters), limit, after));
+}
+
+// src/server/tools/pick.ts
+async function pickWorkItem(config3, reader2, lists2, pick2, { fullPath, limit, ...filters }) {
+  const result = await lists2.within(fullPath, await resolveFilters(config3, reader2, filters), limit);
+  if (result.items.length === 0) return answer(`No Work Items in ${fullPath} match, so there's nothing to pick from.`, { picked: null });
+  const picked = await pick2(result.items);
+  if (picked === "unsupported") {
+    return listAnswer(`This client can't show a pick-list, so ask the user which of these Work Items in ${fullPath} to open, then Fetch it`, result);
+  }
+  if (!picked || !result.items.some((item) => item.reference === picked)) {
+    return answer("The user didn't pick a Work Item.", { picked: null });
+  }
+  return fetchWorkItem(config3, reader2, picked);
 }
 
 // src/server/main.ts
@@ -38179,7 +38198,7 @@ var reader = new Reader(config2, gateway, instance);
 var lists = new Lists(config2, gateway, instance);
 var lookups = new Lookups(gateway);
 var writes = new Writes(config2, gateway, instance, reader, lookups);
-var server = new McpServer({ name: "gitlab-work-items", version: "0.1.0" });
+var server = new McpServer({ name: "gitlab-work-items", version: "0.2.0" });
 server.registerTool(
   "status",
   {
@@ -38232,7 +38251,43 @@ server.registerTool(
   },
   guarded(async ({ limit, after, ...filters }) => listAnswer("Your Work Items", await lists.mine(filters, limit, after)))
 );
-var CONFIRM_TIMEOUT_MS = 60 * 60 * 1e3;
+var DIALOG_TIMEOUT_MS = 60 * 60 * 1e3;
+var pickWithUser = async (entries) => {
+  if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
+  const response = await server.server.elicitInput(
+    {
+      mode: "form",
+      message: "Pick a Work Item to open in full.",
+      requestedSchema: {
+        type: "object",
+        properties: {
+          workItem: {
+            type: "string",
+            title: "Work Item",
+            oneOf: entries.map((entry2) => ({ const: entry2.reference, title: `${entry2.reference} ${entry2.title}` }))
+          }
+        },
+        required: ["workItem"]
+      }
+    },
+    { timeout: DIALOG_TIMEOUT_MS }
+  );
+  return response.action === "accept" && typeof response.content?.workItem === "string" ? response.content.workItem : void 0;
+};
+server.registerTool(
+  "pick_work_item",
+  {
+    title: "Pick a GitLab Work Item to open",
+    description: "Lists Issues and Tasks in a project or group with the same filters as list_work_items, lets the user pick one in a dialog, and returns the picked Work Item in full, as fetch_work_item does. Use it when the user wants to choose a Work Item to open; show the picked one to them in full.",
+    inputSchema: {
+      fullPath: external_exports.string().describe("Full path of the project or group, e.g. acme/app or acme"),
+      limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to offer (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
+      ...FILTER_SCHEMA
+    },
+    annotations: { readOnlyHint: true }
+  },
+  guarded(async (args) => pickWorkItem(config2, reader, lists, pickWithUser, args))
+);
 var confirmWithUser = async (message, writes2) => {
   if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
   const response = await server.server.elicitInput(
@@ -38252,7 +38307,7 @@ var confirmWithUser = async (message, writes2) => {
         required: ["confirm"]
       }
     },
-    { timeout: CONFIRM_TIMEOUT_MS }
+    { timeout: DIALOG_TIMEOUT_MS }
   );
   return response.action === "accept" && response.content?.confirm === true;
 };

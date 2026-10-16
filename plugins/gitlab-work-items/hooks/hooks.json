@@ -5,6 +5,12 @@
         "matcher": "mcp__plugin_gitlab-work-items_gitlab__.*",
         "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/write-guard.mjs\"" }]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [{ "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs\"", "timeout": 30 }]
+      }
     ]
   }
 }

@@ -21,7 +21,7 @@ describe("the write-guard hook", () => {
     expect(output.hookSpecificOutput.permissionDecisionReason).toMatch(/GitLab/);
   });
 
-  it.each(["status", "fetch_work_item", "list_work_items", "my_work_items", "prepare_writes"])(
+  it.each(["status", "fetch_work_item", "list_work_items", "my_work_items", "pick_work_item", "prepare_writes"])(
     "lets the read-only %s tool run without a prompt",
     (tool) => {
       const { code, output } = runHook(`${PREFIX}${tool}`);

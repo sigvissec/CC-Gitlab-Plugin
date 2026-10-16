@@ -54,6 +54,16 @@ _Avoid_: note
 A Comment together with its replies, which can be resolved as a unit.
 _Avoid_: discussion
 
+## Wayfinder
+
+**Wayfinder map**:
+A Work Item the wayfinder skill uses as the index of one planning effort, listing the decisions made so far.
+_Avoid_: plan, epic
+
+**Wayfinder ticket**:
+A Work Item the wayfinder skill uses for one decision on a Wayfinder map. It's **claimed** while it's assigned to the dev working it.
+_Avoid_: ticket (on its own, which reads as any Work Item)
+
 ## Where it runs
 
 **Desktop**:

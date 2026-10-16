@@ -137,6 +137,15 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 82. As a maintainer, I want the README to list behaviours that can only be confirmed in the desktop app or IDE extensions, so that the first person there knows what to watch for.
 83. As a user on my own Instance, I want a checklist for verifying Writes by hand in a throwaway project, so that I can confirm the plugin on my setup after installing it.
 
+### Wayfinder tickets (added after the build, at the user's request)
+
+84. As a developer who plans with wayfinder, I want Claude Code to show the Wayfinder tickets I've claimed in the repo's project as soon as a session starts, so that I see what's in flight without asking.
+85. As that developer, I want each one on its own numbered line with its wayfinder type and the Wayfinder map it belongs to, so that the list stays short.
+86. As that developer, I want Claude to be told the same list, so that "open 2" opens the second one in full.
+87. As a developer, I want to pick a Work Item from a list in a dialog with the arrow keys and see it in full, so that I can open one without typing its Reference.
+88. As a developer, I want nothing shown and no GitLab call made when I start Claude Code outside a repo on my Instance, so that other work isn't slowed or cluttered.
+89. As a developer, I want a one-line note when the plugin couldn't check my Wayfinder tickets, and the session to start anyway, so that a GitLab problem never blocks me.
+
 ## Implementation Decisions
 
 ### Shape of the plugin
@@ -202,6 +211,18 @@ The server is organised as a few deep modules, each with a small interface:
 
 - A `PreToolUse` hook shipped with the plugin that matches the apply tool and always returns an "ask" decision, so Claude Code's approval prompt appears for every Write even if the user set the tool to "always allow". It returns "allow" for the plugin's read-only tools (`status`, the Fetch and list tools, and the prepare tool, which changes nothing), so reading never prompts; a plugin can't pre-approve tools through its own settings. It says nothing about any other tool.
 
+### Session-start hook (added after the build, at the user's request)
+
+- A `SessionStart` hook, on startup, resume, and `/clear` (not after compaction), with a 30-second limit. It reads the plugin's settings from Claude Code's `CLAUDE_PLUGIN_OPTION_*` variables and reaches GitLab through the same gateway as the server.
+- The repo's project: its `origin` remote if that's on the configured Instance, otherwise the one project its other remotes on the Instance point to (HTTPS, `ssh://`, and `git@host:path` remotes; under a sub-path, HTTPS remotes carry it and SSH remotes don't). Outside a git repo, or with no such remote, it shows nothing and calls nothing.
+- One query lists the open Issues and Tasks in that project labelled `wayfinder:research`, `wayfinder:prototype`, `wayfinder:grilling`, or `wayfinder:task` and assigned to the signed-in user (how a wayfinder session claims a ticket), 20 at most with a count of the rest, plus the project's `wayfinder:map` Issues for their titles. A ticket's map is the Issue its `Part of #<map>` line names.
+- It shows the user a numbered line per ticket (`systemMessage`) and gives Claude the same list (`additionalContext`), so a number names a ticket. With no claimed tickets it shows nothing; when GitLab can't be reached it shows one line saying why, and always lets the session start.
+
+### Work Item picker (added after the build, at the user's request)
+
+- A read-only `pick_work_item` tool takes `list_work_items`' inputs, shows the list as a single-choice MCP elicitation dialog (a titled `oneOf`, one option per Work Item: its Reference and title), and returns the picked Work Item exactly as `fetch_work_item` does. Dialogs wait up to an hour.
+- When nothing matches it says so without a dialog; when the user declines or cancels it says nothing was picked; where the client can't show a dialog it returns the list for Claude to ask from.
+
 ### Skills and Commands
 
 - A conversation skill teaches Claude when and how to use the tools:
@@ -217,6 +238,7 @@ The server is organised as a few deep modules, each with a small interface:
   - `mine`: the user's open Work Items across the Instance.
   - `comment <reference> <what to say>`: quoted text is posted word for word; otherwise Claude drafts it. A Comment link as the Reference makes it a reply in that Thread. Preview and confirmation apply.
   - `status`: configuration, token source, `glab` and GitLab versions, edition, signed-in user, the 18.1 check, and read-only probes.
+  - `open [what to pick from]`: pick a Work Item in a dialog and see it in full; with nothing given, from the Wayfinder tickets the user has claimed in the repo's project. (Added after the build.)
 - There are no Commands for other Writes; they're asked for in conversation.
 
 ## Testing Decisions
@@ -232,7 +254,7 @@ The server is organised as a few deep modules, each with a small interface:
   - Real `glab` against a **Test Instance**: the full suite, which also records every request and response.
   - A fake `glab` that replays those recordings: fast, needs no GitLab, runs on every push.
   - The server's code has no test-only hooks; the only swap is which `glab` program it finds.
-- **Seam 2: the write-guard hook's input and output contract.** Tests feed it sample tool calls and check that it demands approval for the apply tool and lets everything else through.
+- **Seam 2: the hooks' input and output contracts.** Tests feed the write-guard hook sample tool calls and check that it demands approval for the apply tool and lets everything else through. They start the session-start hook in throwaway git repos, with GitLab behind the same swapped `glab`, and check what it shows the user and tells Claude; the Test Instance suite records it like the tools.
 - Skills and Commands are prompt files, checked for structure only (`claude plugin validate --strict`).
 
 ### Test Instances
