@@ -18,7 +18,7 @@ Resolved by grilling (term Command added to `/GLOSSARY.md`), using [How does Git
 - The plugin is named `gitlab-work-items` (distinct from Anthropic's existing `gitlab` plugin), so Commands read `/gitlab-work-items:<command>`.
 
 **Commands**
-- `/gitlab-work-items:fetch <reference>`: Fetch one Work Item and show its digest.
+- `/gitlab-work-items:fetch <reference>`: Fetch one Work Item and show its digest. (Changed after the build, at the user's request: it shows the Work Item in full.)
 - `/gitlab-work-items:list <what you want, in words>`: a filtered list.
 - `/gitlab-work-items:mine`: the user's open Work Items across the Instance.
 - `/gitlab-work-items:comment <reference> <what to say>`: quoted text is posted word for word; a description of what to say is drafted by Claude. Preview and confirmation apply. With a Comment link as the Reference, it replies in that Comment's Thread.
@@ -29,6 +29,7 @@ Resolved by grilling (term Command added to `/GLOSSARY.md`), using [How does Git
 **What a Fetch shows**
 - A digest: the full reference and URL; title, Work Item Type, state, assignees, labels, milestone, due date; parent and counts of children and Linked Items; number of Threads and how many are unresolved; and associated merge requests.
 - The full content stays available, so follow-ups don't re-Fetch; the plugin re-Fetches only before a Write, for the staleness check.
+- (Changed after the build, at the user's request.) When the user wants the Work Item itself (opens it, picks it from a list, or pastes its link on its own), Claude shows it in full: the digest, then the description and every Thread's Comments word for word. The digest alone is for Fetches made as background for another task.
 - Associated merge requests (single Fetch only, never in lists): closing and mentioning merge requests in one de-duplicated list, each labelled **closes** or **mentions**, with reference (`group/project!34`), title, state (draft, open, merged, closed), and URL. Up to 10 shown, ordered draft/open, then merged, then closed, with a count of the rest; hidden merge requests are reported as hidden rather than counted misleadingly.
 - Epics have no associated merge requests in GitLab; an Epic's digest says merge requests appear on its child Issues, which Claude can Fetch on request. No roll-up in v1.
 - Merge requests themselves are not Fetched, reviewed, or commented on; a merge request link or `!34` Reference is refused like any unsupported type.

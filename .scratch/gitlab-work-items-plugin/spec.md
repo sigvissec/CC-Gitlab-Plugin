@@ -60,7 +60,8 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 
 ### Fetching one Work Item
 
-24. As a developer, I want a short digest when Claude Fetches a Work Item (full reference and URL; title, type, state, assignees, labels, milestone, due date; parent; counts of children and Linked Items; number of Threads and how many are unresolved), so that I see what matters at a glance.
+24. As a developer, I want a short digest when Claude Fetches a Work Item as background for another task (full reference and URL; title, type, state, assignees, labels, milestone, due date; parent; counts of children and Linked Items; number of Threads and how many are unresolved), so that I see what matters at a glance.
+24a. As a developer, I want to see a Work Item in full when I open it, pick it from a list, or paste its link on its own (the digest, then its description and every Thread's Comments word for word), so that I can review it in Claude Code without going to GitLab. (Added after the build, at the user's request.)
 25. As a developer, I want Claude to keep the full description and Threads available after a Fetch, so that follow-up questions don't trigger another fetch.
 26. As a developer, I want to ask Claude to review a Work Item for clarity, completeness, and gaps, so that I get a second opinion before starting work.
 27. As a developer, I want Claude to see the Work Item's Tasks and parent, so that it understands where the work sits.
@@ -70,7 +71,7 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 31. As a developer, I want each associated merge request shown with its reference (`group/project!34`), title, state (draft, open, merged, closed), and URL, so that I can judge progress without opening GitLab.
 32. As a developer, I want at most 10 associated merge requests listed (draft and open first, then merged, then closed) with a count of the rest, so that a busy Work Item doesn't flood the conversation.
 33. As a developer, I want to be told when some associated merge requests are hidden from my token, so that a count isn't misleading.
-34. As a developer, I want `/gitlab-work-items:fetch <reference>` to Fetch and summarise one Work Item, so that I have a direct shortcut.
+34. As a developer, I want `/gitlab-work-items:fetch <reference>` to Fetch one Work Item and show it in full, so that I have a direct shortcut.
 
 ### Fetching lists
 
@@ -81,7 +82,7 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 39. As a developer, I want group lists to include all subgroups and projects, so that a group list is never mysteriously empty.
 40. As a developer, I want lists to show 20 items by default, most recently updated first, with more fetched only when I ask (up to 200), so that lists don't overwhelm the conversation.
 41. As a developer, I want every list to say whether more items exist, so that I know when I'm seeing everything.
-42. As a developer, I want each list entry to be a compact summary (reference, title, type, state, assignees, labels, milestone, parent, last updated), so that I can scan many Work Items quickly.
+42. As a developer, I want each list entry to be a compact summary (reference, title, type, state, assignees, labels, milestone, parent, last updated), numbered so I can open one by its number, so that I can scan many Work Items quickly.
 43. As a developer, I want Claude to say how it read an ambiguous list request, so that I can correct it.
 44. As a developer, I want to list a Work Item's Tasks with filters, so that I can see, for example, which open Tasks are unassigned.
 
@@ -207,10 +208,11 @@ The server is organised as a few deep modules, each with a small interface:
   - Fetch References the user gives without being asked; don't chase References inside Fetched text unless needed to answer, and say so when it does.
   - Resolve short References to full ones before calling the server: the conversation's Context, then the current repo's git remote (`origin` if it's on the configured Instance, otherwise the only remote that is, otherwise ask), then ask the user. Say which Context was used. `&iid` resolves against the Context project's group.
   - Present digests, lists, previews, and reports as decided above; say how ambiguous list requests were read.
+  - Show a Work Item in full when the user wants the Work Item itself (opens it, picks it from a numbered list, or pastes its link on its own); show the digest when it was Fetched as background for another task.
   - Never ask the user to paste a token; point at `status` on setup problems.
   - Writes only ever go through prepare and apply.
 - Commands, each a skill under `/gitlab-work-items:`, taking plain words:
-  - `fetch <reference>`: Fetch one Work Item and show its digest.
+  - `fetch <reference>`: Fetch one Work Item and show it in full.
   - `list <what you want>`: a filtered list.
   - `mine`: the user's open Work Items across the Instance.
   - `comment <reference> <what to say>`: quoted text is posted word for word; otherwise Claude drafts it. A Comment link as the Reference makes it a reply in that Thread. Preview and confirmation apply.

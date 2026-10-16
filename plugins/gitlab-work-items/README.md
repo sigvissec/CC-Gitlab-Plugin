@@ -41,11 +41,13 @@ Then check everything: `/gitlab-work-items:status acme/app` shows the Instance, 
 
 Talk normally: "what's left on acme/app#12?", "list open issues in acme labelled auth", "relabel those three as blocked". Short references like `#12` are resolved against the project you're discussing or your repo's git remote, and Claude says which it used.
 
+Lists are short, numbered summaries. To read one in Claude Code, say its number, reference, or title ("open 3"): Claude shows it in full, with its fields, description, and every Comment. Links in Claude's answers open GitLab in your browser instead, because Claude Code hands a clicked link to your system's browser.
+
 Commands, to drive the plugin directly:
 
 | Command | Does |
 |---|---|
-| `/gitlab-work-items:fetch <reference>` | Fetch one Work Item and show its digest |
+| `/gitlab-work-items:fetch <reference>` | Fetch one Work Item and show it in full: its fields, description, and every Comment |
 | `/gitlab-work-items:list <what you want>` | A filtered list, described in plain words |
 | `/gitlab-work-items:mine` | Your open Work Items across the Instance |
 | `/gitlab-work-items:comment <reference> <what to say>` | Comment, or reply in a Thread when given a Comment link; quoted text is posted word for word, except lines GitLab runs as quick actions (such as `/close`), which the preview points out |
