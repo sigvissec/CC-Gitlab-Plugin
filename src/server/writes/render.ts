@@ -40,12 +40,23 @@ export function stateLines(item: WorkItem): string[] {
   ];
 }
 
+/** Every Write in full, numbered as the user sees them. */
+function writeLines(plan: Plan): string[] {
+  return plan.writes.flatMap((write) => [`${write.number}. ${write.preview[0]}`, ...write.preview.slice(1)]);
+}
+
 export function renderPreview(plan: Plan): string {
-  const lines = [`Plan ${plan.id}: ${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}. Nothing has been sent yet.`];
-  for (const write of plan.writes) {
-    lines.push(`${write.number}. ${write.preview[0]}`, ...write.preview.slice(1));
-  }
-  return lines.join("\n");
+  const count = `${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}`;
+  return [`Plan ${plan.id}: ${count}. Nothing has been sent yet.`, ...writeLines(plan)].join("\n");
+}
+
+/**
+ * The confirmation dialog's message. Claude Code's terminal shows only its first three lines,
+ * so it opens on the Writes: a lone Write in full, or a list of them all ahead of the detail.
+ */
+export function renderConfirmation(plan: Plan): string {
+  if (plan.writes.length === 1) return writeLines(plan).join("\n");
+  return [...plan.writes.map((write) => `${write.number}. ${write.preview[0]}`), "", ...writeLines(plan)].join("\n");
 }
 
 export function renderReport(results: WriteResult[]): string {

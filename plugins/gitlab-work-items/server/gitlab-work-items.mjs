@@ -37237,12 +37237,16 @@ function stateLines(item) {
     `  milestone: ${item.milestone?.title ?? "none"}, due: ${item.dueDate ?? "none"}`
   ];
 }
+function writeLines(plan) {
+  return plan.writes.flatMap((write) => [`${write.number}. ${write.preview[0]}`, ...write.preview.slice(1)]);
+}
 function renderPreview(plan) {
-  const lines = [`Plan ${plan.id}: ${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}. Nothing has been sent yet.`];
-  for (const write of plan.writes) {
-    lines.push(`${write.number}. ${write.preview[0]}`, ...write.preview.slice(1));
-  }
-  return lines.join("\n");
+  const count = `${plan.writes.length} Write${plan.writes.length === 1 ? "" : "s"}`;
+  return [`Plan ${plan.id}: ${count}. Nothing has been sent yet.`, ...writeLines(plan)].join("\n");
+}
+function renderConfirmation(plan) {
+  if (plan.writes.length === 1) return writeLines(plan).join("\n");
+  return [...plan.writes.map((write) => `${write.number}. ${write.preview[0]}`), "", ...writeLines(plan)].join("\n");
 }
 function renderReport(results) {
   return results.map((r) => {
@@ -37719,9 +37723,7 @@ var Writes = class {
     if (plan.writes.length === 0) {
       return { results: droppedResults, report: renderReport(droppedResults) };
     }
-    const confirmed = await confirm(`${renderPreview(plan)}
-
-Apply ${plan.writes.length === 1 ? "this Write" : `these ${plan.writes.length} Writes`} to GitLab?`);
+    const confirmed = await confirm(renderConfirmation(plan), plan.writes.length);
     if (confirmed === false) {
       const results2 = plan.writes.map((w) => ({
         number: w.number,
@@ -38230,19 +38232,28 @@ server.registerTool(
   },
   guarded(async ({ limit, after, ...filters }) => listAnswer("Your Work Items", await lists.mine(filters, limit, after)))
 );
-var confirmWithUser = async (preview) => {
+var CONFIRM_TIMEOUT_MS = 60 * 60 * 1e3;
+var confirmWithUser = async (message, writes2) => {
   if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
-  const response = await server.server.elicitInput({
-    mode: "form",
-    message: preview,
-    requestedSchema: {
-      type: "object",
-      properties: {
-        confirm: { type: "boolean", title: "Apply to GitLab", description: "Tick to send these Writes to GitLab.", default: false }
-      },
-      required: ["confirm"]
-    }
-  });
+  const response = await server.server.elicitInput(
+    {
+      mode: "form",
+      message,
+      requestedSchema: {
+        type: "object",
+        properties: {
+          confirm: {
+            type: "boolean",
+            title: "Apply to GitLab",
+            description: `Tick to send ${writes2 === 1 ? "this Write" : `these ${writes2} Writes`} to GitLab.`,
+            default: false
+          }
+        },
+        required: ["confirm"]
+      }
+    },
+    { timeout: CONFIRM_TIMEOUT_MS }
+  );
   return response.action === "accept" && response.content?.confirm === true;
 };
 server.registerTool(

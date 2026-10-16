@@ -86,20 +86,34 @@ server.registerTool(
   guarded(async ({ limit, after, ...filters }) => listAnswer("Your Work Items", await lists.mine(filters, limit, after))),
 );
 
+/**
+ * How long the confirmation dialog waits for the user. Claude Code waits on an open dialog
+ * without limit; the SDK would give up after a minute, too soon to read a long preview.
+ */
+const CONFIRM_TIMEOUT_MS = 60 * 60 * 1000;
+
 /** Asks the user directly through MCP elicitation, when the client supports it. */
-const confirmWithUser: Confirm = async (preview) => {
+const confirmWithUser: Confirm = async (message, writes) => {
   if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
-  const response = await server.server.elicitInput({
-    mode: "form",
-    message: preview,
-    requestedSchema: {
-      type: "object",
-      properties: {
-        confirm: { type: "boolean", title: "Apply to GitLab", description: "Tick to send these Writes to GitLab.", default: false },
+  const response = await server.server.elicitInput(
+    {
+      mode: "form",
+      message,
+      requestedSchema: {
+        type: "object",
+        properties: {
+          confirm: {
+            type: "boolean",
+            title: "Apply to GitLab",
+            description: `Tick to send ${writes === 1 ? "this Write" : `these ${writes} Writes`} to GitLab.`,
+            default: false,
+          },
+        },
+        required: ["confirm"],
       },
-      required: ["confirm"],
     },
-  });
+    { timeout: CONFIRM_TIMEOUT_MS },
+  );
   return response.action === "accept" && response.content?.confirm === true;
 };
 

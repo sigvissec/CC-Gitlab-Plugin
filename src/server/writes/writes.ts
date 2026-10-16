@@ -10,11 +10,14 @@ import type { Lookups } from "../lookups.js";
 import type { Reader, WorkItem } from "../reader.js";
 import { parseReference, refused } from "../references.js";
 import { Planner, type Expectation, type Plan, type PlannedWrite, type Step } from "./plan.js";
-import { excerpt, joinOrNone, renderPreview, renderReport, stateLines } from "./render.js";
+import { excerpt, joinOrNone, renderConfirmation, renderPreview, renderReport, stateLines } from "./render.js";
 import { MAX_WRITES, type WriteRequest } from "./requests.js";
 
-/** Asks the user to confirm a preview: true or false, or "unsupported" when the client can't ask. */
-export type Confirm = (preview: string) => Promise<boolean | "unsupported">;
+/**
+ * Asks the user, in a message showing them, to confirm sending some number of Writes:
+ * true or false, or "unsupported" when the client can't ask.
+ */
+export type Confirm = (message: string, writes: number) => Promise<boolean | "unsupported">;
 
 export interface WriteResult {
   /** Its number in the preview. */
@@ -70,7 +73,7 @@ export class Writes {
 
     // Where the client can ask the user directly, their answer is the confirmation. Otherwise
     // Claude Code's approval prompt for this tool, forced by the plugin's hook, already was.
-    const confirmed = await confirm(`${renderPreview(plan)}\n\nApply ${plan.writes.length === 1 ? "this Write" : `these ${plan.writes.length} Writes`} to GitLab?`);
+    const confirmed = await confirm(renderConfirmation(plan), plan.writes.length);
     if (confirmed === false) {
       const results = plan.writes.map((w) => ({
         number: w.number,

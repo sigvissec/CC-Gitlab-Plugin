@@ -12,14 +12,16 @@ const ROOT = resolve(import.meta.dirname, "../..");
 const SERVER = join(ROOT, "plugins/gitlab-work-items/server/gitlab-work-items.mjs");
 const FAKE_GLAB_DIR = join(ROOT, "test/support/fake-glab");
 const RECORDING_GLAB_DIR = join(ROOT, "test/support/recording-glab");
+/** How long Claude Code waits for a tool call by default (MCP_TOOL_TIMEOUT unset). */
+const CLAUDE_CODE_TOOL_TIMEOUT_MS = 100_000_000;
 
 export interface Session {
   call(tool: string, args?: Record<string, unknown>): Promise<ToolResult>;
   glabCalls(): GlabCall[];
   /** The tools the server lists, with their `_meta`. */
   tools(): Promise<{ name: string; _meta?: Record<string, unknown> }[]>;
-  /** Elicitation requests the server sent, with the answer the test gave. */
-  elicitations: { message: string }[];
+  /** Elicitation requests the server sent: the dialog's message and the fields it asks for. */
+  elicitations: { message: string; requestedSchema: any }[];
   close(): Promise<void>;
 }
 
@@ -58,7 +60,7 @@ export interface StartOptions {
   /** Extra environment for the server process, such as a user's GITLAB_TOKEN. */
   env?: Record<string, string>;
   /** How the client answers elicitation; omit to act like a client without elicitation. */
-  elicit?: (message: string) => ElicitResult;
+  elicit?: (message: string) => ElicitResult | Promise<ElicitResult>;
   /** Leave the fake glab off PATH, as if glab weren't installed. */
   withoutGlab?: boolean;
 }
@@ -91,12 +93,13 @@ export async function start(options: StartOptions): Promise<Session> {
   const transport = new StdioClientTransport({ command: process.execPath, args: [SERVER], env, stderr: "pipe" });
   const capabilities = options.elicit ? { elicitation: { form: {} } } : {};
   const client = new Client({ name: "test-client", version: "0.0.0" }, { capabilities });
-  const elicitations: { message: string }[] = [];
+  const elicitations: Session["elicitations"] = [];
   if (options.elicit) {
     const answer = options.elicit;
     client.setRequestHandler(ElicitRequestSchema, async (request) => {
       const message = String(request.params.message);
-      elicitations.push({ message });
+      const requestedSchema = "requestedSchema" in request.params ? request.params.requestedSchema : undefined;
+      elicitations.push({ message, requestedSchema });
       return answer(message);
     });
   }
@@ -105,7 +108,7 @@ export async function start(options: StartOptions): Promise<Session> {
   return {
     elicitations,
     async call(tool, args = {}) {
-      const result = (await client.callTool({ name: tool, arguments: args })) as any;
+      const result = (await client.callTool({ name: tool, arguments: args }, undefined, { timeout: CLAUDE_CODE_TOOL_TIMEOUT_MS })) as any;
       const text = (result.content ?? [])
         .filter((c: any) => c.type === "text")
         .map((c: any) => c.text)

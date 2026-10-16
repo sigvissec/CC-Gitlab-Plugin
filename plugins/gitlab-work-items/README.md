@@ -54,7 +54,7 @@ Commands, to drive the plugin directly:
 ## How Writes stay safe
 
 - Every Write is previewed first: fields as before → after, descriptions as a diff, Comments exactly as they'll appear. Lines GitLab would run as quick actions (such as `/close`) are pointed out.
-- Only you can confirm. Claude Code asks you to approve applying Writes every time, even if you once chose "always allow" or use a mode that skips prompts, and the plugin then shows you the full preview in a dialog to confirm. Where no dialog can be shown, as in `claude -p`, nothing is sent. Reading never prompts.
+- Only you can confirm. Claude Code asks you to approve applying Writes every time, even if you once chose "always allow" or use a mode that skips prompts, and the plugin then asks you in a dialog of its own: tick "Apply to GitLab", then Accept. In the terminal that dialog shows only the start of the preview (the first lines of a lone Write, or each Write's first line), so read the full preview Claude shows you before confirming. The dialog waits up to an hour. Where no dialog can be shown, as in `claude -p`, nothing is sent. Reading never prompts.
 - Before sending, the plugin checks your token's permissions and that the Work Item (or Thread) hasn't changed since it was fetched. After sending, it re-reads and tells you about anything GitLab didn't keep, such as a second assignee on Free.
 - The plugin never deletes anything. One preview holds at most 20 Writes.
 - Comments are public unless you ask for internal. Comments, replies, and new Work Items carry a "_Posted with Claude Code_" footer; turn it off with the footer option.

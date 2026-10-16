@@ -121,6 +121,42 @@ describe("an Edit", () => {
     expect(applied.data.results[0]).toMatchObject({ outcome: "done" });
   });
 
+  // Claude Code's terminal shows a dialog's first three lines, so they name the Writes.
+  it("opens the dialog on the Write itself, and says beside the tick box that it sends one", async () => {
+    const s = await withGitLab([fetchWorkItem({ labels: ["bug"] }), lookupLabel("acme/app", "blocked", 7)], { elicit: () => ({ action: "decline" }) });
+    const prepared = await s.call("prepare_writes", { writes: [{ kind: "edit", reference: "acme/app#12", addLabels: ["blocked"] }] });
+
+    await s.call("apply_writes", { planId: prepared.data.planId });
+
+    const [dialog] = s.elicitations;
+    expect(dialog!.message.split("\n").slice(0, 2)).toEqual([expect.stringMatching(/^1\. Edit acme\/app#12\b/), "  labels: bug → bug, blocked"]);
+    expect(dialog!.requestedSchema.properties.confirm.description).toBe("Tick to send this Write to GitLab.");
+  });
+
+  it("opens the dialog on a list of the Writes, and says beside the tick box how many it sends", async () => {
+    const s = await withGitLab(
+      [fetchWorkItem({ iid: "12", labels: [] }), lookupLabel("acme/app", "p1", 9), fetchWorkItem({ iid: "13", id: 1013, labels: [] }), lookupLabel("acme/app", "p1", 9)],
+      { elicit: () => ({ action: "decline" }) },
+    );
+    const prepared = await s.call("prepare_writes", {
+      writes: [
+        { kind: "edit", reference: "acme/app#12", addLabels: ["p1"] },
+        { kind: "edit", reference: "acme/app#13", addLabels: ["p1"] },
+      ],
+    });
+
+    await s.call("apply_writes", { planId: prepared.data.planId });
+
+    const [dialog] = s.elicitations;
+    expect(dialog!.message.split("\n").slice(0, 3)).toEqual([
+      expect.stringMatching(/^1\. Edit acme\/app#12\b/),
+      expect.stringMatching(/^2\. Edit acme\/app#13\b/),
+      "",
+    ]);
+    expect(dialog!.message).toMatch(/^2\. Edit acme\/app#13\b.*\n  labels: none → p1/m);
+    expect(dialog!.requestedSchema.properties.confirm.description).toBe("Tick to send these 2 Writes to GitLab.");
+  });
+
   it.each([
     ["declines", { action: "decline" as const }],
     ["cancels", { action: "cancel" as const }],
