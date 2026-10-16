@@ -44,6 +44,7 @@ Nothing: every item has been ticketed and resolved or ruled out of scope. The ro
 
 ## Out of scope
 
+- **Windows and macOS**: the plugin targets Linux only, at the user's request after the build.
 - **Images and attachments**: links in descriptions and Comments are shown as-is; no downloading for Claude to view, no uploading.
 - **Custom fields**: EE-only, Experiment, and likely a paid-tier feature the user can't test.
 - **Bulk operations** beyond the shared preview, which holds at most 20 Writes (see [What safety rails guard writes to GitLab?](issues/08-write-safety.md)).

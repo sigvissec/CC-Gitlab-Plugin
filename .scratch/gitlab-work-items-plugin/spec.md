@@ -25,7 +25,7 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 - Claude can Edit Work Items, Comment and reply, resolve Threads, and create Issues and Tasks. Every Write is previewed first and only happens when the user themselves confirms it; the plugin checks permissions and whether the data changed since it was Fetched, re-reads after writing, and reports anything GitLab silently dropped.
 - Five Commands give shortcuts: `/gitlab-work-items:fetch`, `:list`, `:mine`, `:comment`, and `:status`.
 - Reviewing a Work Item is simply Claude reasoning over the Fetched data; the plugin is a thin, safe bridge.
-- Setup is either an existing `glab` login or a token entered in the plugin's settings. The plugin works on Desktop (the Claude desktop app, a terminal, or an IDE extension) against gitlab.com or a self-managed Instance running GitLab 18.1 or later, and is installed from this repo, which is its own marketplace.
+- Setup is either an existing `glab` login or a token entered in the plugin's settings. The plugin works on Desktop on Linux (a terminal, an IDE extension, or the Claude desktop app) against gitlab.com or a self-managed Instance running GitLab 18.1 or later, and is installed from this repo, which is its own marketplace.
 
 ## User Stories
 
@@ -33,7 +33,7 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 
 1. As a developer, I want to install the plugin from a marketplace with two commands, so that setup takes a minute rather than an afternoon.
 2. As a developer already signed in with `glab`, I want the plugin to use my existing `glab` login, so that I don't create or paste another token.
-3. As a developer without `glab` set up, I want to enter a personal access token in the plugin's settings and have it stored in my system keychain, so that my token isn't kept in plain text.
+3. As a developer without `glab` set up, I want to enter a personal access token in the plugin's settings and have Claude Code store it where only I can read it, so that I don't need glab's login. (On Linux, Claude Code keeps sensitive options in `~/.claude/.credentials.json`, owner-only but unencrypted; glab's login uses the desktop keyring where one is available.)
 4. As a developer on a self-managed Instance under a sub-path (for example `https://example.com/gitlab`), I want to configure the Instance's full base URL, so that References and API calls resolve correctly.
 5. As a developer, I want the plugin to tell me exactly what's missing when it isn't set up (no `glab`, no token, wrong Instance, expired token, GitLab older than 18.1), so that I can fix it without guessing.
 6. As a developer, I want Claude never to ask me to paste a token into the chat, so that my token doesn't end up in a transcript.
@@ -142,14 +142,14 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 
 - One Claude Code plugin named `gitlab-work-items`, distributed from this repository, which also serves as its marketplace. Releases carry pinned versions; updates are deliberate.
 - It contains: a bundled MCP server; skills (one conversation skill plus the five Commands); a write-guard hook; plugin settings (`userConfig`); and a README.
-- Target is Desktop only (desktop app, terminal, IDE extensions on the user's machine). Claude Code on the web gets no special handling.
+- Target is Desktop only, on Linux (terminal, IDE extensions, and the desktop app's Linux beta on the user's machine). Claude Code on the web gets no special handling; Windows and macOS aren't supported.
 - Supported GitLab: 18.1 or later, gitlab.com or self-managed, CE or EE, any tier; behaviour degrades where a tier lacks a field (weight, multiple assignees, blocking links).
 - Supported Work Item Types: Issue and Task only.
 
 ### Settings (`userConfig`)
 
 - Instance base URL (required; may include a sub-path; default gitlab.com).
-- Personal access token (optional; `sensitive`, so stored in the system keychain).
+- Personal access token (optional; `sensitive`, so Claude Code keeps it out of the settings files, in `~/.claude/.credentials.json` on Linux).
 - Footer on Comments, replies, and new descriptions (on by default).
 
 ### The MCP server
@@ -267,6 +267,7 @@ The server is organised as a few deep modules, each with a small interface:
 
 - Epics, and the other Work Item Types (objective, key result, incident, test case, requirement).
 - Claude Code on the web (cloud sessions).
+- Windows and macOS: the plugin targets Linux (decided after the spec, at the user's request).
 - Deleting anything (Work Items, Comments, Threads) and editing posted Comments.
 - Acting on merge requests themselves (Fetching, reviewing, or commenting on a merge request).
 - A Review feature: reviewing is Claude reasoning over Fetched data.
@@ -288,6 +289,6 @@ The server is organised as a few deep modules, each with a small interface:
   - Whether a plugin can ship the permission that lets its read tools run without prompts.
   - The minimum `glab` version to pin.
 - **Unverified on real Instances** (from the planning research, which read GitLab's source rather than a live Instance): whether GitLab accepts a token sent as `Authorization: Bearer`, Work Item Type IDs on a self-managed 18.x Instance, exact silent-drop and unlicensed-field errors on Free, and associated merge request edge cases. The Test Instance suite settles these.
-- **Unverifiable by Claude, to list in the README:** whether the desktop app prompts for `userConfig` values, whether the elicitation dialog renders in the desktop app and IDE extensions, and whether a plugin's server gets the token and `PATH` when the desktop app is launched from the Dock on macOS.
+- **Unverifiable by Claude, to list in the README:** whether the desktop app prompts for `userConfig` values, whether the elicitation dialog renders in the desktop app and IDE extensions, and whether a plugin's server gets `PATH` when the desktop app is started from the application launcher.
 - **The user's own Instance** (Free, version unconfirmed) wasn't reachable during planning; the user may verify against it after the build, using `status`'s read-only probes and the manual checklist in [What does our test Instance actually support?](issues/05-test-instance-checks.md).
 - **Research write-ups** behind these decisions live on unmerged branches: `research/gitlab-work-items-api`, `research/work-item-list-filters`, `research/associated-merge-requests`, `research/gitlab-official-mcp-server`, `research/glab-cli-work-items`, and `research/claude-code-plugin-format`.

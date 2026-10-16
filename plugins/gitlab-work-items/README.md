@@ -4,7 +4,7 @@ Brings GitLab Issues and Tasks into Claude Code. Paste a Work Item's URL or Refe
 
 ## Requirements
 
-- Claude Code on your own machine: the desktop app (local and SSH sessions; its WSL sessions don't load plugins), the `claude` command in a terminal, or the VS Code or JetBrains extension. Claude Code on the web doesn't load plugins installed on your machine.
+- Linux, with Claude Code on your own machine: the `claude` command in a terminal, the VS Code or JetBrains extension, or the Claude desktop app (in beta on Linux, for Ubuntu 22.04 or later and Debian 12 or later). Windows and macOS aren't supported. Claude Code on the web doesn't load plugins installed on your machine.
 - [`glab`](https://gitlab.com/gitlab-org/cli) 1.123.0 or later, and Node 20 or later, on your `PATH`.
 - GitLab 18.1 or later: gitlab.com or a self-managed Instance, CE or EE, any tier. Weight needs EE on Premium; "blocks" links need Premium.
 
@@ -23,7 +23,7 @@ Releases pin their version; update deliberately with `claude plugin update gitla
 
 Pick one:
 
-1. **Your glab login** (recommended): `glab auth login --hostname gitlab.example.com`. glab knows an Instance by its bare hostname, so an Instance on a port or under a sub-path takes two extra settings. For `http://example.com:8080/gitlab`:
+1. **Your glab login** (recommended): `glab auth login --hostname gitlab.example.com`. glab keeps the token in your desktop's keyring, such as GNOME Keyring or KDE Wallet, when one is running, and in its config file otherwise. glab knows an Instance by its bare hostname, so an Instance on a port or under a sub-path takes two extra settings. For `http://example.com:8080/gitlab`:
 
    ```sh
    glab config set subfolder gitlab --host example.com
@@ -31,9 +31,9 @@ Pick one:
    ```
 
    Sign in to such an Instance with a token (glab asks for one, or pass `--stdin`), not through the browser: glab's browser sign-in always uses https and ignores `--api-host`. The plugin itself always uses the address in its `instance_url` setting.
-2. **A token in the plugin's settings**: run `/plugin configure gitlab-work-items@gitlab-work-items` in a session, or open `/plugin`, choose gitlab-work-items, and set the token option. Claude Code keeps it in the macOS Keychain, or in `~/.claude/.credentials.json` where there's no supported keychain. Use a personal access token with the `api` scope (`read_api` if you only want to read; Writes then fail when sent).
+2. **A token in the plugin's settings**: run `/plugin configure gitlab-work-items@gitlab-work-items` in a session, or open `/plugin`, choose gitlab-work-items, and set the token option. On Linux, Claude Code keeps it unencrypted in `~/.claude/.credentials.json`, which only you can read; glab's login is the safer choice where you have a keyring. Use a personal access token with the `api` scope (`read_api` if you only want to read; Writes then fail when sent).
 
-The plugin uses its own setting first, then glab's login for the configured Instance, then `GITLAB_TOKEN`. `GITLAB_TOKEN` works when it reaches the plugin (for example in a terminal session), but on macOS the desktop app doesn't pass on variables exported in your shell profile. Token and other credential variables the plugin didn't choose are never passed to glab, so a token meant for another GitLab, or a CI job token, isn't sent to yours.
+The plugin uses its own setting first, then glab's login for the configured Instance, then `GITLAB_TOKEN`. `GITLAB_TOKEN` works only when Claude Code was started with it in its environment, as when you run `claude` from a shell that exports it. Token and other credential variables the plugin didn't choose are never passed to glab, so a token meant for another GitLab, or a CI job token, isn't sent to yours.
 
 Then check everything: `/gitlab-work-items:status acme/app` shows the Instance, token source, versions, and runs read-only probes in that project.
 
@@ -63,7 +63,7 @@ Commands, to drive the plugin directly:
 
 These behaviours couldn't be checked when the plugin was built, so watch for them:
 
-- **Desktop app and IDE extensions:** whether the confirmation dialog renders there. If it doesn't, nothing is sent.
+- **The desktop app's Linux beta and the IDE extensions:** whether the confirmation dialog renders there (if it doesn't, nothing is sent), and whether the desktop app finds `glab` on your `PATH` when started from your application launcher.
 - **Premium and your own Instance:** reads were checked against gitlab.com, and every Write runs in CI against throwaway Instances (GitLab 18.1 and the newest release, each as EE and CE, all on Free). Premium-only Writes (weight, "blocks" links) haven't run against real GitLab yet. Before relying on Writes, try them on a scratch project on your Instance:
   1. `/gitlab-work-items:status <project>`: every probe passes.
   2. Fetch an Issue, then ask Claude to retitle it, add a label, and set a due date. Confirm, and check the result in GitLab.
