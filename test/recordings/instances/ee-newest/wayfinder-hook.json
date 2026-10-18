@@ -1,0 +1,91 @@
+{
+ "interactions": [
+  {
+   "operationName": "InstanceProbe",
+   "variables": {},
+   "queryHash": "9668d405252f9f7f1be81837660d96f2eb96159d9d47ff5bd142441180df6e9a",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "metadata": {
+       "version": "19.4.2-ee",
+       "enterprise": true
+      },
+      "currentUser": {
+       "username": "root"
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ClaimedWayfinderTickets",
+   "variables": {
+    "fullPath": "acme/app",
+    "assignees": [
+     "root"
+    ],
+    "ticketLabels": [
+     "wayfinder:research",
+     "wayfinder:prototype",
+     "wayfinder:grilling",
+     "wayfinder:task"
+    ],
+    "mapLabels": [
+     "wayfinder:map"
+    ]
+   },
+   "queryHash": "eb64e1fd221036aff6521ec85642dca84b7125e2fd4c2ef906382e56dd49402b",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "tickets": {
+        "count": 1,
+        "nodes": [
+         {
+          "reference": "acme/app#6",
+          "title": "Which cache to use?",
+          "webUrl": "http://localhost:8929/acme/app/-/work_items/6",
+          "widgets": [
+           {
+            "type": "DESCRIPTION",
+            "description": "Part of #5\n\n## Question\n\nWhich cache fits the read path?"
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": [
+              {
+               "title": "wayfinder:grilling"
+              }
+             ]
+            }
+           }
+          ]
+         }
+        ]
+       },
+       "maps": {
+        "nodes": [
+         {
+          "reference": "acme/app#5",
+          "title": "Plan the cache"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ ],
+ "glabVersion": "1.123.0",
+ "auth": {
+  "localhost": {
+   "loggedIn": true
+  }
+ }
+}

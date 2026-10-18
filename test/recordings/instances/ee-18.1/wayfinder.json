@@ -1,0 +1,262 @@
+{
+ "interactions": [
+  {
+   "operationName": "InstanceProbe",
+   "variables": {},
+   "queryHash": "9668d405252f9f7f1be81837660d96f2eb96159d9d47ff5bd142441180df6e9a",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "metadata": {
+       "version": "18.1.6-ee",
+       "enterprise": true
+      },
+      "currentUser": {
+       "username": "root"
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "ListWorkItems",
+   "variables": {
+    "fullPath": "acme/app",
+    "includeDescendants": true,
+    "state": "opened",
+    "types": [
+     "ISSUE",
+     "TASK"
+    ],
+    "sort": "UPDATED_DESC",
+    "assigneeUsernames": [
+     "root"
+    ],
+    "or": {
+     "labelNames": [
+      "wayfinder:research",
+      "wayfinder:prototype",
+      "wayfinder:grilling",
+      "wayfinder:task"
+     ]
+    },
+    "first": 20
+   },
+   "queryHash": "3deb739b139d918a5c148792e9f090c5d877aa77357f4159c2a1acaee5add079",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItems": {
+        "nodes": [
+         {
+          "id": "gid://gitlab/WorkItem/6",
+          "reference": "acme/app#6",
+          "title": "Which cache to use?",
+          "state": "OPEN",
+          "webUrl": "http://localhost:8929/acme/app/-/issues/6",
+          "updatedAt": "2026-10-16T12:45:02Z",
+          "workItemType": {
+           "name": "Issue"
+          },
+          "widgets": [
+           {
+            "type": "ASSIGNEES",
+            "assignees": {
+             "nodes": [
+              {
+               "username": "root"
+              }
+             ]
+            }
+           },
+           {
+            "type": "HIERARCHY",
+            "parent": null
+           },
+           {
+            "type": "LABELS",
+            "labels": {
+             "nodes": [
+              {
+               "title": "wayfinder:grilling"
+              }
+             ]
+            }
+           },
+           {
+            "type": "MILESTONE",
+            "milestone": null
+           }
+          ]
+         }
+        ],
+        "pageInfo": {
+         "hasNextPage": false,
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NTowMi42NDEwMjkwMDAgKzAwMDAiLCJpZCI6IjYifQ"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "operationName": "FetchWorkItem",
+   "variables": {
+    "fullPath": "acme/app",
+    "iid": "6"
+   },
+   "queryHash": "9fcc348474665eb7dc40f04a8d65a4b5c217604ba9ab49f1b62f3a7966619aeb",
+   "response": {
+    "exitCode": 0,
+    "body": {
+     "data": {
+      "namespace": {
+       "workItem": {
+        "id": "gid://gitlab/WorkItem/6",
+        "iid": "6",
+        "reference": "acme/app#6",
+        "title": "Which cache to use?",
+        "state": "OPEN",
+        "confidential": false,
+        "description": "Part of #5\n\n## Question\n\nWhich cache fits the read path?",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/6",
+        "createdAt": "2026-10-16T12:45:02Z",
+        "updatedAt": "2026-10-16T12:45:02Z",
+        "workItemType": {
+         "name": "Issue"
+        },
+        "author": {
+         "username": "root"
+        },
+        "userPermissions": {
+         "updateWorkItem": true,
+         "setWorkItemMetadata": true,
+         "adminParentLink": true,
+         "adminWorkItemLink": true,
+         "createNote": true,
+         "markNoteAsInternal": true,
+         "blockedWorkItems": false
+        },
+        "widgets": [
+         {
+          "type": "ASSIGNEES",
+          "assignees": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/User/1",
+             "username": "root"
+            }
+           ]
+          }
+         },
+         {
+          "type": "AWARD_EMOJI"
+         },
+         {
+          "type": "CRM_CONTACTS"
+         },
+         {
+          "type": "CURRENT_USER_TODOS"
+         },
+         {
+          "type": "DESCRIPTION"
+         },
+         {
+          "type": "DESIGNS"
+         },
+         {
+          "type": "DEVELOPMENT",
+          "closingMergeRequests": {
+           "count": 0,
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false
+           }
+          },
+          "relatedMergeRequests": {
+           "nodes": []
+          }
+         },
+         {
+          "type": "EMAIL_PARTICIPANTS"
+         },
+         {
+          "type": "ERROR_TRACKING"
+         },
+         {
+          "type": "HIERARCHY",
+          "parent": null,
+          "hasChildren": false,
+          "children": {
+           "count": 0,
+           "nodes": []
+          }
+         },
+         {
+          "type": "LABELS",
+          "labels": {
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/5",
+             "title": "wayfinder:grilling"
+            }
+           ]
+          }
+         },
+         {
+          "type": "LINKED_ITEMS",
+          "linkedItems": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "MILESTONE",
+          "milestone": null
+         },
+         {
+          "type": "NOTES",
+          "discussions": {
+           "nodes": [],
+           "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": null
+           }
+          }
+         },
+         {
+          "type": "NOTIFICATIONS"
+         },
+         {
+          "type": "PARTICIPANTS"
+         },
+         {
+          "type": "START_AND_DUE_DATE",
+          "dueDate": null,
+          "startDate": null
+         },
+         {
+          "type": "TIME_TRACKING"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ ],
+ "glabVersion": "1.123.0",
+ "auth": {
+  "localhost": {
+   "loggedIn": true
+  }
+ }
+}

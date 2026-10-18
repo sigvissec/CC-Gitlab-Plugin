@@ -1,7 +1,7 @@
 {
   "name": "gitlab-work-items",
   "displayName": "GitLab Work Items",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Brings GitLab Issues and Tasks into Claude Code: fetch them and filtered lists live, see their merge requests, and edit, comment, resolve Threads, and create them after previewing every Write.",
   "author": {
     "name": "sigvissec"

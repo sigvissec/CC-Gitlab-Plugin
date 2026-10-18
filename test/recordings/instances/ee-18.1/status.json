@@ -456,12 +456,12 @@
        "workItems": {
         "nodes": [
          {
-          "id": "gid://gitlab/WorkItem/4",
-          "reference": "acme/app#4",
-          "title": "An Issue for Edits",
+          "id": "gid://gitlab/WorkItem/7",
+          "reference": "acme/app#7",
+          "title": "Measure cache hit rates",
           "state": "OPEN",
-          "webUrl": "http://localhost:8929/acme/app/-/issues/4",
-          "updatedAt": "2026-10-15T16:17:26Z",
+          "webUrl": "http://localhost:8929/acme/app/-/issues/7",
+          "updatedAt": "2026-10-16T12:45:02Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -479,7 +479,11 @@
            {
             "type": "LABELS",
             "labels": {
-             "nodes": []
+             "nodes": [
+              {
+               "title": "wayfinder:research"
+              }
+             ]
             }
            },
            {
@@ -491,7 +495,7 @@
         ],
         "pageInfo": {
          "hasNextPage": true,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNSAxNjoxNzoyNi40OTIwNjEwMDAgKzAwMDAiLCJpZCI6IjQifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NTowMi45NzU2MTMwMDAgKzAwMDAiLCJpZCI6IjcifQ"
         }
        }
       }
@@ -503,7 +507,7 @@
    "operationName": "FetchWorkItem",
    "variables": {
     "fullPath": "acme/app",
-    "iid": "4"
+    "iid": "7"
    },
    "queryHash": "9fcc348474665eb7dc40f04a8d65a4b5c217604ba9ab49f1b62f3a7966619aeb",
    "response": {
@@ -512,16 +516,16 @@
      "data": {
       "namespace": {
        "workItem": {
-        "id": "gid://gitlab/WorkItem/4",
-        "iid": "4",
-        "reference": "acme/app#4",
-        "title": "An Issue for Edits",
+        "id": "gid://gitlab/WorkItem/7",
+        "iid": "7",
+        "reference": "acme/app#7",
+        "title": "Measure cache hit rates",
         "state": "OPEN",
         "confidential": false,
-        "description": null,
-        "webUrl": "http://localhost:8929/acme/app/-/issues/4",
-        "createdAt": "2026-10-15T16:17:26Z",
-        "updatedAt": "2026-10-15T16:17:26Z",
+        "description": "Part of #5",
+        "webUrl": "http://localhost:8929/acme/app/-/issues/7",
+        "createdAt": "2026-10-16T12:45:02Z",
+        "updatedAt": "2026-10-16T12:45:02Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -590,7 +594,12 @@
          {
           "type": "LABELS",
           "labels": {
-           "nodes": []
+           "nodes": [
+            {
+             "id": "gid://gitlab/ProjectLabel/6",
+             "title": "wayfinder:research"
+            }
+           ]
           }
          },
          {

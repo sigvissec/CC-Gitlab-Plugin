@@ -13,6 +13,9 @@
  "mentioningMergeRequest": "acme/app!2",
  "milestone": "18.2",
  "threadNoteUrl": "http://localhost:8929/acme/app/-/work_items/1#note_6",
+ "wayfinderMap": "acme/app#5",
+ "claimedTicket": "acme/app#6",
+ "unclaimedTicket": "acme/app#7",
  "users": [
   "alice",
   "bob"

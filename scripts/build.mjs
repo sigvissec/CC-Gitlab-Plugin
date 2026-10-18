@@ -1,4 +1,4 @@
-// Bundles the MCP server and the write-guard hook into single files inside the plugin,
+// Bundles the MCP server and the hooks into single files inside the plugin,
 // so installing the plugin downloads nothing.
 import { build } from "esbuild";
 
@@ -16,3 +16,4 @@ const shared = {
 
 await build({ ...shared, entryPoints: ["src/server/main.ts"], outfile: `${pluginDir}server/gitlab-work-items.mjs` });
 await build({ ...shared, entryPoints: ["src/hook/write-guard.ts"], outfile: `${pluginDir}hooks/write-guard.mjs` });
+await build({ ...shared, entryPoints: ["src/hook/session-start.ts"], outfile: `${pluginDir}hooks/session-start.mjs` });
