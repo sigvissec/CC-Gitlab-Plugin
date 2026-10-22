@@ -36,7 +36,7 @@
      "wayfinder:map"
     ]
    },
-   "queryHash": "eb64e1fd221036aff6521ec85642dca84b7125e2fd4c2ef906382e56dd49402b",
+   "queryHash": "f2844d19ba8c4a17bbf65d8274e15a4f53c14f9fe1d0dd77931d2cc3b98f7054",
    "response": {
     "exitCode": 0,
     "body": {
@@ -72,7 +72,8 @@
         "nodes": [
          {
           "reference": "acme/app#5",
-          "title": "Plan the cache"
+          "title": "Plan the cache",
+          "webUrl": "http://localhost:8929/acme/app/-/issues/5"
          }
         ]
        }
