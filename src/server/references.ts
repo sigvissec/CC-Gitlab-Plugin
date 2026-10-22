@@ -3,14 +3,18 @@
 import type { Config } from "./config.js";
 import { GitLabError } from "./gateway.js";
 
-export interface WorkItemRef {
+/** What a Reference points at: a project path and IID, and a Comment when it links to one. */
+export interface ParsedReference {
   fullPath: string;
   iid: string;
-  /** Set when the Reference was a link to a specific Comment. */
-  noteId?: string;
+  /** The number of the Comment a Comment link points at (GitLab's `#note_<number>` anchor). */
+  commentNumber?: string;
 }
 
 export const SUPPORTED_TYPES = ["Issue", "Task"] as const;
+
+/** A Work Item Type the plugin works with. */
+export type WorkItemType = (typeof SUPPORTED_TYPES)[number];
 
 export function refused(message: string): GitLabError {
   return new GitLabError(message, "refused");
@@ -25,11 +29,16 @@ const EPIC = "Epics aren't supported: the plugin works with Issues and Tasks onl
 const mergeRequest = (reference: string) =>
   `${reference} is a merge request. The plugin shows the merge requests linked to a Work Item, but doesn't work on merge requests themselves.`;
 
-export function fullReference(ref: WorkItemRef): string {
+export function fullReference(ref: ParsedReference): string {
   return `${ref.fullPath}#${ref.iid}`;
 }
 
-export function parseReference(input: string, config: Config): WorkItemRef {
+/** A Work Item's URL on the configured Instance, in the form the plugin itself accepts. */
+export function workItemUrl(ref: ParsedReference, config: Config): string {
+  return `${config.baseUrl}/${ref.fullPath}/-/work_items/${ref.iid}`;
+}
+
+export function parseReference(input: string, config: Config): ParsedReference {
   const text = input.trim();
   if (/^https?:\/\//i.test(text)) return parseUrl(text, config);
 
@@ -45,7 +54,7 @@ export function parseReference(input: string, config: Config): WorkItemRef {
   throw refused(`"${text}" isn't a Work Item Reference. Use a Work Item URL or a full reference such as group/project#12.`);
 }
 
-function parseUrl(text: string, config: Config): WorkItemRef {
+function parseUrl(text: string, config: Config): ParsedReference {
   const url = new URL(text);
   const base = new URL(config.baseUrl);
   const basePath = base.pathname.replace(/\/+$/, "");
@@ -63,6 +72,6 @@ function parseUrl(text: string, config: Config): WorkItemRef {
   if (!item?.[1] || !item[2]) {
     throw refused(`${text} isn't a Work Item URL. Use a link to an Issue or Task, or a full reference such as group/project#12.`);
   }
-  const note = /^#note_(\d+)$/.exec(url.hash);
-  return { fullPath: item[1], iid: item[2], ...(note?.[1] ? { noteId: note[1] } : {}) };
+  const comment = /^#note_(\d+)$/.exec(url.hash);
+  return { fullPath: item[1], iid: item[2], ...(comment?.[1] ? { commentNumber: comment[1] } : {}) };
 }

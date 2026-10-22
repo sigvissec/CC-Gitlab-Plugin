@@ -62,6 +62,23 @@ describe("fetching one Work Item", () => {
     expect(result.text).toContain("Can you add logs?");
   });
 
+  it("names every Work Item it mentions by full reference and URL", async () => {
+    const s = await withItems([
+      fetchWorkItem({
+        parent: { reference: "acme/app#3", title: "Auth hardening", type: "Issue" },
+        children: [{ reference: "acme/app#13", title: "Write repro test" }],
+        linked: [{ linkType: "relates_to", reference: "acme/app#20", title: "Session cookie" }],
+      }),
+    ]);
+
+    const result = await s.call("fetch_work_item", { reference: "acme/app#12" });
+
+    const url = (iid: number) => `https://gitlab.example.com/acme/app/-/work_items/${iid}`;
+    expect(result.text).toContain(`Parent: acme/app#3 (Auth hardening) ${url(3)}`);
+    expect(result.text).toMatch(new RegExp(`^  - acme/app#13 Write repro test \\[.+\\] ${url(13)}$`, "m"));
+    expect(result.text).toMatch(new RegExp(`^  - relates_to acme/app#20 Session cookie \\[open\\] ${url(20)}$`, "m"));
+  });
+
   it("answers in text alone, so Claude Code shows Claude the description and Threads, not just the fields", async () => {
     const s = await withItems([
       fetchWorkItem({ description: "Steps:\n1. Log in", threads: [{ id: "d1", notes: [{ id: 101, author: "bob", body: "Can you add logs?" }] }] }),
@@ -97,6 +114,7 @@ describe("fetching one Work Item", () => {
     const result = await s.call("fetch_work_item", { reference: "https://gitlab.example.com/acme/app/-/work_items/12#note_457" });
 
     expect(result.data.focus).toMatchObject({ threadId: "gid://gitlab/Discussion/d2", commentId: "gid://gitlab/DiscussionNote/457" });
+    expect(result.text).toContain("Focus: Comment gid://gitlab/DiscussionNote/457 in Thread gid://gitlab/Discussion/d2");
   });
 
   it("works on an Instance under a sub-path", async () => {

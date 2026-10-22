@@ -14320,12 +14320,12 @@ function handleCatchall(proms, input2, payload, ctx, def, inst, abortEarly) {
   const t = _catchall.def.type;
   const optin = _catchall.optin;
   const optout = _catchall.optout;
-  let seen = 0;
+  let seen2 = 0;
   for (const key in input2) {
-    if (abortEarly && payload.issues.length !== seen) {
-      if (aborted(payload, seen))
+    if (abortEarly && payload.issues.length !== seen2) {
+      if (aborted(payload, seen2))
         break;
-      seen = payload.issues.length;
+      seen2 = payload.issues.length;
     }
     if (keySet.has(key))
       continue;
@@ -14414,12 +14414,12 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
     const proms = [];
     const shape = value.shape;
     const abortEarly = ctx?.abortEarly;
-    let seen = payload.issues.length;
+    let seen2 = payload.issues.length;
     for (const key of value.allKeys) {
-      if (abortEarly && payload.issues.length !== seen) {
-        if (aborted(payload, seen))
+      if (abortEarly && payload.issues.length !== seen2) {
+        if (aborted(payload, seen2))
           break;
-        seen = payload.issues.length;
+        seen2 = payload.issues.length;
       }
       if (key === "__proto__")
         continue;
@@ -14959,12 +14959,12 @@ var $ZodTuple = /* @__PURE__ */ $constructor("$ZodTuple", (inst, def) => {
     if (def.rest && !itemAborted) {
       let i = items.length - 1;
       const rest = input2.slice(items.length);
-      let seen = payload.issues.length;
+      let seen2 = payload.issues.length;
       for (const el of rest) {
-        if (abortEarly && payload.issues.length !== seen) {
-          if (aborted(payload, seen))
+        if (abortEarly && payload.issues.length !== seen2) {
+          if (aborted(payload, seen2))
             break;
-          seen = payload.issues.length;
+          seen2 = payload.issues.length;
         }
         i++;
         const result = def.rest._zod.run({ value: el, issues: [] }, ctx);
@@ -15194,12 +15194,12 @@ var $ZodMap = /* @__PURE__ */ $constructor("$ZodMap", (inst, def) => {
     const proms = [];
     payload.value = memo2 ? memo2.alloc(inst, payload, /* @__PURE__ */ new Map(), ctx) : /* @__PURE__ */ new Map();
     const abortEarly = ctx?.abortEarly;
-    let seen = payload.issues.length;
+    let seen2 = payload.issues.length;
     for (const [key, value] of input2) {
-      if (abortEarly && payload.issues.length !== seen) {
-        if (aborted(payload, seen))
+      if (abortEarly && payload.issues.length !== seen2) {
+        if (aborted(payload, seen2))
           break;
-        seen = payload.issues.length;
+        seen2 = payload.issues.length;
       }
       const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
       const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
@@ -15265,12 +15265,12 @@ var $ZodSet = /* @__PURE__ */ $constructor("$ZodSet", (inst, def) => {
     const proms = [];
     payload.value = memo2 ? memo2.alloc(inst, payload, /* @__PURE__ */ new Set(), ctx) : /* @__PURE__ */ new Set();
     const abortEarly = ctx?.abortEarly;
-    let seen = payload.issues.length;
+    let seen2 = payload.issues.length;
     for (const item of input2) {
-      if (abortEarly && payload.issues.length !== seen) {
-        if (aborted(payload, seen))
+      if (abortEarly && payload.issues.length !== seen2) {
+        if (aborted(payload, seen2))
           break;
-        seen = payload.issues.length;
+        seen2 = payload.issues.length;
       }
       const result = def.valueType._zod.run({ value: item, issues: [] }, ctx);
       if (result instanceof Promise) {
@@ -26490,14 +26490,14 @@ function handleUnrepresentable(schema, ctx, json2, params, message) {
 function processSchema(schema, ctx, _params = { path: [], schemaPath: [] }) {
   var _a3;
   const def = schema._zod.def;
-  const seen = ctx.seen.get(schema);
-  if (seen) {
-    seen.count++;
+  const seen2 = ctx.seen.get(schema);
+  if (seen2) {
+    seen2.count++;
     const isCycle = _params.schemaPath.includes(schema);
     if (isCycle) {
-      seen.cycle = _params.path;
+      seen2.cycle = _params.path;
     }
-    return seen.schema;
+    return seen2.schema;
   }
   const result = { schema: {}, count: 1, cycle: void 0, path: _params.path };
   ctx.seen.set(schema, result);
@@ -26587,12 +26587,12 @@ function extractDefs(ctx, schema) {
     if (entry2[1].schema.$ref) {
       return;
     }
-    const seen = entry2[1];
+    const seen2 = entry2[1];
     const { ref, defId } = makeURI(entry2);
-    seen.def = { ...seen.schema };
+    seen2.def = { ...seen2.schema };
     if (defId)
-      seen.defId = defId;
-    const schema2 = seen.schema;
+      seen2.defId = defId;
+    const schema2 = seen2.schema;
     for (const key in schema2) {
       delete schema2[key];
     }
@@ -26600,16 +26600,16 @@ function extractDefs(ctx, schema) {
   };
   if (ctx.cycles === "throw") {
     for (const entry2 of ctx.seen.entries()) {
-      const seen = entry2[1];
-      if (seen.cycle) {
-        throw new Error(`Cycle detected: #/${seen.cycle?.join("/")}/<root>
+      const seen2 = entry2[1];
+      if (seen2.cycle) {
+        throw new Error(`Cycle detected: #/${seen2.cycle?.join("/")}/<root>
 
 Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.`);
       }
     }
   }
   for (const entry2 of ctx.seen.entries()) {
-    const seen = entry2[1];
+    const seen2 = entry2[1];
     if (schema === entry2[0]) {
       extractToDef(entry2);
       continue;
@@ -26626,11 +26626,11 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       extractToDef(entry2);
       continue;
     }
-    if (seen.cycle) {
+    if (seen2.cycle) {
       extractToDef(entry2);
       continue;
     }
-    if (seen.count > 1) {
+    if (seen2.count > 1) {
       if (ctx.reused === "ref") {
         extractToDef(entry2);
       }
@@ -26692,7 +26692,7 @@ function foldObjects(members2) {
         const part = other.properties?.[key] ?? undeclaredConstraint(other);
         if (part === null || part === void 0)
           continue;
-        if (!parts.some((seen) => JSON.stringify(seen) === JSON.stringify(part)))
+        if (!parts.some((seen2) => JSON.stringify(seen2) === JSON.stringify(part)))
           parts.push(part);
       }
       const merged = parts.length === 1 ? parts[0] : foldObjects(parts) ?? { allOf: parts };
@@ -26710,7 +26710,7 @@ function foldObjects(members2) {
     const constraints = [];
     for (const object3 of objects) {
       const constraint = undeclaredConstraint(object3);
-      if (constraint && !constraints.some((seen) => JSON.stringify(seen) === JSON.stringify(constraint)))
+      if (constraint && !constraints.some((seen2) => JSON.stringify(seen2) === JSON.stringify(constraint)))
         constraints.push(constraint);
     }
     if (constraints.length === 1)
@@ -26752,13 +26752,13 @@ function finalize(ctx, schema) {
   if (!root)
     throw new Error("Unprocessed schema. This is a bug in Zod.");
   const flattenRef = (zodSchema) => {
-    const seen = ctx.seen.get(zodSchema);
-    if (seen.ref === null)
+    const seen2 = ctx.seen.get(zodSchema);
+    if (seen2.ref === null)
       return;
-    const schema2 = seen.def ?? seen.schema;
+    const schema2 = seen2.def ?? seen2.schema;
     const _cached = { ...schema2 };
-    const ref = seen.ref;
-    seen.ref = null;
+    const ref = seen2.ref;
+    seen2.ref = null;
     if (ref) {
       flattenRef(ref);
       const refSeen = ctx.seen.get(ref);
@@ -26810,7 +26810,7 @@ function finalize(ctx, schema) {
     ctx.override({
       zodSchema,
       jsonSchema: schema2,
-      path: seen.path ?? []
+      path: seen2.path ?? []
     });
   };
   if (!ctx.external || ctx.sharedEmitDoneFor !== ctx.external) {
@@ -26826,8 +26826,8 @@ function finalize(ctx, schema) {
       rewrite();
     if (ctx.intersections.length) {
       const carriers = /* @__PURE__ */ new Map();
-      for (const seen of ctx.seen.values()) {
-        for (const json2 of [seen.schema, seen.def]) {
+      for (const seen2 of ctx.seen.values()) {
+        for (const json2 of [seen2.schema, seen2.def]) {
           const allOf = json2?.allOf;
           if (!Array.isArray(allOf))
             continue;
@@ -26867,11 +26867,11 @@ function finalize(ctx, schema) {
   const defs = ctx.external?.defs ?? {};
   if (!ctx.external || ctx.sharedEmitDoneFor !== ctx.external) {
     for (const entry2 of ctx.seen.entries()) {
-      const seen = entry2[1];
-      if (seen.def && seen.defId) {
-        if (seen.def.id === seen.defId)
-          delete seen.def.id;
-        assignProp(defs, seen.defId, seen.def);
+      const seen2 = entry2[1];
+      if (seen2.def && seen2.defId) {
+        if (seen2.def.id === seen2.defId)
+          delete seen2.def.id;
+        assignProp(defs, seen2.defId, seen2.def);
       }
     }
   }
@@ -27485,8 +27485,8 @@ function rewriteKeyNames(ctx) {
   }
   const rewrites = /* @__PURE__ */ new Map();
   for (const record2 of pendingRecords.get(ctx) ?? []) {
-    const seen = ctx.seen.get(record2);
-    const names = (seen?.def ?? seen?.schema)?.propertyNames;
+    const seen2 = ctx.seen.get(record2);
+    const names = (seen2?.def ?? seen2?.schema)?.propertyNames;
     if (!names || names === true || rewrites.has(names))
       continue;
     const rewritten = stringifyKeyNames(bySchema, names, /* @__PURE__ */ new Set());
@@ -27549,9 +27549,9 @@ var recordProcessor = (schema, ctx, _json, params) => {
 var nullableProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
   const inner = processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
+  const seen2 = ctx.seen.get(schema);
   if (ctx.target === "openapi-3.0") {
-    seen.ref = def.innerType;
+    seen2.ref = def.innerType;
     json2.nullable = true;
   } else {
     json2.anyOf = [inner, { type: "null" }];
@@ -27560,8 +27560,8 @@ var nullableProcessor = (schema, ctx, json2, params) => {
 var nonoptionalProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = def.innerType;
 };
 var UNREPRESENTABLE_DEFAULT = /* @__PURE__ */ Symbol();
 function serializeDefaultValue(value, schema, ctx, json2, params) {
@@ -27580,8 +27580,8 @@ function serializeDefaultValue(value, schema, ctx, json2, params) {
 var defaultProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = def.innerType;
   const value = serializeDefaultValue(def.defaultValue, schema, ctx, json2, params);
   if (value !== UNREPRESENTABLE_DEFAULT)
     json2.default = value;
@@ -27589,8 +27589,8 @@ var defaultProcessor = (schema, ctx, json2, params) => {
 var prefaultProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = def.innerType;
   if (ctx.io !== "input")
     return;
   const value = serializeDefaultValue(def.defaultValue, schema, ctx, json2, params);
@@ -27600,8 +27600,8 @@ var prefaultProcessor = (schema, ctx, json2, params) => {
 var catchProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = def.innerType;
   let catchValue;
   try {
     catchValue = def.catchValue(void 0);
@@ -27616,33 +27616,33 @@ var pipeProcessor = (schema, ctx, _json, params) => {
   const inIsTransform = def.in._zod.traits.has("$ZodTransform");
   const innerType = ctx.io === "input" ? inIsTransform ? def.out : def.in : def.out;
   processSchema(innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = innerType;
 };
 var readonlyProcessor = (schema, ctx, json2, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = def.innerType;
   json2.readOnly = true;
 };
 var promiseProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = def.innerType;
 };
 var optionalProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = def.innerType;
 };
 var lazyProcessor = (schema, ctx, _json, params) => {
   const innerType = schema._zod.innerType;
   processSchema(innerType, ctx, params);
-  const seen = ctx.seen.get(schema);
-  seen.ref = innerType;
+  const seen2 = ctx.seen.get(schema);
+  seen2.ref = innerType;
 };
 var allProcessors = {
   string: stringProcessor,
@@ -30399,7 +30399,7 @@ function checkObjectGuards(objectSchema, guards) {
   });
   return guard.pipe(objectSchema);
 }
-function canonicalKey(value, seen) {
+function canonicalKey(value, seen2) {
   if (value === null)
     return "z";
   const type = typeof value;
@@ -30409,14 +30409,14 @@ function canonicalKey(value, seen) {
     const raw = String(value);
     return `${type[0]}${raw.length}:${raw}`;
   }
-  if (seen.has(value))
+  if (seen2.has(value))
     return null;
-  seen.add(value);
+  seen2.add(value);
   try {
     if (Array.isArray(value)) {
       const parts2 = [];
       for (const item of value) {
-        const key = canonicalKey(item, seen);
+        const key = canonicalKey(item, seen2);
         if (key === null)
           return null;
         parts2.push(key);
@@ -30426,14 +30426,14 @@ function canonicalKey(value, seen) {
     const keys = Object.keys(value).sort();
     const parts = [];
     for (const k of keys) {
-      const key = canonicalKey(value[k], seen);
+      const key = canonicalKey(value[k], seen2);
       if (key === null)
         return null;
       parts.push(`${k.length}:${k}=${key}`);
     }
     return `o${parts.length}:{${parts.join(",")}}`;
   } finally {
-    seen.delete(value);
+    seen2.delete(value);
   }
 }
 var SCHEMA_KEYWORDS = /* @__PURE__ */ new Set([
@@ -36589,6 +36589,47 @@ var StdioServerTransport = class {
   }
 };
 
+// plugins/gitlab-work-items/.claude-plugin/plugin.json
+var plugin_default = {
+  name: "gitlab-work-items",
+  displayName: "GitLab Work Items",
+  version: "0.3.0",
+  description: "Brings GitLab Issues and Tasks into Claude Code: fetch them and filtered lists live, see their merge requests, and edit, comment, resolve Threads, and create them after previewing every Write.",
+  author: {
+    name: "sigvissec"
+  },
+  homepage: "https://github.com/sigvissec/CC-Gitlab-Plugin",
+  repository: "https://github.com/sigvissec/CC-Gitlab-Plugin",
+  keywords: [
+    "gitlab",
+    "work items",
+    "issues",
+    "tasks",
+    "glab"
+  ],
+  userConfig: {
+    instance_url: {
+      type: "string",
+      title: "GitLab Instance URL",
+      description: "Base URL of your GitLab Instance, including any sub-path, for example https://gitlab.example.com or https://example.com/gitlab.",
+      default: "https://gitlab.com",
+      required: true
+    },
+    token: {
+      type: "string",
+      title: "GitLab personal access token (optional)",
+      description: "A token with the api scope (read_api is enough for reading). Leave empty to use your glab login for this Instance, or GITLAB_TOKEN.",
+      sensitive: true
+    },
+    footer: {
+      type: "boolean",
+      title: 'Add a "Posted with Claude Code" footer',
+      description: "Adds a short footer to Comments, replies, and new Work Items' descriptions.",
+      default: true
+    }
+  }
+};
+
 // src/server/config.ts
 function readConfig() {
   const env = process.env;
@@ -36613,6 +36654,17 @@ function configOf(instanceUrl, token, footer) {
 
 // src/server/gateway.ts
 import { spawn } from "node:child_process";
+
+// src/server/once.ts
+function onceItWorks(check2) {
+  let answer2;
+  return () => answer2 ??= check2().catch((error62) => {
+    answer2 = void 0;
+    throw error62;
+  });
+}
+
+// src/server/gateway.ts
 var REMOVED_VARIABLES = [
   "GITLAB_TOKEN",
   "GITLAB_ACCESS_TOKEN",
@@ -36667,12 +36719,8 @@ var Gateway = class {
     this.config = config3;
   }
   config;
-  tokenSource;
-  /** Which token the server uses, decided once per session. */
-  source() {
-    this.tokenSource ??= this.chooseSource();
-    return this.tokenSource;
-  }
+  /** Which token the server uses: decided once per session, or again until one is found. */
+  source = onceItWorks(() => this.chooseSource());
   async chooseSource() {
     if (this.config.settingToken) return "plugin setting";
     const status2 = await run(
@@ -36733,6 +36781,10 @@ function atLeast(version2, minimum) {
   }
   return true;
 }
+var glabSupported = (version2) => atLeast(version2, MINIMUM_GLAB);
+var gitlabSupported = (version2) => atLeast(version2, MINIMUM_GITLAB);
+var glabTooOld = (version2) => `glab ${version2} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`;
+var gitlabTooOld = (version2) => `This Instance runs GitLab ${version2}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`;
 
 // src/server/instance.ts
 var PROBE = (
@@ -36745,52 +36797,53 @@ var PROBE = (
 `
 );
 var Instance = class {
-  constructor(gateway2) {
-    this.gateway = gateway2;
+  constructor(gateway) {
+    this.gateway = gateway;
   }
   gateway;
-  info;
-  /** Probes the Instance once per session. */
-  probe() {
-    this.info ??= this.gateway.graphql("InstanceProbe", PROBE).then((data) => {
-      if (!data?.metadata?.version) {
-        throw new GitLabError("GitLab didn't report its version; the token may be missing or invalid.", "not-set-up");
-      }
-      if (!data.currentUser?.username) {
-        throw new GitLabError("The token isn't signed in as any user; it may be expired or revoked.", "not-set-up");
-      }
-      return {
-        version: data.metadata.version,
-        enterprise: Boolean(data.metadata.enterprise),
-        username: data.currentUser.username,
-        meetsMinimumVersion: atLeast(data.metadata.version, MINIMUM_GITLAB)
-      };
-    });
-    return this.info;
-  }
-  glabChecked;
+  /** Probes the Instance once per session, or again after a probe that failed. */
+  probe = onceItWorks(async () => {
+    const data = await this.gateway.graphql("InstanceProbe", PROBE);
+    if (!data?.metadata?.version) {
+      throw new GitLabError("GitLab didn't report its version; the token may be missing or invalid.", "not-set-up");
+    }
+    if (!data.currentUser?.username) {
+      throw new GitLabError("The token isn't signed in as any user; it may be expired or revoked.", "not-set-up");
+    }
+    return {
+      version: data.metadata.version,
+      enterprise: Boolean(data.metadata.enterprise),
+      username: data.currentUser.username,
+      meetsMinimumVersion: gitlabSupported(data.metadata.version)
+    };
+  });
+  requireGlab = onceItWorks(async () => {
+    const version2 = await this.gateway.glabVersion();
+    if (!glabSupported(version2)) throw new GitLabError(glabTooOld(version2), "not-set-up");
+  });
   /** Throws unless glab and the Instance are new enough; every tool but `status` calls this first. */
   async requireSupported() {
-    this.glabChecked ??= this.gateway.glabVersion().then((version2) => {
-      if (!atLeast(version2, MINIMUM_GLAB)) {
-        throw new GitLabError(`glab ${version2} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`, "not-set-up");
-      }
-    });
-    await this.glabChecked;
+    await this.requireGlab();
     const info = await this.probe();
-    if (!info.meetsMinimumVersion) {
-      throw new GitLabError(
-        `This Instance runs GitLab ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`,
-        "not-set-up"
-      );
-    }
+    if (!info.meetsMinimumVersion) throw new GitLabError(gitlabTooOld(info.version), "not-set-up");
     return info;
   }
 };
 
+// src/server/gitlab.ts
+function connect(config3) {
+  const gateway = new Gateway(config3);
+  return { config: config3, gateway, instance: new Instance(gateway) };
+}
+
 // src/server/nodes.ts
+var SUMMARY_FIELDS = "id reference(full: true) title state webUrl workItemType { name }";
 var widgetOf = (node2, type) => (node2?.widgets ?? []).find((w) => w.type === type);
 var stateOf = (state) => state === "CLOSED" ? "closed" : "open";
+var typeOf = (node2) => node2?.workItemType?.name ?? "Unknown";
+function summaryOf(node2) {
+  return { id: node2.id, reference: node2.reference, title: node2.title, type: typeOf(node2), state: stateOf(node2.state), url: node2.webUrl };
+}
 
 // src/server/references.ts
 var SUPPORTED_TYPES = ["Issue", "Task"];
@@ -36837,14 +36890,13 @@ function parseUrl(text, config3) {
   if (!item?.[1] || !item[2]) {
     throw refused(`${text} isn't a Work Item URL. Use a link to an Issue or Task, or a full reference such as group/project#12.`);
   }
-  const note = /^#note_(\d+)$/.exec(url2.hash);
-  return { fullPath: item[1], iid: item[2], ...note?.[1] ? { noteId: note[1] } : {} };
+  const comment = /^#note_(\d+)$/.exec(url2.hash);
+  return { fullPath: item[1], iid: item[2], ...comment?.[1] ? { commentNumber: comment[1] } : {} };
 }
 
 // src/server/reader.ts
-var SUMMARY = "id reference(full: true) title state webUrl workItemType { name }";
 var PAGE = "pageInfo { hasNextPage endCursor }";
-var LINKS = `nodes { linkType workItem { ${SUMMARY} } } ${PAGE}`;
+var LINKS = `nodes { linkType workItem { ${SUMMARY_FIELDS} } } ${PAGE}`;
 var THREADS = `
             nodes {
               id replyId resolvable resolved
@@ -36872,9 +36924,9 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
         ... on WorkItemWidgetMilestone { milestone { id title } }
         ... on WorkItemWidgetStartAndDueDate { dueDate startDate }${enterprise ? "\n        ... on WorkItemWidgetWeight { weight }" : ""}
         ... on WorkItemWidgetHierarchy {
-          parent { ${SUMMARY} }
+          parent { ${SUMMARY_FIELDS} }
           hasChildren
-          children(first: 100) { count nodes { ${SUMMARY} } }
+          children(first: 100) { count nodes { ${SUMMARY_FIELDS} } }
         }
         ... on WorkItemWidgetLinkedItems { linkedItems(first: 100) { ${LINKS} } }
         ... on WorkItemWidgetNotes { discussions(filter: ONLY_COMMENTS, first: 100) { ${THREADS} } }
@@ -36924,16 +36976,6 @@ query FetchWorkItemLinks($fullPath: ID!, $iid: String!, $after: String!) {
     )
   }
 ];
-function summary(node2) {
-  return {
-    id: node2.id,
-    reference: node2.reference,
-    title: node2.title,
-    type: node2.workItemType?.name ?? "Unknown",
-    state: stateOf(node2.state),
-    url: node2.webUrl
-  };
-}
 function mrState(mr) {
   if (mr.state === "opened") return mr.draft ? "draft" : "open";
   if (mr.state === "merged") return "merged";
@@ -36941,18 +36983,18 @@ function mrState(mr) {
 }
 var MR_ORDER = { draft: 0, open: 1, merged: 2, closed: 3 };
 function mergeRequests(widget) {
-  const seen = /* @__PURE__ */ new Map();
+  const seen2 = /* @__PURE__ */ new Map();
   const closing = widget?.closingMergeRequests?.nodes ?? [];
   for (const node2 of closing) {
     const mr = node2.mergeRequest;
-    if (mr) seen.set(mr.id, { reference: mr.reference, title: mr.title, state: mrState(mr), relation: "closes", url: mr.webUrl });
+    if (mr) seen2.set(mr.id, { reference: mr.reference, title: mr.title, state: mrState(mr), relation: "closes", url: mr.webUrl });
   }
   for (const mr of widget?.relatedMergeRequests?.nodes ?? []) {
-    if (!seen.has(mr.id)) {
-      seen.set(mr.id, { reference: mr.reference, title: mr.title, state: mrState(mr), relation: "mentions", url: mr.webUrl });
+    if (!seen2.has(mr.id)) {
+      seen2.set(mr.id, { reference: mr.reference, title: mr.title, state: mrState(mr), relation: "mentions", url: mr.webUrl });
     }
   }
-  const all = [...seen.values()].sort((a, b) => MR_ORDER[a.state] - MR_ORDER[b.state]);
+  const all = [...seen2.values()].sort((a, b) => MR_ORDER[a.state] - MR_ORDER[b.state]);
   const visibleClosing = closing.filter((node2) => node2.mergeRequest).length;
   const count = widget?.closingMergeRequests?.count ?? closing.length;
   return widget?.closingMergeRequests?.pageInfo?.hasNextPage ? { all, hidden: closing.length - visibleClosing, unfetched: Math.max(0, count - closing.length) } : { all, hidden: Math.max(0, count - visibleClosing), unfetched: 0 };
@@ -36968,7 +37010,7 @@ function toWorkItem(node2, ref) {
     fullPath: ref.fullPath,
     iid: node2.iid,
     title: node2.title,
-    type: node2.workItemType?.name ?? "Unknown",
+    type: typeOf(node2),
     state: stateOf(node2.state),
     confidential: Boolean(node2.confidential),
     author: node2.author?.username ?? "",
@@ -36979,10 +37021,10 @@ function toWorkItem(node2, ref) {
     milestone: widget("MILESTONE")?.milestone ?? null,
     dueDate: widget("START_AND_DUE_DATE")?.dueDate ?? null,
     weight: weight ? weight.weight ?? null : void 0,
-    parent: hierarchy?.parent ? summary(hierarchy.parent) : null,
-    children: (hierarchy?.children?.nodes ?? []).map(summary),
+    parent: hierarchy?.parent ? summaryOf(hierarchy.parent) : null,
+    children: (hierarchy?.children?.nodes ?? []).map(summaryOf),
     childrenCount: hierarchy?.children?.count ?? (hierarchy?.children?.nodes ?? []).length,
-    linkedItems: (widget("LINKED_ITEMS")?.linkedItems?.nodes ?? []).map((n) => ({ ...summary(n.workItem), linkType: n.linkType })),
+    linkedItems: (widget("LINKED_ITEMS")?.linkedItems?.nodes ?? []).map((n) => ({ ...summaryOf(n.workItem), linkType: n.linkType })),
     threads: (widget("NOTES")?.discussions?.nodes ?? []).map((d) => ({
       id: d.id,
       replyId: d.replyId,
@@ -37010,58 +37052,30 @@ query ResolveWorkItem($fullPath: ID!, $iid: String!) {
   namespace(fullPath: $fullPath) { workItem(iid: $iid) { id reference(full: true) workItemType { name } } }
 }`
 );
-function threadWithComment(item, noteId) {
+function threadWithComment(item, commentNumber) {
   for (const thread of item.threads) {
-    const comment = thread.comments.find((c) => c.id.slice(c.id.lastIndexOf("/") + 1) === noteId);
+    const comment = thread.comments.find((c) => c.id.slice(c.id.lastIndexOf("/") + 1) === commentNumber);
     if (comment) return { thread, commentId: comment.id };
   }
   return void 0;
 }
 var Reader = class {
-  constructor(config3, gateway2, instance2) {
-    this.config = config3;
-    this.gateway = gateway2;
-    this.instance = instance2;
+  constructor(gitlab2) {
+    this.gitlab = gitlab2;
   }
-  config;
-  gateway;
-  instance;
-  /** When each Work Item was last updated, as of the version Claude was last shown. */
-  seen = /* @__PURE__ */ new Map();
-  /** How many Comments each Thread had in the version Claude was last shown. */
-  seenThreads = /* @__PURE__ */ new Map();
+  gitlab;
   requireSupportedType(reference, type) {
     if (!SUPPORTED_TYPES.includes(type)) {
       throw refused(`${reference} is an ${type}; only Issues and Tasks are supported.`);
     }
   }
-  /** Records the version of a Work Item that Claude has now seen. */
-  remember(item) {
-    this.seen.set(item.id, item.updatedAt);
-    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.commentCount);
-  }
-  /** How many Comments a Thread had in the version Claude was last shown; its count now if never shown. */
-  commentsSeen(thread) {
-    return this.seenThreads.get(thread.id) ?? thread.commentCount;
-  }
-  /**
-   * Fetches a Work Item and says whether it changed since the version Claude was last shown.
-   * A changed Work Item counts as shown from here on, so callers must show its new state.
-   */
-  async fetchSinceSeen(ref) {
-    const item = await this.fetch(ref);
-    const seen = this.seen.get(item.id);
-    const changed = seen !== void 0 && seen !== item.updatedAt;
-    if (changed) this.remember(item);
-    return { item, changed };
-  }
   /** Looks up a Work Item's global ID without fetching the rest of it. */
   async resolve(ref) {
-    await this.instance.requireSupported();
-    const data = await this.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
+    await this.gitlab.instance.requireSupported();
+    const data = await this.gitlab.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
     const node2 = data?.namespace?.workItem;
-    if (!node2) throw notFound(fullReference(ref), this.config);
-    const resolved = { id: node2.id, reference: node2.reference ?? fullReference(ref), type: node2.workItemType?.name ?? "Unknown" };
+    if (!node2) throw notFound(fullReference(ref), this.gitlab.config);
+    const resolved = { id: node2.id, reference: node2.reference ?? fullReference(ref), type: typeOf(node2) };
     this.requireSupportedType(resolved.reference, resolved.type);
     return resolved;
   }
@@ -37070,7 +37084,7 @@ var Reader = class {
     const nodes = [];
     while (pageInfo?.hasNextPage && pageInfo.endCursor) {
       const variables = { fullPath: ref.fullPath, iid: ref.iid, after: pageInfo.endCursor };
-      const data = await this.gateway.graphql(paged.operationName, paged.query, variables);
+      const data = await this.gitlab.gateway.graphql(paged.operationName, paged.query, variables);
       const connection = widgetOf(data?.namespace?.workItem, paged.widget)?.[paged.field];
       nodes.push(...connection?.nodes ?? []);
       pageInfo = connection?.pageInfo;
@@ -37079,13 +37093,13 @@ var Reader = class {
   }
   /** Fetches a supported Work Item, or throws a readable refusal. */
   async fetch(ref) {
-    const info = await this.instance.requireSupported();
-    const data = await this.gateway.graphql("FetchWorkItem", fetchQuery(info.enterprise), {
+    const info = await this.gitlab.instance.requireSupported();
+    const data = await this.gitlab.gateway.graphql("FetchWorkItem", fetchQuery(info.enterprise), {
       fullPath: ref.fullPath,
       iid: ref.iid
     });
     const node2 = data?.namespace?.workItem;
-    if (!node2) throw notFound(fullReference(ref), this.config);
+    if (!node2) throw notFound(fullReference(ref), this.gitlab.config);
     for (const paged of PAGED) {
       const connection = widgetOf(node2, paged.widget)?.[paged.field];
       if (connection) connection.nodes = [...connection.nodes ?? [], ...await this.laterPages(ref, paged, connection.pageInfo)];
@@ -37093,6 +37107,33 @@ var Reader = class {
     const item = toWorkItem(node2, ref);
     this.requireSupportedType(item.reference, item.type);
     return item;
+  }
+};
+
+// src/server/seen.ts
+var Seen = class {
+  /** When each Work Item was last updated, as of the version Claude was last shown. */
+  versions = /* @__PURE__ */ new Map();
+  /** How many Comments each Thread had in the version Claude was last shown. */
+  commentCounts = /* @__PURE__ */ new Map();
+  /** Records the version of a Work Item that Claude has now been shown. */
+  remember(item) {
+    this.versions.set(item.id, item.updatedAt);
+    for (const thread of item.threads) this.commentCounts.set(thread.id, thread.commentCount);
+  }
+  /** How many Comments a Thread had in the version Claude was last shown; its count now if never shown. */
+  comments(thread) {
+    return this.commentCounts.get(thread.id) ?? thread.commentCount;
+  }
+  /**
+   * Whether a Work Item changed since the version Claude was last shown. A changed one counts as
+   * shown from here on, so callers must show its new state.
+   */
+  changed(item) {
+    const seen2 = this.versions.get(item.id);
+    const changed = seen2 !== void 0 && seen2 !== item.updatedAt;
+    if (changed) this.remember(item);
+    return changed;
   }
 };
 
@@ -37126,8 +37167,8 @@ query LookupWorkItemTypes($fullPath: ID!) {
 }`
 );
 var Lookups = class {
-  constructor(gateway2) {
-    this.gateway = gateway2;
+  constructor(gateway) {
+    this.gateway = gateway;
   }
   gateway;
   types = /* @__PURE__ */ new Map();
@@ -37177,9 +37218,6 @@ var Lookups = class {
     return (await this.type(fullPath, name)).widgets.has(widget);
   }
 };
-
-// src/server/writes/writes.ts
-import { randomUUID } from "node:crypto";
 
 // src/server/diff.ts
 function lineDiff(before, after) {
@@ -37253,9 +37291,9 @@ function renderConfirmation(plan) {
 }
 function renderReport(results) {
   return results.map((r) => {
-    const head = `${r.number}. ${r.summary}: ${r.outcome}${r.created ? `, created ${r.created} ${r.url}` : ""}`;
-    const notes = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
-    return [head, ...notes].join("\n");
+    const head = `${r.number}. ${r.summary}${r.url ? ` ${r.url}` : ""}: ${r.outcome}${r.created ? `, created ${r.created} ${r.createdUrl}` : ""}`;
+    const details = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
+    return [head, ...details].join("\n");
   }).join("\n");
 }
 
@@ -37276,9 +37314,9 @@ mutation RemoveLinkedItems($input: WorkItemRemoveLinkedItemsInput!) {
 }`
 );
 var LINKS_PER_REQUEST = 10;
-function batches(ids) {
+function batches(items) {
   const out = [];
-  for (let i = 0; i < ids.length; i += LINKS_PER_REQUEST) out.push(ids.slice(i, i + LINKS_PER_REQUEST));
+  for (let i = 0; i < items.length; i += LINKS_PER_REQUEST) out.push(items.slice(i, i + LINKS_PER_REQUEST));
   return out;
 }
 var LINK_TYPES = { relates_to: "RELATED", blocks: "BLOCKS", is_blocked_by: "BLOCKED_BY" };
@@ -37324,18 +37362,42 @@ mutation UpdateWorkItem($input: WorkItemUpdateInput!) {
   workItemUpdate(input: $input) { workItem { id } errors }
 }`
 );
+var WIDGETS = {
+  description: (description) => ({ descriptionWidget: { description } }),
+  assignees: (assigneeIds) => ({ assigneesWidget: { assigneeIds } }),
+  milestone: (milestoneId) => ({ milestoneWidget: { milestoneId } }),
+  dueDate: (dueDate) => ({ startAndDueDateWidget: { dueDate } }),
+  weight: (weight) => ({ weightWidget: { weight } }),
+  parent: (parentId) => ({ hierarchyWidget: { parentId } })
+};
+var Changes = class {
+  constructor(input2) {
+    this.input = input2;
+  }
+  input;
+  preview = [];
+  expect = {};
+  /** The fields changed, as the preview names them. */
+  fields = [];
+  add(field, preview, input2, expect) {
+    this.fields.push(field);
+    this.preview.push(...preview);
+    Object.assign(this.input, input2);
+    Object.assign(this.expect, expect);
+  }
+};
+var weightUnavailable = (where) => refused(`${where}, weight isn't available: it needs GitLab EE on Premium or above. Nothing was prepared.`);
+var cantComment = (item) => refused(`On ${item.reference}, your token can't post Comments. Nothing was prepared.`);
 var Planner = class {
-  constructor(config3, gateway2, instance2, reader2, lookups2) {
-    this.config = config3;
-    this.gateway = gateway2;
-    this.instance = instance2;
+  constructor(gitlab2, reader2, seen2, lookups2) {
+    this.gitlab = gitlab2;
     this.reader = reader2;
+    this.seen = seen2;
     this.lookups = lookups2;
   }
-  config;
-  gateway;
-  instance;
+  gitlab;
   reader;
+  seen;
   lookups;
   plan(request) {
     switch (request.kind) {
@@ -37350,92 +37412,73 @@ var Planner = class {
         return this.planCreate(request);
     }
   }
+  parse(reference) {
+    return parseReference(reference, this.gitlab.config);
+  }
   async planCreate(request) {
     let fullPath;
     let parent;
     if (request.type === "Task") {
       if (!request.parent) throw refused("A Task needs a parent Issue: pass its Reference as parent.");
-      parent = await this.reader.fetch(parseReference(request.parent, this.config));
+      parent = await this.reader.fetch(this.parse(request.parent));
       if (parent.type !== "Issue") throw refused(`${parent.reference} is a ${parent.type}; a Task's parent must be an Issue.`);
       if (!parent.permissions.adminParentLink) throw refused(`Your token can't add Tasks under ${parent.reference}. Nothing was prepared.`);
       fullPath = parent.fullPath;
     } else {
       if (!request.project) throw refused("An Issue needs a project: pass its full path as project, for example acme/app.");
       if (request.parent) throw refused("An Issue's parent would be an Epic, and Epics aren't supported.");
-      await this.instance.requireSupported();
-      const data = await this.gateway.graphql("CheckProject", CHECK_PROJECT, { fullPath: request.project });
-      if (!data?.project) throw notFound(request.project, this.config);
+      await this.gitlab.instance.requireSupported();
+      const data = await this.gitlab.gateway.graphql("CheckProject", CHECK_PROJECT, { fullPath: request.project });
+      if (!data?.project) throw notFound(request.project, this.gitlab.config);
       if (!data.project.userPermissions?.createWorkItem) throw refused(`Your token can't create Work Items in ${request.project}. Nothing was prepared.`);
       fullPath = request.project;
     }
     if (request.weight !== void 0 && !await this.lookups.typeOffers(fullPath, request.type, "WEIGHT")) {
-      throw refused(`In ${fullPath}, weight isn't available: it needs GitLab EE on Premium or above. Nothing was prepared.`);
+      throw weightUnavailable(`In ${fullPath}`);
     }
-    const description = request.description ? this.withFooter(request.description) : this.config.footer ? FOOTER : void 0;
+    const description = request.description ? this.withFooter(request.description) : this.gitlab.config.footer ? FOOTER : void 0;
     const confidential = request.confidential === true;
-    const input2 = {
-      namespacePath: fullPath,
-      workItemTypeId: await this.lookups.typeId(fullPath, request.type),
-      title: request.title,
-      confidential
-    };
-    const expect = { title: request.title };
-    const summary2 = parent ? `Create a Task under ${parent.reference}` : `Create an Issue in ${fullPath}`;
-    const preview = [parent ? `${summary2} (${parent.url})` : summary2, `  title: ${request.title}`];
+    const changes = new Changes({ namespacePath: fullPath, workItemTypeId: await this.lookups.typeId(fullPath, request.type), confidential });
+    changes.add("title", [`  title: ${request.title}`], { title: request.title }, { title: request.title });
     if (description !== void 0) {
-      input2.descriptionWidget = { description };
-      expect.description = description;
-      preview.push("  description:", ...quote(description), ...quickActionWarning(description, "saving"));
+      changes.add("description", ["  description:", ...quote(description), ...quickActionWarning(description, "saving")], WIDGETS.description(description), { description });
     }
     if (request.labels?.length) {
-      input2.labelsWidget = { labelIds: await Promise.all(request.labels.map((t) => this.lookups.labelId(fullPath, t))) };
-      expect.labelsInclude = request.labels;
-      preview.push(`  labels: ${joinOrNone(request.labels)}`);
+      const labelIds = await Promise.all(request.labels.map((t) => this.lookups.labelId(fullPath, t)));
+      changes.add("labels", [`  labels: ${joinOrNone(request.labels)}`], { labelsWidget: { labelIds } }, { labelsInclude: request.labels });
     }
     if (request.assignees?.length) {
-      input2.assigneesWidget = { assigneeIds: await this.lookups.userIds(request.assignees) };
-      expect.assignees = request.assignees;
-      preview.push(`  assignees: ${joinOrNone(request.assignees)}`);
+      changes.add("assignees", [`  assignees: ${joinOrNone(request.assignees)}`], WIDGETS.assignees(await this.lookups.userIds(request.assignees)), { assignees: request.assignees });
     }
     if (request.milestone) {
-      input2.milestoneWidget = { milestoneId: await this.lookups.milestoneId(fullPath, request.milestone) };
-      expect.milestone = request.milestone;
-      preview.push(`  milestone: ${request.milestone}`);
+      changes.add("milestone", [`  milestone: ${request.milestone}`], WIDGETS.milestone(await this.lookups.milestoneId(fullPath, request.milestone)), { milestone: request.milestone });
     }
     if (request.dueDate) {
-      input2.startAndDueDateWidget = { dueDate: request.dueDate };
-      expect.dueDate = request.dueDate;
-      preview.push(`  due date: ${request.dueDate}`);
+      changes.add("due date", [`  due date: ${request.dueDate}`], WIDGETS.dueDate(request.dueDate), { dueDate: request.dueDate });
     }
     if (request.weight !== void 0) {
-      input2.weightWidget = { weight: request.weight };
-      expect.weight = request.weight;
-      preview.push(`  weight: ${request.weight}`);
+      changes.add("weight", [`  weight: ${request.weight}`], WIDGETS.weight(request.weight), { weight: request.weight });
     }
-    if (parent) {
-      input2.hierarchyWidget = { parentId: parent.id };
-      expect.parent = parent.reference;
-    }
-    preview.push(`  confidential: ${confidential ? "yes" : "no"}`);
+    if (parent) changes.add("parent", [], WIDGETS.parent(parent.id), { parent: parent.reference });
+    const summary = parent ? `Create a Task under ${parent.reference}` : `Create an Issue in ${fullPath}`;
     return {
-      summary: summary2,
-      preview,
-      target: { ref: { fullPath, iid: "" }, id: "", reference: "", updatedAt: "" },
-      creates: true,
+      summary,
+      ...parent ? { url: parent.url } : {},
+      preview: [parent ? `${summary} (${parent.url})` : summary, ...changes.preview, `  confidential: ${confidential ? "yes" : "no"}`],
       guard: { kind: "none" },
-      steps: [{ operationName: "CreateWorkItem", query: CREATE, input: input2, field: "workItemCreate" }],
-      expect
+      steps: [{ operationName: "CreateWorkItem", query: CREATE, input: changes.input, field: "workItemCreate", sends: [summary] }],
+      expect: changes.expect
     };
   }
   withFooter(body) {
-    return this.config.footer ? `${body}
+    return this.gitlab.config.footer ? `${body}
 
 ${FOOTER}` : body;
   }
   async planComment(request) {
-    const ref = parseReference(request.reference, this.config);
+    const ref = this.parse(request.reference);
     const item = await this.reader.fetch(ref);
-    if (!item.permissions.createNote) throw refused(`On ${item.reference}, your token can't post Comments. Nothing was prepared.`);
+    if (!item.permissions.createNote) throw cantComment(item);
     const internal = request.internal === true;
     if (internal && !item.permissions.markNoteAsInternal) {
       throw refused(
@@ -37444,24 +37487,26 @@ ${FOOTER}` : body;
     }
     const body = this.withFooter(request.body);
     const what = request.startThread ? "New Thread" : "Comment";
+    const input2 = { noteableId: item.id, body, internal };
     return {
       summary: `${what} on ${item.reference}`,
+      url: item.url,
       preview: [`${what} on ${item.reference} (${internal ? "internal" : "public"}) ${item.url}`, ...quote(body), ...quickActionWarning(body, "posting")],
       target: targetOf(ref, item),
       guard: { kind: "none" },
       steps: [
-        request.startThread ? { operationName: "CreateDiscussion", query: CREATE_DISCUSSION, input: { noteableId: item.id, body, internal }, field: "createDiscussion" } : { operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, body, internal }, field: "createNote" }
+        request.startThread ? { operationName: "CreateDiscussion", query: CREATE_DISCUSSION, input: input2, field: "createDiscussion", sends: [what] } : { operationName: "CreateNote", query: CREATE_NOTE, input: input2, field: "createNote", sends: [what] }
       ],
       expect: {}
     };
   }
   async planThread(request) {
-    const ref = parseReference(request.reference, this.config);
+    const ref = this.parse(request.reference);
     const item = await this.reader.fetch(ref);
-    const thread = findThread(item, request.thread, ref.noteId);
+    const thread = findThread(item, request.thread, ref.commentNumber);
     const first = thread.comments[0];
     const internal = Boolean(first?.internal);
-    const comments = this.reader.commentsSeen(thread);
+    const comments = this.seen.comments(thread);
     if (thread.commentCount !== comments) {
       throw refused(
         `That Thread on ${item.reference} has new Comments since you fetched it. Fetch ${item.reference} again and show the user the new Comments first. Nothing was prepared.`
@@ -37471,14 +37516,15 @@ ${FOOTER}` : body;
     const replies = thread.commentCount - 1;
     const about = `"${excerpt(first?.body ?? "")}" by ${first?.author ?? "unknown"}, ${replies} repl${replies === 1 ? "y" : "ies"}`;
     if (request.kind === "reply") {
-      if (!item.permissions.createNote) throw refused(`On ${item.reference}, your token can't post Comments. Nothing was prepared.`);
+      if (!item.permissions.createNote) throw cantComment(item);
       const body = this.withFooter(request.body);
       return {
         summary: `Reply on ${item.reference}`,
+        url: item.url,
         preview: [`Reply on ${item.reference} (${internal ? "internal, like its Thread" : "public, like its Thread"}) ${item.url}`, `  in the Thread ${about}`, ...quote(body), ...quickActionWarning(body, "posting")],
         target: targetOf(ref, item),
         guard,
-        steps: [{ operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, discussionId: thread.replyId, body }, field: "createNote" }],
+        steps: [{ operationName: "CreateNote", query: CREATE_NOTE, input: { noteableId: item.id, discussionId: thread.replyId, body }, field: "createNote", sends: ["reply"] }],
         expect: {}
       };
     }
@@ -37487,117 +37533,136 @@ ${FOOTER}` : body;
     if (!thread.canResolve) throw refused(`On ${item.reference}, your token can't resolve that Thread. Nothing was prepared.`);
     return {
       summary: `Resolve a Thread on ${item.reference}`,
+      url: item.url,
       preview: [`Resolve the Thread on ${item.reference} ${item.url}: ${about}`],
       target: targetOf(ref, item),
       guard,
-      steps: [{ operationName: "ResolveThread", query: RESOLVE_THREAD, input: { id: thread.id, resolve: true }, field: "discussionToggleResolve" }],
+      steps: [{ operationName: "ResolveThread", query: RESOLVE_THREAD, input: { id: thread.id, resolve: true }, field: "discussionToggleResolve", sends: ["resolution"] }],
       expect: {}
     };
   }
   async planEdit(request) {
-    const ref = parseReference(request.reference, this.config);
+    const ref = this.parse(request.reference);
     const item = await this.current(ref);
     requirePermissions(item, request);
-    const preview = [`Edit ${item.reference} (${item.url})`];
-    const input2 = { id: item.id };
-    const expect = {};
+    const changes = new Changes({ id: item.id });
+    const change = (before, after) => `${before ?? "none"} \u2192 ${after ?? "none"}`;
     if (request.title !== void 0 && request.title !== item.title) {
-      preview.push(`  title: ${item.title} \u2192 ${request.title}`);
-      input2.title = request.title;
-      expect.title = request.title;
+      changes.add("title", [`  title: ${change(item.title, request.title)}`], { title: request.title }, { title: request.title });
     }
     if (request.description !== void 0 && request.description !== item.description) {
-      preview.push(
-        "  description:",
-        ...lineDiff(item.description, request.description).map((line) => `    ${line}`),
-        ...quickActionWarning(request.description, "saving")
+      changes.add(
+        "description",
+        ["  description:", ...lineDiff(item.description, request.description).map((line) => `    ${line}`), ...quickActionWarning(request.description, "saving")],
+        WIDGETS.description(request.description),
+        { description: request.description }
       );
-      input2.descriptionWidget = { description: request.description };
-      expect.description = request.description;
     }
     const add = request.addLabels ?? [];
     const remove = request.removeLabels ?? [];
     if (add.length || remove.length) {
       const current = item.labels.map((l) => l.title);
       const after = [...current.filter((t) => !remove.includes(t)), ...add.filter((t) => !current.includes(t))];
-      preview.push(`  labels: ${joinOrNone(current)} \u2192 ${joinOrNone(after)}`);
-      input2.labelsWidget = {
+      const labelsWidget = {
         addLabelIds: await Promise.all(add.map((t) => this.lookups.labelId(ref.fullPath, t))),
         removeLabelIds: item.labels.filter((l) => remove.includes(l.title)).map((l) => l.id)
       };
-      expect.labelsInclude = add;
-      expect.labelsExclude = remove;
+      changes.add("labels", [`  labels: ${joinOrNone(current)} \u2192 ${joinOrNone(after)}`], { labelsWidget }, { labelsInclude: add, labelsExclude: remove });
     }
     if (request.assignees !== void 0) {
-      preview.push(`  assignees: ${joinOrNone(item.assignees.map((a) => a.username))} \u2192 ${joinOrNone(request.assignees)}`);
-      input2.assigneesWidget = { assigneeIds: await this.lookups.userIds(request.assignees) };
-      expect.assignees = request.assignees;
+      changes.add(
+        "assignees",
+        [`  assignees: ${joinOrNone(item.assignees.map((a) => a.username))} \u2192 ${joinOrNone(request.assignees)}`],
+        WIDGETS.assignees(await this.lookups.userIds(request.assignees)),
+        { assignees: request.assignees }
+      );
     }
     if (request.milestone !== void 0) {
-      preview.push(`  milestone: ${item.milestone?.title ?? "none"} \u2192 ${request.milestone ?? "none"}`);
-      input2.milestoneWidget = { milestoneId: request.milestone === null ? null : await this.lookups.milestoneId(ref.fullPath, request.milestone) };
-      expect.milestone = request.milestone;
+      const milestoneId = request.milestone === null ? null : await this.lookups.milestoneId(ref.fullPath, request.milestone);
+      changes.add("milestone", [`  milestone: ${change(item.milestone?.title ?? null, request.milestone)}`], WIDGETS.milestone(milestoneId), { milestone: request.milestone });
     }
     if (request.state !== void 0) {
-      const target = request.state === "close" ? "closed" : "open";
-      preview.push(`  state: ${item.state} \u2192 ${target}`);
-      input2.stateEvent = request.state === "close" ? "CLOSE" : "REOPEN";
-      expect.state = target;
+      const state = request.state === "close" ? "closed" : "open";
+      changes.add("state", [`  state: ${change(item.state, state)}`], { stateEvent: request.state === "close" ? "CLOSE" : "REOPEN" }, { state });
     }
     if (request.dueDate !== void 0) {
-      preview.push(`  due date: ${item.dueDate ?? "none"} \u2192 ${request.dueDate ?? "none"}`);
-      input2.startAndDueDateWidget = { dueDate: request.dueDate };
-      expect.dueDate = request.dueDate;
+      changes.add("due date", [`  due date: ${change(item.dueDate, request.dueDate)}`], WIDGETS.dueDate(request.dueDate), { dueDate: request.dueDate });
     }
     if (request.weight !== void 0) {
-      if (item.weight === void 0) {
-        throw refused(`On ${item.reference}, weight isn't available: it needs GitLab EE on Premium or above. Nothing was prepared.`);
-      }
-      preview.push(`  weight: ${item.weight ?? "none"} \u2192 ${request.weight ?? "none"}`);
-      input2.weightWidget = { weight: request.weight };
-      expect.weight = request.weight;
+      if (item.weight === void 0) throw weightUnavailable(`On ${item.reference}`);
+      changes.add("weight", [`  weight: ${change(item.weight, request.weight)}`], WIDGETS.weight(request.weight), { weight: request.weight });
     }
     if (request.parent !== void 0) {
-      const parent = request.parent === null ? null : await this.reader.resolve(parseReference(request.parent, this.config));
-      preview.push(`  parent: ${item.parent?.reference ?? "none"} \u2192 ${parent?.reference ?? "none"}`);
-      input2.hierarchyWidget = { parentId: parent?.id ?? null };
-      expect.parent = parent?.reference ?? null;
+      const parent = request.parent === null ? null : await this.reader.resolve(this.parse(request.parent));
+      changes.add(
+        "parent",
+        [`  parent: ${change(item.parent?.reference ?? null, parent?.reference ?? null)}`],
+        WIDGETS.parent(parent?.id ?? null),
+        { parent: parent?.reference ?? null }
+      );
     }
     const steps = [];
-    if (Object.keys(input2).length > 1) steps.push({ operationName: "UpdateWorkItem", query: UPDATE, input: input2, field: "workItemUpdate" });
+    if (changes.fields.length) {
+      steps.push({ operationName: "UpdateWorkItem", query: UPDATE, input: changes.input, field: "workItemUpdate", sends: changes.fields });
+    }
     const blocking = (request.addLinks ?? []).find((l) => l.linkType !== "relates_to");
     if (blocking && !item.permissions.blockedWorkItems) {
       throw refused(`"${blocking.linkType.replaceAll("_", " ")}" links need GitLab Premium or above, which ${item.reference} doesn't have. Nothing was prepared.`);
     }
-    const byType = /* @__PURE__ */ new Map();
+    const preview = [...changes.preview];
+    const expect = changes.expect;
+    const linksByType = /* @__PURE__ */ new Map();
     for (const link of request.addLinks ?? []) {
-      const target = await this.reader.resolve(parseReference(link.reference, this.config));
-      preview.push(`  link: ${link.linkType.replaceAll("_", " ")} ${target.reference}`);
-      byType.set(LINK_TYPES[link.linkType], [...byType.get(LINK_TYPES[link.linkType]) ?? [], target.id]);
-      (expect.linksInclude ??= []).push(target.reference);
+      const linked = await this.reader.resolve(this.parse(link.reference));
+      const part = `link: ${link.linkType.replaceAll("_", " ")} ${linked.reference}`;
+      preview.push(`  ${part}`);
+      const linkType = LINK_TYPES[link.linkType];
+      linksByType.set(linkType, [...linksByType.get(linkType) ?? [], { id: linked.id, part }]);
+      (expect.linksInclude ??= []).push(linked.reference);
     }
-    for (const [linkType, ids] of byType) {
-      for (const batch of batches(ids)) {
-        steps.push({ operationName: "AddLinkedItems", query: ADD_LINKS, input: { id: item.id, workItemsIds: batch, linkType }, field: "workItemAddLinkedItems" });
+    for (const [linkType, links] of linksByType) {
+      for (const batch of batches(links)) {
+        steps.push({
+          operationName: "AddLinkedItems",
+          query: ADD_LINKS,
+          input: { id: item.id, workItemsIds: batch.map((l) => l.id), linkType },
+          field: "workItemAddLinkedItems",
+          sends: batch.map((l) => l.part)
+        });
       }
     }
-    const unlink = [];
+    const unlinks = [];
     for (const reference of request.removeLinks ?? []) {
-      const target = await this.reader.resolve(parseReference(reference, this.config));
-      preview.push(`  unlink: ${target.reference}`);
-      unlink.push(target.id);
-      (expect.linksExclude ??= []).push(target.reference);
+      const linked = await this.reader.resolve(this.parse(reference));
+      const part = `unlink: ${linked.reference}`;
+      preview.push(`  ${part}`);
+      unlinks.push({ id: linked.id, part });
+      (expect.linksExclude ??= []).push(linked.reference);
     }
-    for (const batch of batches(unlink)) {
-      steps.push({ operationName: "RemoveLinkedItems", query: REMOVE_LINKS, input: { id: item.id, workItemsIds: batch }, field: "workItemRemoveLinkedItems" });
+    for (const batch of batches(unlinks)) {
+      steps.push({
+        operationName: "RemoveLinkedItems",
+        query: REMOVE_LINKS,
+        input: { id: item.id, workItemsIds: batch.map((l) => l.id) },
+        field: "workItemRemoveLinkedItems",
+        sends: batch.map((l) => l.part)
+      });
     }
     if (steps.length === 0) throw refused(`The Edit to ${item.reference} doesn't change anything.`);
-    return { summary: `Edit ${item.reference}`, preview, target: targetOf(ref, item), guard: { kind: "version" }, steps, expect };
+    return {
+      summary: `Edit ${item.reference}`,
+      url: item.url,
+      preview: [`Edit ${item.reference} (${item.url})`, ...preview],
+      target: targetOf(ref, item),
+      guard: { kind: "version" },
+      steps,
+      expect
+    };
   }
   /** Fetches a Work Item for a Write, refusing if it changed since Claude last saw it. */
   async current(ref) {
-    const { item, changed } = await this.reader.fetchSinceSeen(ref);
-    if (changed) {
+    const item = await this.reader.fetch(ref);
+    if (this.seen.changed(item)) {
       throw refused(
         [
           `${item.reference} changed in GitLab since you fetched it (now updated ${item.updatedAt}). Nothing was prepared. Its current state:`,
@@ -37616,28 +37681,29 @@ function requirePermissions(item, request) {
       Boolean(request.addLabels?.length || request.removeLabels?.length) || request.assignees !== void 0 || request.milestone !== void 0 || request.dueDate !== void 0 || request.weight !== void 0,
       "setWorkItemMetadata",
       "change its labels, assignees, milestone, or dates"
-    ]
-  ];
-  needs.push(
+    ],
     [request.parent !== void 0, "adminParentLink", "change its parent"],
     [Boolean(request.addLinks?.length || request.removeLinks?.length), "adminWorkItemLink", "change its Linked Items"]
-  );
+  ];
   const denied = needs.filter(([wanted, permission]) => wanted && !item.permissions[permission]).map(([, , what]) => what);
   if (denied.length) throw refused(`On ${item.reference}, your token can't ${denied.join(", or ")}. Nothing was prepared.`);
 }
 function targetOf(ref, item) {
   return { ref, id: item.id, reference: item.reference, updatedAt: item.updatedAt };
 }
-function findThread(item, threadId, noteId) {
+function findThread(item, threadId, commentNumber) {
   const wanted = threadId && !threadId.startsWith("gid://") ? `gid://gitlab/Discussion/${threadId}` : threadId;
-  const thread = wanted ? item.threads.find((t) => t.id === wanted) : noteId ? threadWithComment(item, noteId)?.thread : void 0;
+  const thread = wanted ? item.threads.find((t) => t.id === wanted) : commentNumber ? threadWithComment(item, commentNumber)?.thread : void 0;
   if (!thread) {
     throw refused(
-      wanted || noteId ? `That Thread isn't on ${item.reference}, or your token can't see it.` : `Say which Thread on ${item.reference}: pass its ID from a Fetch, or use a link to one of its Comments.`
+      wanted || commentNumber ? `That Thread isn't on ${item.reference}, or your token can't see it.` : `Say which Thread on ${item.reference}: pass its ID from a Fetch, or use a link to one of its Comments.`
     );
   }
   return thread;
 }
+
+// src/server/writes/writes.ts
+import { randomUUID } from "node:crypto";
 
 // src/server/writes/requests.ts
 var MAX_WRITES = 20;
@@ -37673,7 +37739,7 @@ var REPLY = external_exports.object({
 });
 var CREATE2 = external_exports.object({
   kind: external_exports.literal("create"),
-  type: external_exports.enum(["Issue", "Task"]),
+  type: external_exports.enum(SUPPORTED_TYPES),
   project: external_exports.string().optional().describe("For an Issue: the project's full path"),
   parent: external_exports.string().optional().describe("For a Task: the parent Issue's Reference"),
   title: external_exports.string().min(1),
@@ -37693,18 +37759,37 @@ var RESOLVE2 = external_exports.object({
 var WRITE_SCHEMA = external_exports.discriminatedUnion("kind", [EDIT, COMMENT, REPLY, CREATE2, RESOLVE2]);
 
 // src/server/writes/writes.ts
-var Writes = class {
-  constructor(config3, gateway2, instance2, reader2, lookups2) {
-    this.config = config3;
-    this.gateway = gateway2;
-    this.reader = reader2;
-    this.planner = new Planner(config3, gateway2, instance2, reader2, lookups2);
+var OwnChanges = class {
+  versions = /* @__PURE__ */ new Map();
+  commentCounts = /* @__PURE__ */ new Map();
+  record(write, after) {
+    this.versions.set(after.id, after.updatedAt);
+    const { guard } = write;
+    if (guard.kind !== "thread") return;
+    const thread = after.threads.find((t) => t.id === guard.threadId);
+    if (thread) this.commentCounts.set(guard.threadId, thread.commentCount);
   }
-  config;
-  gateway;
+  /** The version a Work Item should be at now: as planned, or as this plan's own Writes left it. */
+  version(target) {
+    return this.versions.get(target.id) ?? target.updatedAt;
+  }
+  /** How many Comments a Thread should have now: as planned, or as this plan's own replies left it. */
+  comments(guard) {
+    return this.commentCounts.get(guard.threadId) ?? guard.comments;
+  }
+};
+var Writes = class {
+  constructor(gitlab2, reader2, seen2, planner) {
+    this.gitlab = gitlab2;
+    this.reader = reader2;
+    this.seen = seen2;
+    this.planner = planner;
+  }
+  gitlab;
   reader;
-  plans = /* @__PURE__ */ new Map();
+  seen;
   planner;
+  plans = /* @__PURE__ */ new Map();
   async prepare(requests) {
     if (requests.length === 0) throw refused("There's nothing to write.");
     if (requests.length > MAX_WRITES) {
@@ -37722,15 +37807,14 @@ var Writes = class {
     this.plans.delete(planId);
     const dropped = new Set(drop);
     const plan = { id: stored.id, writes: stored.writes.filter((w) => !dropped.has(w.number)) };
-    const droppedResults = stored.writes.filter((w) => dropped.has(w.number)).map((w) => ({ number: w.number, summary: w.summary, outcome: "not applied", didNotStick: [], detail: "Dropped by the user before applying." }));
+    const droppedResults = stored.writes.filter((w) => dropped.has(w.number)).map((w) => ({ ...named(w), outcome: "not applied", didNotStick: [], detail: "Dropped by the user before applying." }));
     if (plan.writes.length === 0) {
       return { results: droppedResults, report: renderReport(droppedResults) };
     }
     const confirmed = await confirm(renderConfirmation(plan), plan.writes.length);
     if (confirmed === false) {
       const results2 = plan.writes.map((w) => ({
-        number: w.number,
-        summary: w.summary,
+        ...named(w),
         outcome: "not applied",
         didNotStick: [],
         detail: "The user didn't confirm, so nothing was sent."
@@ -37740,52 +37824,53 @@ var Writes = class {
 ${renderReport(all2)}` };
     }
     const results = [];
-    const expected = /* @__PURE__ */ new Map();
+    const own2 = new OwnChanges();
     let stopped = false;
     for (const write of plan.writes) {
-      const number4 = write.number;
       if (stopped) {
-        results.push({ number: number4, summary: write.summary, outcome: "not applied", didNotStick: [] });
+        results.push({ ...named(write), outcome: "not applied", didNotStick: [] });
         continue;
       }
+      const sent = [];
       try {
-        const changed = await this.changedSincePreview(write, expected);
+        const changed = await this.changedSincePreview(write, own2);
         if (changed) {
           stopped = true;
-          results.push({ number: number4, summary: write.summary, outcome: "not applied", didNotStick: [], detail: changed });
+          results.push({ ...named(write), outcome: "not applied", didNotStick: [], detail: changed });
           continue;
         }
         let created;
         for (const step of write.steps) {
           const payload = await this.run(step);
-          if (write.creates) created = payload?.workItem;
+          sent.push(...step.sends);
+          if (!write.target) created = payload?.workItem;
         }
-        const ref = created ? parseReference(created.reference, this.config) : write.target.ref;
+        const ref = write.target?.ref ?? (created && parseReference(created.reference, this.gitlab.config));
+        if (!ref) throw new GitLabError("GitLab didn't return the Work Item it created.", "graphql");
         const after = await this.reader.fetch(ref);
-        this.reader.remember(after);
-        expected.set(after.id, after.updatedAt);
+        this.seen.remember(after);
+        own2.record(write, after);
         results.push({
-          number: number4,
-          summary: write.summary,
+          ...named(write),
           outcome: "done",
           didNotStick: didNotStick(write.expect, after),
-          ...created ? { created: after.reference, url: after.url } : {}
+          ...created ? { created: after.reference, createdUrl: after.url } : {}
         });
       } catch (error62) {
         if (!(error62 instanceof GitLabError)) throw error62;
         stopped = true;
-        results.push({ number: number4, summary: write.summary, outcome: "failed", didNotStick: [], detail: error62.message });
+        results.push({ ...named(write), outcome: "failed", didNotStick: [], detail: failure2(error62.message, write, sent) });
       }
     }
     const all = byNumber([...results, ...droppedResults]);
     return { results: all, report: renderReport(all) };
   }
   /** Why a Write mustn't be sent now, or undefined when it may. */
-  async changedSincePreview(write, expected) {
+  async changedSincePreview(write, own2) {
     const { guard, target } = write;
-    if (guard.kind === "none") return void 0;
+    if (guard.kind === "none" || !target) return void 0;
     const now = await this.reader.fetch(target.ref);
-    if (guard.kind === "version" && now.updatedAt !== (expected.get(target.id) ?? target.updatedAt)) {
+    if (guard.kind === "version" && now.updatedAt !== own2.version(target)) {
       return [
         `${target.reference} changed in GitLab since it was fetched (updated ${now.updatedAt}). Nothing was written to it. Its current state:`,
         ...stateLines(now),
@@ -37793,10 +37878,11 @@ ${renderReport(all2)}` };
       ].join("\n");
     }
     if (guard.kind === "thread") {
+      const comments = own2.comments(guard);
       const thread = now.threads.find((t) => t.id === guard.threadId);
-      if (!thread || thread.commentCount !== guard.comments) {
-        const added = thread ? thread.comments.slice(guard.comments) : [];
-        const unshown = (thread?.commentCount ?? 0) - guard.comments - added.length;
+      if (!thread || thread.commentCount !== comments) {
+        const added = thread ? thread.comments.slice(comments) : [];
+        const unshown = (thread?.commentCount ?? 0) - comments - added.length;
         return [
           `The Thread on ${target.reference} has new Comments since it was fetched. Nothing was written. New Comments:`,
           ...added.map((c) => `  ${c.author}: ${excerpt(c.body)}`),
@@ -37808,12 +37894,21 @@ ${renderReport(all2)}` };
     return void 0;
   }
   async run(step) {
-    const data = await this.gateway.graphql(step.operationName, step.query, { input: step.input });
+    const data = await this.gitlab.gateway.graphql(step.operationName, step.query, { input: step.input });
     const payload = data?.[step.field];
     if (payload?.errors?.length) throw new GitLabError(payload.errors.join("; "), "graphql");
     return payload;
   }
 };
+function named(write) {
+  return { number: write.number, summary: write.summary, ...write.url ? { url: write.url } : {} };
+}
+function failure2(message, write, sent) {
+  if (sent.length === 0) return message;
+  const unsent = write.steps.flatMap((step) => step.sends).filter((part) => !sent.includes(part));
+  if (unsent.length === 0) return `It was all sent (${sent.join(", ")}), but reading it back failed: ${message}`;
+  return `GitLab refused part of it: ${message}. Sent before that: ${sent.join(", ")}. Not sent: ${unsent.join(", ")}.`;
+}
 function byNumber(results) {
   return [...results].sort((a, b) => a.number - b.number);
 }
@@ -37846,6 +37941,30 @@ function didNotStick(expect, after) {
   if (missing.length || kept.length) problems.push(`labels: GitLab kept ${joinOrNone(labels)}`);
   return problems;
 }
+
+// src/server/wayfinder.ts
+var WAYFINDER_TICKET_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
+var SHOWN = 20;
+var CLAIMED = (
+  /* GraphQL */
+  `
+query ClaimedWayfinderTickets($fullPath: ID!, $assignees: [String!], $ticketLabels: [String!], $mapLabels: [String!]) {
+  namespace(fullPath: $fullPath) {
+    tickets: workItems(state: opened, types: [ISSUE, TASK], assigneeUsernames: $assignees, or: { labelNames: $ticketLabels }, sort: UPDATED_DESC, first: ${SHOWN}) {
+      count
+      nodes {
+        reference(full: true) title webUrl
+        widgets(onlyTypes: [DESCRIPTION, LABELS]) {
+          type
+          ... on WorkItemWidgetDescription { description }
+          ... on WorkItemWidgetLabels { labels { nodes { title } } }
+        }
+      }
+    }
+    maps: workItems(labelName: $mapLabels, first: 100) { nodes { reference(full: true) title webUrl } }
+  }
+}`
+);
 
 // src/server/lists.ts
 var DEFAULT_LIMIT = 20;
@@ -37889,81 +38008,91 @@ query ListMyWorkItems(${FILTER_VARIABLES}) {
   }
 }`
 );
+var PAGING_SCHEMA = {
+  limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many Work Items (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
+  after: external_exports.string().optional().describe("Cursor from a previous list, to continue it")
+};
 var FILTER_SCHEMA = {
   state: external_exports.enum(["opened", "closed", "all"]).optional().describe("Default: opened"),
-  types: external_exports.array(external_exports.enum(["Issue", "Task"])).optional().describe("Default: both"),
+  types: external_exports.array(external_exports.enum(SUPPORTED_TYPES)).optional().describe("Default: both"),
   assignees: external_exports.array(external_exports.string()).optional().describe("Usernames; every one must be assigned"),
   assignedToMe: external_exports.boolean().optional().describe("Only Work Items assigned to the signed-in user"),
   author: external_exports.string().optional().describe("Author's username"),
   labels: external_exports.array(external_exports.string()).optional().describe("Every one of these labels"),
   excludeLabels: external_exports.array(external_exports.string()).optional().describe("None of these labels"),
   anyLabels: external_exports.array(external_exports.string()).optional().describe("At least one of these labels"),
+  wayfinderTickets: external_exports.boolean().optional().describe(`Only Wayfinder tickets: Work Items labelled ${WAYFINDER_TICKET_LABELS.join(", ")}. Not with anyLabels.`),
   milestone: external_exports.string().optional().describe("Milestone title"),
   parent: external_exports.string().optional().describe("The parent Work Item's URL or full reference, to list its children"),
   search: external_exports.string().optional().describe("Text to find in titles and descriptions")
 };
 function entry(node2) {
-  const widget = (type) => widgetOf(node2, type);
+  const widget = (type2) => widgetOf(node2, type2);
+  const { reference, title, type, state, url: url2 } = summaryOf(node2);
   return {
-    reference: node2.reference,
-    title: node2.title,
-    type: node2.workItemType?.name ?? "Unknown",
-    state: stateOf(node2.state),
+    reference,
+    title,
+    type,
+    state,
     assignees: (widget("ASSIGNEES")?.assignees?.nodes ?? []).map((a) => a.username),
     labels: (widget("LABELS")?.labels?.nodes ?? []).map((l) => l.title),
     milestone: widget("MILESTONE")?.milestone?.title ?? null,
     parent: widget("HIERARCHY")?.parent?.reference ?? null,
     updatedAt: node2.updatedAt,
-    url: node2.webUrl
+    url: url2
   };
 }
 var Lists = class {
-  constructor(config3, gateway2, instance2) {
-    this.config = config3;
-    this.gateway = gateway2;
-    this.instance = instance2;
+  constructor(gitlab2) {
+    this.gitlab = gitlab2;
   }
-  config;
-  gateway;
-  instance;
+  gitlab;
   async variables(filters) {
     const nonEmpty = (values) => values?.length ? values : void 0;
     const assignees = [...filters.assignees ?? []];
     if (filters.assignedToMe) {
-      const { username } = await this.instance.probe();
+      const { username } = await this.gitlab.instance.probe();
       if (!assignees.includes(username)) assignees.push(username);
     }
     return {
       state: filters.state ?? "opened",
-      types: (filters.types?.length ? filters.types : ["Issue", "Task"]).map((t) => t.toUpperCase()),
+      types: (filters.types?.length ? filters.types : SUPPORTED_TYPES).map((t) => t.toUpperCase()),
       sort: "UPDATED_DESC",
       assigneeUsernames: nonEmpty(assignees),
       authorUsername: filters.author || void 0,
       labelName: nonEmpty(filters.labels),
       not: filters.excludeLabels?.length ? { labelName: filters.excludeLabels } : void 0,
-      or: filters.anyLabels?.length ? { labelNames: filters.anyLabels } : void 0,
+      or: this.anyOfLabels(filters),
       milestoneTitle: filters.milestone ? [filters.milestone] : void 0,
       parentIds: filters.parentId ? [filters.parentId] : void 0,
       search: filters.search || void 0,
       in: filters.search ? ["TITLE", "DESCRIPTION"] : void 0
     };
   }
+  /** GitLab takes one set of labels a Work Item needs at least one of. */
+  anyOfLabels(filters) {
+    if (filters.wayfinderTickets && filters.anyLabels?.length) {
+      throw refused("Use anyLabels or wayfinderTickets, not both: GitLab takes one set of labels to match any of.");
+    }
+    if (filters.wayfinderTickets) return { labelNames: WAYFINDER_TICKET_LABELS };
+    return filters.anyLabels?.length ? { labelNames: filters.anyLabels } : void 0;
+  }
   /** Lists a project's or group's Work Items, subgroups and projects included. */
   async within(fullPath, filters, limit = DEFAULT_LIMIT, after) {
-    await this.instance.requireSupported();
+    await this.gitlab.instance.requireSupported();
     const base = { fullPath, includeDescendants: true, ...await this.variables(filters) };
     return this.pages(limit, after, async (first, cursor) => {
-      const data = await this.gateway.graphql("ListWorkItems", NAMESPACE_LIST, { ...base, first, after: cursor });
+      const data = await this.gitlab.gateway.graphql("ListWorkItems", NAMESPACE_LIST, { ...base, first, after: cursor });
       if (!data?.namespace) return null;
       return data.namespace.workItems;
     }, fullPath);
   }
   /** The signed-in user's Work Items across the Instance, assigned to them. */
   async mine(filters, limit = DEFAULT_LIMIT, after) {
-    await this.instance.requireSupported();
+    await this.gitlab.instance.requireSupported();
     const base = await this.variables({ ...filters, assignedToMe: true });
     return this.pages(limit, after, async (first, cursor) => {
-      const data = await this.gateway.graphql("ListMyWorkItems", MY_LIST, { ...base, first, after: cursor });
+      const data = await this.gitlab.gateway.graphql("ListMyWorkItems", MY_LIST, { ...base, first, after: cursor });
       return data?.currentUser?.workItems ?? null;
     }, "Your Work Items");
   }
@@ -37975,7 +38104,7 @@ var Lists = class {
     let endCursor = null;
     while (items.length < wanted) {
       const connection = await fetchPage(Math.min(PAGE_MAX, wanted - items.length), cursor);
-      if (!connection) throw notFound(what, this.config);
+      if (!connection) throw notFound(what, this.gitlab.config);
       items.push(...(connection.nodes ?? []).map(entry));
       hasMore = Boolean(connection.pageInfo?.hasNextPage);
       endCursor = connection.pageInfo?.endCursor ?? null;
@@ -37991,7 +38120,7 @@ var DATA_KEY = "gitlab-work-items/data";
 function answer(text, data) {
   return { content: [{ type: "text", text }], ...data ? { _meta: { [DATA_KEY]: data } } : {} };
 }
-function failure2(text, data) {
+function failure3(text, data) {
   return { ...answer(text, data), isError: true };
 }
 function guarded(handler) {
@@ -38001,7 +38130,7 @@ function guarded(handler) {
     } catch (error62) {
       if (error62 instanceof GitLabError) {
         const hint = error62.kind === "not-set-up" || error62.kind === "glab-missing" ? " Run /gitlab-work-items:status for details." : "";
-        return failure2(`${error62.message}${hint}`, { error: error62.kind, message: error62.message });
+        return failure3(`${error62.message}${hint}`, { error: error62.kind, message: error62.message });
       }
       throw error62;
     }
@@ -38021,17 +38150,16 @@ async function probes(config3, project, deps) {
   const results = [];
   results.push(
     await probe("Work Item Types", async () => {
-      await deps.lookups.typeId(project, "Issue");
-      await deps.lookups.typeId(project, "Task");
-      return "Issue and Task available";
+      for (const type of SUPPORTED_TYPES) await deps.lookups.typeId(project, type);
+      return `${SUPPORTED_TYPES.join(" and ")} available`;
     })
   );
   let first;
   results.push(
     await probe("List query", async () => {
-      const list = await deps.lists.within(project, { types: ["Issue"] }, 1);
-      first = list.items[0]?.reference;
-      return first ?? "no open Issues to list";
+      const entry2 = (await deps.lists.within(project, { types: ["Issue"] }, 1)).items[0];
+      first = entry2?.reference;
+      return entry2 ? `${entry2.reference} ${entry2.url}` : "no open Issues to list";
     })
   );
   if (first) {
@@ -38040,17 +38168,22 @@ async function probes(config3, project, deps) {
       await probe("Fetch with merge requests", async () => {
         const item = await deps.reader.fetch(parseReference(reference, config3));
         const count = item.mergeRequests.all.length;
-        return `${item.reference}: ${count} associated merge request${count === 1 ? "" : "s"}`;
+        return `${item.reference} ${item.url}: ${count} associated merge request${count === 1 ? "" : "s"}`;
       })
     );
   }
   return results;
 }
-async function status(config3, gateway2, instance2, deps, project) {
-  const glabVersion = await gateway2.glabVersion();
-  const glabOk = atLeast(glabVersion, MINIMUM_GLAB);
-  const tokenSource = await gateway2.source();
-  const info = await instance2.probe();
+function probeLines(project, checks) {
+  if (checks) return [`Read-only probes in ${project}:`, ...checks.map((c) => `  ${c.ok ? "ok" : "FAILED"} ${c.probe}: ${c.detail}`)];
+  if (!project) return ["Read-only probes: not run. Name a project to run them in, for example /gitlab-work-items:status acme/app."];
+  return [`Read-only probes in ${project}: not run, because this GitLab is older than the plugin supports.`];
+}
+async function status({ config: config3, gateway, instance }, deps, project) {
+  const glabVersion = await gateway.glabVersion();
+  const glabOk = glabSupported(glabVersion);
+  const tokenSource = await gateway.source();
+  const info = await instance.probe();
   const checks = project && info.meetsMinimumVersion ? await probes(config3, project, deps) : void 0;
   const data = {
     instance: config3.baseUrl,
@@ -38068,17 +38201,17 @@ async function status(config3, gateway2, instance2, deps, project) {
     `GitLab: ${info.version} (${data.edition})`,
     `Signed in as: ${info.username}`,
     `Token from: ${tokenSource}`,
-    glabOk ? `glab: ${glabVersion}` : `glab: ${glabVersion}, too old. The plugin needs glab ${MINIMUM_GLAB} or later.`,
-    info.meetsMinimumVersion ? `Minimum GitLab ${MINIMUM_GITLAB}: met` : `Minimum GitLab ${MINIMUM_GITLAB}: NOT met. This Instance runs ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`,
-    ...checks ? [`Read-only probes in ${project}:`, ...checks.map((c) => `  ${c.ok ? "ok" : "FAILED"} ${c.probe}: ${c.detail}`)] : []
+    glabOk ? `glab: ${glabVersion}` : `glab: ${glabVersion}, too old. ${glabTooOld(glabVersion)}`,
+    info.meetsMinimumVersion ? `Minimum GitLab ${MINIMUM_GITLAB}: met` : `Minimum GitLab ${MINIMUM_GITLAB}: NOT met. ${gitlabTooOld(info.version)}`,
+    ...probeLines(project, checks)
   ];
   return answer(lines.join("\n"), data);
 }
 
 // src/server/tools/fetch.ts
 var MR_LIMIT = 10;
-function focusOf(item, noteId) {
-  const found = noteId ? threadWithComment(item, noteId) : void 0;
+function focusOf(item, commentNumber) {
+  const found = commentNumber ? threadWithComment(item, commentNumber) : void 0;
   return found ? { threadId: found.thread.id, commentId: found.commentId } : void 0;
 }
 function threadText(thread, index) {
@@ -38092,14 +38225,14 @@ function threadText(thread, index) {
   if (unfetched > 0) lines.push(`  - ${unfetched} more Comments not shown; open the Thread in GitLab to read them.`);
   return lines.join("\n");
 }
-async function fetchWorkItem(config3, reader2, reference) {
+async function fetchWorkItem(config3, reader2, seen2, reference) {
   const ref = parseReference(reference, config3);
   const item = await reader2.fetch(ref);
-  reader2.remember(item);
+  seen2.remember(item);
   const unresolved = item.threads.filter((t) => t.resolvable && !t.resolved).length;
   const shown = item.mergeRequests.all.slice(0, MR_LIMIT);
   const more = item.mergeRequests.all.length - shown.length + item.mergeRequests.unfetched;
-  const focus = focusOf(item, ref.noteId);
+  const focus = focusOf(item, ref.commentNumber);
   const data = {
     reference: item.reference,
     url: item.url,
@@ -38130,25 +38263,23 @@ async function fetchWorkItem(config3, reader2, reference) {
     `Assignees: ${data.assignees.join(", ") || "none"}`,
     `Labels: ${data.labels.join(", ") || "none"}`,
     `Milestone: ${data.milestone ?? "none"}  Due: ${item.dueDate ?? "none"}${item.weight !== void 0 ? `  Weight: ${item.weight ?? "none"}` : ""}`,
-    `Parent: ${item.parent ? `${item.parent.reference} (${item.parent.title})` : "none"}`,
+    `Parent: ${item.parent ? `${item.parent.reference} (${item.parent.title}) ${item.parent.url}` : "none"}`,
     `Children: ${item.childrenCount}  Linked Items: ${item.linkedItems.length}`,
     `Threads: ${item.threads.length} (${unresolved} unresolved)`
   ];
   const mrLines = shown.map((m) => `  - ${m.relation} ${m.reference}: ${m.title} [${m.state}] ${m.url}`);
   if (more > 0) mrLines.push(`  - ${more} more not shown`);
   if (item.mergeRequests.hidden > 0) mrLines.push(`  - ${item.mergeRequests.hidden} more that your token can't see`);
-  if (item.type === "Issue" || item.type === "Task") {
-    digest.push(mrLines.length ? `Merge requests:
+  digest.push(mrLines.length ? `Merge requests:
 ${mrLines.join("\n")}` : "Merge requests: none");
-  }
-  if (focus) digest.push(`Focus: comment ${focus.commentId} in thread ${focus.threadId}`);
+  if (focus) digest.push(`Focus: Comment ${focus.commentId} in Thread ${focus.threadId}`);
   const details = [
     "",
     "Description:",
     item.description || "(empty)",
-    ...item.children.length ? ["", "Children:", ...item.children.map((c) => `  - ${c.reference} ${c.title} [${c.type}, ${c.state}]`)] : [],
+    ...item.children.length ? ["", "Children:", ...item.children.map((c) => `  - ${c.reference} ${c.title} [${c.type}, ${c.state}] ${c.url}`)] : [],
     ...item.childrenCount > item.children.length ? [`  - ${item.childrenCount - item.children.length} more not shown; list them with list_work_items and this parent.`] : [],
-    ...item.linkedItems.length ? ["", "Linked Items:", ...item.linkedItems.map((l) => `  - ${l.linkType} ${l.reference} ${l.title} [${l.state}]`)] : [],
+    ...item.linkedItems.length ? ["", "Linked Items:", ...item.linkedItems.map((l) => `  - ${l.linkType} ${l.reference} ${l.title} [${l.state}] ${l.url}`)] : [],
     ...item.threads.length ? ["", ...item.threads.map(threadText)] : []
   ];
   return answer([...digest, ...details].join("\n"), data);
@@ -38177,37 +38308,69 @@ async function listWorkItems(config3, reader2, lists2, { fullPath, limit, after,
 }
 
 // src/server/tools/pick.ts
-async function pickWorkItem(config3, reader2, lists2, pick2, { fullPath, limit, ...filters }) {
+async function pickWorkItem(config3, reader2, seen2, lists2, pickOne, { fullPath, limit, ...filters }) {
   const result = await lists2.within(fullPath, await resolveFilters(config3, reader2, filters), limit);
   if (result.items.length === 0) return answer(`No Work Items in ${fullPath} match, so there's nothing to pick from.`, { picked: null });
-  const picked = await pick2(result.items);
+  const picked = await pickOne(result.items);
   if (picked === "unsupported") {
     return listAnswer(`This client can't show a pick-list, so ask the user which of these Work Items in ${fullPath} to open, then Fetch it`, result);
   }
   if (!picked || !result.items.some((item) => item.reference === picked)) {
     return answer("The user didn't pick a Work Item.", { picked: null });
   }
-  return fetchWorkItem(config3, reader2, picked);
+  return fetchWorkItem(config3, reader2, seen2, picked);
 }
 
 // src/server/main.ts
-var config2 = readConfig();
-var gateway = new Gateway(config2);
-var instance = new Instance(gateway);
-var reader = new Reader(config2, gateway, instance);
-var lists = new Lists(config2, gateway, instance);
-var lookups = new Lookups(gateway);
-var writes = new Writes(config2, gateway, instance, reader, lookups);
-var server = new McpServer({ name: "gitlab-work-items", version: "0.2.0" });
+var gitlab = connect(readConfig());
+var { config: config2 } = gitlab;
+var reader = new Reader(gitlab);
+var seen = new Seen();
+var lists = new Lists(gitlab);
+var lookups = new Lookups(gitlab.gateway);
+var writes = new Writes(gitlab, reader, seen, new Planner(gitlab, reader, seen, lookups));
+var server = new McpServer({ name: "gitlab-work-items", version: plugin_default.version });
+var DIALOG_TIMEOUT_MS = 60 * 60 * 1e3;
+async function askUser(message, fields) {
+  if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
+  const response = await server.server.elicitInput(
+    { mode: "form", message, requestedSchema: { type: "object", properties: fields, required: Object.keys(fields) } },
+    { timeout: DIALOG_TIMEOUT_MS }
+  );
+  return response.action === "accept" ? response.content : void 0;
+}
+var pickWithUser = async (entries) => {
+  const answers = await askUser("Pick a Work Item to open in full.", {
+    workItem: {
+      type: "string",
+      title: "Work Item",
+      oneOf: entries.map((entry2) => ({ const: entry2.reference, title: `${entry2.reference} ${entry2.title}` }))
+    }
+  });
+  if (answers === "unsupported") return answers;
+  return typeof answers?.workItem === "string" ? answers.workItem : void 0;
+};
+var confirmWithUser = async (message, count) => {
+  const answers = await askUser(message, {
+    confirm: {
+      type: "boolean",
+      title: "Apply to GitLab",
+      description: `Tick to send ${count === 1 ? "this Write" : `these ${count} Writes`} to GitLab.`,
+      default: false
+    }
+  });
+  if (answers === "unsupported") return answers;
+  return answers?.confirm === true;
+};
 server.registerTool(
   "status",
   {
     title: "GitLab plugin status",
-    description: "Shows the configured GitLab Instance, where the token comes from, glab's version, the GitLab version and edition, who the token signs in as, and whether GitLab 18.1 or later is met. Given a project, also runs read-only probes of the plugin's queries there.",
+    description: `Shows the configured GitLab Instance, where the token comes from, glab's version, the GitLab version and edition, who the token signs in as, and whether GitLab ${MINIMUM_GITLAB} or later is met. Given a project, also runs read-only probes of the plugin's queries there.`,
     inputSchema: { project: external_exports.string().optional().describe("A project's full path to run read-only probes in, e.g. acme/app") },
     annotations: { readOnlyHint: true }
   },
-  guarded(async ({ project }) => status(config2, gateway, instance, { lookups, lists, reader }, project))
+  guarded(async ({ project }) => status(gitlab, { lookups, lists, reader }, project))
 );
 server.registerTool(
   "fetch_work_item",
@@ -38217,17 +38380,16 @@ server.registerTool(
     inputSchema: { reference: external_exports.string().describe("Work Item URL or full reference, e.g. group/project#12") },
     annotations: { readOnlyHint: true }
   },
-  guarded(async ({ reference }) => fetchWorkItem(config2, reader, reference))
+  guarded(async ({ reference }) => fetchWorkItem(config2, reader, seen, reference))
 );
 server.registerTool(
   "list_work_items",
   {
     title: "List GitLab Work Items",
-    description: "Lists Issues and Tasks in a project or group (subgroups and projects included) as compact summaries, most recently updated first. 20 by default; ask for more with limit (up to 200) or continue with after.",
+    description: "Lists Issues and Tasks in a project or group (subgroups and projects included) as compact summaries, most recently updated first. Ask for more with limit or continue with after.",
     inputSchema: {
       fullPath: external_exports.string().describe("Full path of the project or group, e.g. acme/app or acme"),
-      limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to return (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
-      after: external_exports.string().optional().describe("Cursor from a previous list, to continue it"),
+      ...PAGING_SCHEMA,
       ...FILTER_SCHEMA
     },
     annotations: { readOnlyHint: true }
@@ -38240,8 +38402,7 @@ server.registerTool(
     title: "List my GitLab Work Items",
     description: "Lists the signed-in user's Issues and Tasks across the whole Instance (assigned to them), open by default, most recently updated first.",
     inputSchema: {
-      limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to return (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
-      after: external_exports.string().optional().describe("Cursor from a previous list, to continue it"),
+      ...PAGING_SCHEMA,
       state: FILTER_SCHEMA.state,
       types: FILTER_SCHEMA.types,
       labels: FILTER_SCHEMA.labels,
@@ -38251,29 +38412,6 @@ server.registerTool(
   },
   guarded(async ({ limit, after, ...filters }) => listAnswer("Your Work Items", await lists.mine(filters, limit, after)))
 );
-var DIALOG_TIMEOUT_MS = 60 * 60 * 1e3;
-var pickWithUser = async (entries) => {
-  if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
-  const response = await server.server.elicitInput(
-    {
-      mode: "form",
-      message: "Pick a Work Item to open in full.",
-      requestedSchema: {
-        type: "object",
-        properties: {
-          workItem: {
-            type: "string",
-            title: "Work Item",
-            oneOf: entries.map((entry2) => ({ const: entry2.reference, title: `${entry2.reference} ${entry2.title}` }))
-          }
-        },
-        required: ["workItem"]
-      }
-    },
-    { timeout: DIALOG_TIMEOUT_MS }
-  );
-  return response.action === "accept" && typeof response.content?.workItem === "string" ? response.content.workItem : void 0;
-};
 server.registerTool(
   "pick_work_item",
   {
@@ -38281,36 +38419,13 @@ server.registerTool(
     description: "Lists Issues and Tasks in a project or group with the same filters as list_work_items, lets the user pick one in a dialog, and returns the picked Work Item in full, as fetch_work_item does. Use it when the user wants to choose a Work Item to open; show the picked one to them in full.",
     inputSchema: {
       fullPath: external_exports.string().describe("Full path of the project or group, e.g. acme/app or acme"),
-      limit: external_exports.number().int().min(1).max(MAX_LIMIT).optional().describe(`How many to offer (default ${DEFAULT_LIMIT}, at most ${MAX_LIMIT})`),
+      limit: PAGING_SCHEMA.limit,
       ...FILTER_SCHEMA
     },
     annotations: { readOnlyHint: true }
   },
-  guarded(async (args) => pickWorkItem(config2, reader, lists, pickWithUser, args))
+  guarded(async (args) => pickWorkItem(config2, reader, seen, lists, pickWithUser, args))
 );
-var confirmWithUser = async (message, writes2) => {
-  if (!server.server.getClientCapabilities()?.elicitation) return "unsupported";
-  const response = await server.server.elicitInput(
-    {
-      mode: "form",
-      message,
-      requestedSchema: {
-        type: "object",
-        properties: {
-          confirm: {
-            type: "boolean",
-            title: "Apply to GitLab",
-            description: `Tick to send ${writes2 === 1 ? "this Write" : `these ${writes2} Writes`} to GitLab.`,
-            default: false
-          }
-        },
-        required: ["confirm"]
-      }
-    },
-    { timeout: DIALOG_TIMEOUT_MS }
-  );
-  return response.action === "accept" && response.content?.confirm === true;
-};
 server.registerTool(
   "prepare_writes",
   {

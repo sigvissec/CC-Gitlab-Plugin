@@ -2,6 +2,7 @@
 // with the token chosen by precedence and every other token variable removed.
 import { spawn } from "node:child_process";
 import type { Config } from "./config.js";
+import { onceItWorks } from "./once.js";
 
 /**
  * Variables glab reads that decide which credential it sends, how, or whether it checks TLS.
@@ -77,15 +78,10 @@ function loginCommand(config: Config): string {
 }
 
 export class Gateway {
-  private tokenSource: Promise<TokenSource> | undefined;
-
   constructor(private readonly config: Config) {}
 
-  /** Which token the server uses, decided once per session. */
-  source(): Promise<TokenSource> {
-    this.tokenSource ??= this.chooseSource();
-    return this.tokenSource;
-  }
+  /** Which token the server uses: decided once per session, or again until one is found. */
+  readonly source = onceItWorks(() => this.chooseSource());
 
   private async chooseSource(): Promise<TokenSource> {
     if (this.config.settingToken) return "plugin setting";

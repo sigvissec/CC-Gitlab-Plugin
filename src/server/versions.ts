@@ -15,3 +15,12 @@ export function atLeast(version: string, minimum: string): boolean {
   }
   return true;
 }
+
+export const glabSupported = (version: string) => atLeast(version, MINIMUM_GLAB);
+export const gitlabSupported = (version: string) => atLeast(version, MINIMUM_GITLAB);
+
+/** Why an installed glab won't do. */
+export const glabTooOld = (version: string) => `glab ${version} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`;
+
+/** Why an Instance's GitLab won't do. */
+export const gitlabTooOld = (version: string) => `This Instance runs GitLab ${version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`;

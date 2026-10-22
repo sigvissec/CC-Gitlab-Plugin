@@ -1,7 +1,7 @@
 // Turns the names people use (label titles, usernames, milestone titles, type names) into
 // the global IDs GitLab's mutations need.
 import type { Gateway } from "./gateway.js";
-import { refused } from "./references.js";
+import { refused, type WorkItemType } from "./references.js";
 
 const LABEL = /* GraphQL */ `
 query LookupLabel($fullPath: ID!, $title: String!) {
@@ -57,7 +57,7 @@ export class Lookups {
     return match.id;
   }
 
-  private async type(fullPath: string, name: string): Promise<TypeInfo> {
+  private async type(fullPath: string, name: WorkItemType): Promise<TypeInfo> {
     let types = this.types.get(fullPath);
     if (!types) {
       types = this.gateway.graphql("LookupWorkItemTypes", TYPES, { fullPath }).then(
@@ -77,12 +77,12 @@ export class Lookups {
   }
 
   /** A Work Item Type's ID in a namespace, matched by name and cached; never hard-coded. */
-  async typeId(fullPath: string, name: string): Promise<string> {
+  async typeId(fullPath: string, name: WorkItemType): Promise<string> {
     return (await this.type(fullPath, name)).id;
   }
 
   /** Whether a Work Item Type has a widget (such as WEIGHT) on this namespace's tier. */
-  async typeOffers(fullPath: string, name: string, widget: string): Promise<boolean> {
+  async typeOffers(fullPath: string, name: WorkItemType, widget: string): Promise<boolean> {
     return (await this.type(fullPath, name)).widgets.has(widget);
   }
 }

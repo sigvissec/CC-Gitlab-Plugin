@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { cassette, instanceProbe, loggedIn, type Interaction } from "./support/cassette.js";
 import { repo, runSessionStart } from "./support/session-start-hook.js";
 
-const TICKET_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
+const WAYFINDER_TICKET_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
 
 interface TicketFixture {
   iid: number;
@@ -15,7 +15,7 @@ interface TicketFixture {
   description?: string;
 }
 
-/** GitLab's answer for the user's claimed wayfinder tickets in a project, and its maps. */
+/** GitLab's answer for the user's claimed Wayfinder tickets in a project, and its Wayfinder maps. */
 function claimedTickets(
   tickets: TicketFixture[],
   options: { fullPath?: string; assignee?: string; maps?: { iid: number; title: string }[]; count?: number } = {},
@@ -23,7 +23,7 @@ function claimedTickets(
   const fullPath = options.fullPath ?? "acme/app";
   return {
     operationName: "ClaimedWayfinderTickets",
-    variables: { fullPath, assignees: [options.assignee ?? "alice"], ticketLabels: TICKET_LABELS, mapLabels: ["wayfinder:map"] },
+    variables: { fullPath, assignees: [options.assignee ?? "alice"], ticketLabels: WAYFINDER_TICKET_LABELS, mapLabels: ["wayfinder:map"] },
     response: {
       body: {
         data: {
@@ -40,7 +40,13 @@ function claimedTickets(
                 ],
               })),
             },
-            maps: { nodes: (options.maps ?? []).map((m) => ({ iid: String(m.iid), reference: `${fullPath}#${m.iid}`, title: m.title })) },
+            maps: {
+              nodes: (options.maps ?? []).map((m) => ({
+                reference: `${fullPath}#${m.iid}`,
+                title: m.title,
+                webUrl: `https://gitlab.example.com/${fullPath}/-/work_items/${m.iid}`,
+              })),
+            },
           },
         },
       },
@@ -49,7 +55,7 @@ function claimedTickets(
 }
 
 describe("the session-start hook", () => {
-  it("shows the user, and tells Claude, the wayfinder tickets they've claimed in the repo's project", () => {
+  it("shows the user, and tells Claude, the Wayfinder tickets they've claimed in the repo's project", () => {
     const cwd = repo({ origin: "https://gitlab.example.com/acme/app.git" });
     const run = runSessionStart({
       cwd,
@@ -71,9 +77,9 @@ describe("the session-start hook", () => {
     expect(run.code).toBe(0);
     expect(run.shown).toBe(
       [
-        "Your wayfinder tickets in acme/app:",
-        "1. acme/app#7 Pick a cache (grilling, on the map Plugin v1, acme/app#3)",
-        "2. acme/app#9 Spike the API (research, on the map Plugin v1, acme/app#3)",
+        "Your Wayfinder tickets in acme/app:",
+        "1. acme/app#7 Pick a cache https://gitlab.example.com/acme/app/-/work_items/7 (grilling; Wayfinder map: Plugin v1, acme/app#3 https://gitlab.example.com/acme/app/-/work_items/3)",
+        "2. acme/app#9 Spike the API https://gitlab.example.com/acme/app/-/work_items/9 (research; Wayfinder map: Plugin v1, acme/app#3 https://gitlab.example.com/acme/app/-/work_items/3)",
         "Say a number to open one in full, or pick one with /gitlab-work-items:open.",
       ].join("\n"),
     );
@@ -101,8 +107,8 @@ describe("the session-start hook", () => {
     });
 
     expect(run.shown!.split("\n").slice(1, 4)).toEqual([
-      "1. acme/app#7 Pick a cache (prototype, on the map acme/plans#3)",
-      "2. acme/app#9 Provision a sandbox (task)",
+      "1. acme/app#7 Pick a cache https://gitlab.example.com/acme/app/-/work_items/7 (prototype; Wayfinder map: acme/plans#3 https://gitlab.example.com/acme/plans/-/work_items/3)",
+      "2. acme/app#9 Provision a sandbox https://gitlab.example.com/acme/app/-/work_items/9 (task)",
       "…and 21 more; ask Claude to list them.",
     ]);
   });
@@ -121,7 +127,7 @@ describe("the session-start hook", () => {
     expect(run.glabCalls).toEqual([]);
   });
 
-  it("shows nothing when the user has claimed no wayfinder tickets there", () => {
+  it("shows nothing when the user has claimed no Wayfinder tickets there", () => {
     const cwd = repo({ origin: "https://gitlab.example.com/acme/app.git" });
     const run = runSessionStart({ cwd, cassette: cassette({ auth: loggedIn(), interactions: [instanceProbe(), claimedTickets([])] }) });
 
@@ -143,7 +149,7 @@ describe("the session-start hook", () => {
       cassette: cassette({ auth: loggedIn(), interactions: [instanceProbe(), claimedTickets([{ iid: 7, title: "Pick a cache", type: "grilling" }])] }),
     });
 
-    expect(run.shown).toMatch(/^Your wayfinder tickets in acme\/app:\n1\. acme\/app#7 Pick a cache \(grilling\)/);
+    expect(run.shown).toMatch(/^Your Wayfinder tickets in acme\/app:\n1\. acme\/app#7 Pick a cache \S+\/acme\/app\/-\/work_items\/7 \(grilling\)$/m);
   });
 
   it("uses the plugin's own settings: the Instance and the token", () => {
@@ -166,7 +172,7 @@ describe("the session-start hook", () => {
     const run = runSessionStart({ cwd, cassette: cassette({ auth: { "gitlab.example.com": { loggedIn: false } } }) });
 
     expect(run.code).toBe(0);
-    expect(run.shown).toMatch(/^gitlab-work-items couldn't check your wayfinder tickets in acme\/app: .+/);
+    expect(run.shown).toMatch(/^gitlab-work-items couldn't check your Wayfinder tickets in acme\/app: .+/);
     expect(run.shown).not.toContain("\n");
     expect(run.context).toBeUndefined();
   });

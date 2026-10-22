@@ -87,8 +87,6 @@ function sessionStart(target: Target, name: string): HookRun {
   return runSessionStart({ cwd, instanceUrl: target.seed.url, cassette: JSON.parse(readFileSync(cassettePath, "utf8")) });
 }
 
-const WAYFINDER_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
-
 /** Changes GitLab behind the server's back. Only happens live; replays see its recorded effect. */
 function changeBehindTheServersBack(target: Target, iid: string, title: string) {
   if (!recording) return;
@@ -161,13 +159,16 @@ describe.runIf(all.length > 0).each(all)("on $seed.label (GitLab $seed.version $
     expect(referencesIn(ok(filtered)), filtered.text).toEqual([seed.related]);
   });
 
-  it.runIf(recorded(target, "wayfinder"))("shows the wayfinder tickets I've claimed as a session starts, and opens one picked from them in full", async () => {
+  it.runIf(recorded(target, "wayfinder"))("shows the Wayfinder tickets I've claimed as a session starts, and opens one picked from them in full", async () => {
     const hook = sessionStart(target, "wayfinder-hook");
     const s = await session(target, "wayfinder", { pick: seed.claimedTicket });
-    const picked = await s.call("pick_work_item", { fullPath: seed.project, anyLabels: WAYFINDER_LABELS, assignedToMe: true });
+    const picked = await s.call("pick_work_item", { fullPath: seed.project, wayfinderTickets: true, assignedToMe: true });
     await s.close();
     expect(hook.code).toBe(0);
-    expect(hook.shown, hook.shown).toContain(`1. ${seed.claimedTicket} Which cache to use? (grilling, on the map Plan the cache, ${seed.wayfinderMap})`);
+    // GitLab 18.1 gives an Issue's URL as /-/issues/<iid>; 19.4 gives /-/work_items/<iid>.
+    const url = (reference: string) => `${seed.url}/${reference.split("#")[0]}/-/(issues|work_items)/${reference.split("#")[1]}`;
+    const line = `1. ${seed.claimedTicket} Which cache to use? ${url(seed.claimedTicket!)} \\(grilling; Wayfinder map: Plan the cache, ${seed.wayfinderMap} ${url(seed.wayfinderMap!)}\\)`;
+    expect(hook.shown, hook.shown).toMatch(new RegExp(`^${line.replaceAll("?", "\\?")}$`, "m"));
     expect(hook.shown).not.toContain(seed.unclaimedTicket);
     expect(s.elicitations[0]!.requestedSchema.properties.workItem.oneOf).toEqual([
       { const: seed.claimedTicket, title: `${seed.claimedTicket} Which cache to use?` },

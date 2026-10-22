@@ -1,10 +1,10 @@
 // Fetches one Work Item with everything Claude needs: fields, Hierarchy, Linked Items,
 // Threads, and the merge requests associated with it.
-import type { Config } from "./config.js";
-import type { Gateway } from "./gateway.js";
-import type { Instance } from "./instance.js";
-import { stateOf, widgetOf } from "./nodes.js";
-import { SUPPORTED_TYPES, fullReference, notFound, refused, type WorkItemRef } from "./references.js";
+import type { GitLab } from "./gitlab.js";
+import { SUMMARY_FIELDS, stateOf, summaryOf, typeOf, widgetOf, type ItemSummary } from "./nodes.js";
+import { SUPPORTED_TYPES, fullReference, notFound, refused, type ParsedReference } from "./references.js";
+
+export type { ItemSummary } from "./nodes.js";
 
 export interface Comment {
   id: string;
@@ -25,15 +25,6 @@ export interface Thread {
   comments: Comment[];
   /** How many Comments the Thread has in GitLab, including any not fetched. */
   commentCount: number;
-}
-
-export interface ItemSummary {
-  id: string;
-  reference: string;
-  title: string;
-  type: string;
-  state: "open" | "closed";
-  url: string;
 }
 
 export interface MergeRequestLink {
@@ -76,9 +67,8 @@ export interface WorkItem {
   permissions: Record<string, boolean>;
 }
 
-const SUMMARY = "id reference(full: true) title state webUrl workItemType { name }";
 const PAGE = "pageInfo { hasNextPage endCursor }";
-const LINKS = `nodes { linkType workItem { ${SUMMARY} } } ${PAGE}`;
+const LINKS = `nodes { linkType workItem { ${SUMMARY_FIELDS} } } ${PAGE}`;
 const THREADS = `
             nodes {
               id replyId resolvable resolved
@@ -105,9 +95,9 @@ query FetchWorkItem($fullPath: ID!, $iid: String!) {
         ... on WorkItemWidgetMilestone { milestone { id title } }
         ... on WorkItemWidgetStartAndDueDate { dueDate startDate }${enterprise ? "\n        ... on WorkItemWidgetWeight { weight }" : ""}
         ... on WorkItemWidgetHierarchy {
-          parent { ${SUMMARY} }
+          parent { ${SUMMARY_FIELDS} }
           hasChildren
-          children(first: 100) { count nodes { ${SUMMARY} } }
+          children(first: 100) { count nodes { ${SUMMARY_FIELDS} } }
         }
         ... on WorkItemWidgetLinkedItems { linkedItems(first: 100) { ${LINKS} } }
         ... on WorkItemWidgetNotes { discussions(filter: ONLY_COMMENTS, first: 100) { ${THREADS} } }
@@ -154,17 +144,6 @@ query FetchWorkItemLinks($fullPath: ID!, $iid: String!, $after: String!) {
 ] as const;
 
 
-function summary(node: any): ItemSummary {
-  return {
-    id: node.id,
-    reference: node.reference,
-    title: node.title,
-    type: node.workItemType?.name ?? "Unknown",
-    state: stateOf(node.state),
-    url: node.webUrl,
-  };
-}
-
 function mrState(mr: any): MergeRequestLink["state"] {
   if (mr.state === "opened") return mr.draft ? "draft" : "open";
   if (mr.state === "merged") return "merged";
@@ -194,7 +173,7 @@ function mergeRequests(widget: any): WorkItem["mergeRequests"] {
     : { all, hidden: Math.max(0, count - visibleClosing), unfetched: 0 };
 }
 
-function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
+function toWorkItem(node: any, ref: ParsedReference): WorkItem {
   const widget = (type: string) => widgetOf(node, type);
   const hierarchy = widget("HIERARCHY");
   const weight = widget("WEIGHT");
@@ -205,7 +184,7 @@ function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
     fullPath: ref.fullPath,
     iid: node.iid,
     title: node.title,
-    type: node.workItemType?.name ?? "Unknown",
+    type: typeOf(node),
     state: stateOf(node.state),
     confidential: Boolean(node.confidential),
     author: node.author?.username ?? "",
@@ -216,10 +195,10 @@ function toWorkItem(node: any, ref: WorkItemRef): WorkItem {
     milestone: widget("MILESTONE")?.milestone ?? null,
     dueDate: widget("START_AND_DUE_DATE")?.dueDate ?? null,
     weight: weight ? (weight.weight ?? null) : undefined,
-    parent: hierarchy?.parent ? summary(hierarchy.parent) : null,
-    children: (hierarchy?.children?.nodes ?? []).map(summary),
+    parent: hierarchy?.parent ? summaryOf(hierarchy.parent) : null,
+    children: (hierarchy?.children?.nodes ?? []).map(summaryOf),
     childrenCount: hierarchy?.children?.count ?? (hierarchy?.children?.nodes ?? []).length,
-    linkedItems: (widget("LINKED_ITEMS")?.linkedItems?.nodes ?? []).map((n: any) => ({ ...summary(n.workItem), linkType: n.linkType })),
+    linkedItems: (widget("LINKED_ITEMS")?.linkedItems?.nodes ?? []).map((n: any) => ({ ...summaryOf(n.workItem), linkType: n.linkType })),
     threads: (widget("NOTES")?.discussions?.nodes ?? []).map((d: any) => ({
       id: d.id,
       replyId: d.replyId,
@@ -246,36 +225,27 @@ query ResolveWorkItem($fullPath: ID!, $iid: String!) {
   namespace(fullPath: $fullPath) { workItem(iid: $iid) { id reference(full: true) workItemType { name } } }
 }`;
 
-export interface ResolvedRef {
+export interface ResolvedWorkItem {
   id: string;
   reference: string;
   type: string;
 }
 
 /**
- * The Thread holding a Comment, by the Comment's note number from a Comment link. GitLab's
+ * The Thread holding a Comment, by the Comment's number from a Comment link. GitLab's
  * global ID names the note's class (`Note`, or `DiscussionNote` inside a resolvable Thread),
  * so only the number is compared.
  */
-export function threadWithComment(item: WorkItem, noteId: string): { thread: Thread; commentId: string } | undefined {
+export function threadWithComment(item: WorkItem, commentNumber: string): { thread: Thread; commentId: string } | undefined {
   for (const thread of item.threads) {
-    const comment = thread.comments.find((c) => c.id.slice(c.id.lastIndexOf("/") + 1) === noteId);
+    const comment = thread.comments.find((c) => c.id.slice(c.id.lastIndexOf("/") + 1) === commentNumber);
     if (comment) return { thread, commentId: comment.id };
   }
   return undefined;
 }
 
 export class Reader {
-  /** When each Work Item was last updated, as of the version Claude was last shown. */
-  private readonly seen = new Map<string, string>();
-  /** How many Comments each Thread had in the version Claude was last shown. */
-  private readonly seenThreads = new Map<string, number>();
-
-  constructor(
-    private readonly config: Config,
-    private readonly gateway: Gateway,
-    private readonly instance: Instance,
-  ) {}
+  constructor(private readonly gitlab: GitLab) {}
 
   private requireSupportedType(reference: string, type: string): void {
     if (!(SUPPORTED_TYPES as readonly string[]).includes(type)) {
@@ -283,46 +253,23 @@ export class Reader {
     }
   }
 
-  /** Records the version of a Work Item that Claude has now seen. */
-  remember(item: WorkItem): void {
-    this.seen.set(item.id, item.updatedAt);
-    for (const thread of item.threads) this.seenThreads.set(thread.id, thread.commentCount);
-  }
-
-  /** How many Comments a Thread had in the version Claude was last shown; its count now if never shown. */
-  commentsSeen(thread: Thread): number {
-    return this.seenThreads.get(thread.id) ?? thread.commentCount;
-  }
-
-  /**
-   * Fetches a Work Item and says whether it changed since the version Claude was last shown.
-   * A changed Work Item counts as shown from here on, so callers must show its new state.
-   */
-  async fetchSinceSeen(ref: WorkItemRef): Promise<{ item: WorkItem; changed: boolean }> {
-    const item = await this.fetch(ref);
-    const seen = this.seen.get(item.id);
-    const changed = seen !== undefined && seen !== item.updatedAt;
-    if (changed) this.remember(item);
-    return { item, changed };
-  }
-
   /** Looks up a Work Item's global ID without fetching the rest of it. */
-  async resolve(ref: WorkItemRef): Promise<ResolvedRef> {
-    await this.instance.requireSupported();
-    const data = await this.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
+  async resolve(ref: ParsedReference): Promise<ResolvedWorkItem> {
+    await this.gitlab.instance.requireSupported();
+    const data = await this.gitlab.gateway.graphql("ResolveWorkItem", RESOLVE, { fullPath: ref.fullPath, iid: ref.iid });
     const node = data?.namespace?.workItem;
-    if (!node) throw notFound(fullReference(ref), this.config);
-    const resolved = { id: node.id, reference: node.reference ?? fullReference(ref), type: node.workItemType?.name ?? "Unknown" };
+    if (!node) throw notFound(fullReference(ref), this.gitlab.config);
+    const resolved = { id: node.id, reference: node.reference ?? fullReference(ref), type: typeOf(node) };
     this.requireSupportedType(resolved.reference, resolved.type);
     return resolved;
   }
 
   /** The nodes on every page after the first of a Work Item's paged connection. */
-  private async laterPages(ref: WorkItemRef, paged: (typeof PAGED)[number], pageInfo: any): Promise<any[]> {
+  private async laterPages(ref: ParsedReference, paged: (typeof PAGED)[number], pageInfo: any): Promise<any[]> {
     const nodes: any[] = [];
     while (pageInfo?.hasNextPage && pageInfo.endCursor) {
       const variables = { fullPath: ref.fullPath, iid: ref.iid, after: pageInfo.endCursor };
-      const data = await this.gateway.graphql(paged.operationName, paged.query, variables);
+      const data = await this.gitlab.gateway.graphql(paged.operationName, paged.query, variables);
       const connection = widgetOf(data?.namespace?.workItem, paged.widget)?.[paged.field];
       nodes.push(...(connection?.nodes ?? []));
       pageInfo = connection?.pageInfo;
@@ -331,14 +278,14 @@ export class Reader {
   }
 
   /** Fetches a supported Work Item, or throws a readable refusal. */
-  async fetch(ref: WorkItemRef): Promise<WorkItem> {
-    const info = await this.instance.requireSupported();
-    const data = await this.gateway.graphql("FetchWorkItem", fetchQuery(info.enterprise), {
+  async fetch(ref: ParsedReference): Promise<WorkItem> {
+    const info = await this.gitlab.instance.requireSupported();
+    const data = await this.gitlab.gateway.graphql("FetchWorkItem", fetchQuery(info.enterprise), {
       fullPath: ref.fullPath,
       iid: ref.iid,
     });
     const node = data?.namespace?.workItem;
-    if (!node) throw notFound(fullReference(ref), this.config);
+    if (!node) throw notFound(fullReference(ref), this.gitlab.config);
     for (const paged of PAGED) {
       const connection = widgetOf(node, paged.widget)?.[paged.field];
       if (connection) connection.nodes = [...(connection.nodes ?? []), ...(await this.laterPages(ref, paged, connection.pageInfo))];

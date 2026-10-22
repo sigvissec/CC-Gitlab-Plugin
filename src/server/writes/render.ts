@@ -62,9 +62,9 @@ export function renderConfirmation(plan: Plan): string {
 export function renderReport(results: WriteResult[]): string {
   return results
     .map((r) => {
-      const head = `${r.number}. ${r.summary}: ${r.outcome}${r.created ? `, created ${r.created} ${r.url}` : ""}`;
-      const notes = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
-      return [head, ...notes].join("\n");
+      const head = `${r.number}. ${r.summary}${r.url ? ` ${r.url}` : ""}: ${r.outcome}${r.created ? `, created ${r.created} ${r.createdUrl}` : ""}`;
+      const details = [r.detail ? `   ${r.detail}` : "", ...r.didNotStick.map((d) => `   didn't stick: ${d}`)].filter(Boolean);
+      return [head, ...details].join("\n");
     })
     .join("\n");
 }

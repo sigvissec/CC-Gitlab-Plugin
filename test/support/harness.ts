@@ -3,7 +3,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { ElicitRequestSchema, type ElicitResult } from "@modelcontextprotocol/sdk/types.js";
-import { chmodSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { Cassette } from "./cassette.js";
@@ -18,6 +18,8 @@ const CLAUDE_CODE_TOOL_TIMEOUT_MS = 100_000_000;
 export interface Session {
   call(tool: string, args?: Record<string, unknown>): Promise<ToolResult>;
   glabCalls(): GlabCall[];
+  /** Changes what GitLab and glab answer from here on, as when the user signs in or upgrades glab mid-session. */
+  setCassette(cassette: Cassette): void;
   /** The tools the server lists, with their `_meta`. */
   tools(): Promise<{ name: string; _meta?: Record<string, unknown> }[]>;
   /** Elicitation requests the server sent: the dialog's message and the fields it asks for. */
@@ -117,6 +119,10 @@ export async function start(options: StartOptions): Promise<Session> {
     },
     async tools() {
       return (await client.listTools()).tools;
+    },
+    setCassette(next) {
+      writeFileSync(cassettePath, JSON.stringify(next));
+      rmSync(`${cassettePath}.state.json`, { force: true });
     },
     glabCalls() {
       if (!existsSync(logPath)) return [];

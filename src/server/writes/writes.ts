@@ -3,13 +3,12 @@
 // GitLab: it confirms with the user, checks nothing changed since the data was Fetched,
 // applies the Writes in order, re-reads, and reports what didn't stick.
 import { randomUUID } from "node:crypto";
-import type { Config } from "../config.js";
-import { GitLabError, type Gateway } from "../gateway.js";
-import type { Instance } from "../instance.js";
-import type { Lookups } from "../lookups.js";
+import { GitLabError } from "../gateway.js";
+import type { GitLab } from "../gitlab.js";
 import type { Reader, WorkItem } from "../reader.js";
 import { parseReference, refused } from "../references.js";
-import { Planner, type Expectation, type Plan, type PlannedWrite, type Step } from "./plan.js";
+import type { Seen } from "../seen.js";
+import type { Expectation, Guard, Plan, Planner, PlannedWrite, Step, Target } from "./plan.js";
 import { excerpt, joinOrNone, renderConfirmation, renderPreview, renderReport, stateLines } from "./render.js";
 import { MAX_WRITES, type WriteRequest } from "./requests.js";
 
@@ -23,27 +22,49 @@ export interface WriteResult {
   /** Its number in the preview. */
   number: number;
   summary: string;
+  /** The URL of the Work Item the summary names, if it names one. */
+  url?: string;
   outcome: "done" | "failed" | "not applied";
   didNotStick: string[];
   detail?: string;
-  /** The Reference of a Work Item this Write created. */
+  /** The Reference of a Work Item this Write created, and its URL. */
   created?: string;
-  url?: string;
+  createdUrl?: string;
+}
+
+/** What this plan's own Writes have changed so far, so a later Write doesn't take it for someone else's change. */
+class OwnChanges {
+  private readonly versions = new Map<string, string>();
+  private readonly commentCounts = new Map<string, number>();
+
+  record(write: PlannedWrite, after: WorkItem): void {
+    this.versions.set(after.id, after.updatedAt);
+    const { guard } = write;
+    if (guard.kind !== "thread") return;
+    const thread = after.threads.find((t) => t.id === guard.threadId);
+    if (thread) this.commentCounts.set(guard.threadId, thread.commentCount);
+  }
+
+  /** The version a Work Item should be at now: as planned, or as this plan's own Writes left it. */
+  version(target: Target): string {
+    return this.versions.get(target.id) ?? target.updatedAt;
+  }
+
+  /** How many Comments a Thread should have now: as planned, or as this plan's own replies left it. */
+  comments(guard: Extract<Guard, { kind: "thread" }>): number {
+    return this.commentCounts.get(guard.threadId) ?? guard.comments;
+  }
 }
 
 export class Writes {
   private readonly plans = new Map<string, Plan>();
-  private readonly planner: Planner;
 
   constructor(
-    private readonly config: Config,
-    private readonly gateway: Gateway,
-    instance: Instance,
+    private readonly gitlab: GitLab,
     private readonly reader: Reader,
-    lookups: Lookups,
-  ) {
-    this.planner = new Planner(config, gateway, instance, reader, lookups);
-  }
+    private readonly seen: Seen,
+    private readonly planner: Planner,
+  ) {}
 
   async prepare(requests: WriteRequest[]): Promise<{ plan: Plan; preview: string }> {
     if (requests.length === 0) throw refused("There's nothing to write.");
@@ -66,7 +87,7 @@ export class Writes {
     const plan: Plan = { id: stored.id, writes: stored.writes.filter((w) => !dropped.has(w.number)) };
     const droppedResults: WriteResult[] = stored.writes
       .filter((w) => dropped.has(w.number))
-      .map((w) => ({ number: w.number, summary: w.summary, outcome: "not applied", didNotStick: [], detail: "Dropped by the user before applying." }));
+      .map((w) => ({ ...named(w), outcome: "not applied", didNotStick: [], detail: "Dropped by the user before applying." }));
     if (plan.writes.length === 0) {
       return { results: droppedResults, report: renderReport(droppedResults) };
     }
@@ -76,8 +97,7 @@ export class Writes {
     const confirmed = await confirm(renderConfirmation(plan), plan.writes.length);
     if (confirmed === false) {
       const results = plan.writes.map((w) => ({
-        number: w.number,
-        summary: w.summary,
+        ...named(w),
         outcome: "not applied" as const,
         didNotStick: [],
         detail: "The user didn't confirm, so nothing was sent.",
@@ -87,42 +107,42 @@ export class Writes {
     }
 
     const results: WriteResult[] = [];
-    // Each Work Item's expected version moves forward as this plan's own Writes land.
-    const expected = new Map<string, string>();
+    const own = new OwnChanges();
     let stopped = false;
     for (const write of plan.writes) {
-      const number = write.number;
       if (stopped) {
-        results.push({ number, summary: write.summary, outcome: "not applied", didNotStick: [] });
+        results.push({ ...named(write), outcome: "not applied", didNotStick: [] });
         continue;
       }
+      const sent: string[] = [];
       try {
-        const changed = await this.changedSincePreview(write, expected);
+        const changed = await this.changedSincePreview(write, own);
         if (changed) {
           stopped = true;
-          results.push({ number, summary: write.summary, outcome: "not applied", didNotStick: [], detail: changed });
+          results.push({ ...named(write), outcome: "not applied", didNotStick: [], detail: changed });
           continue;
         }
-        let created: { reference: string; webUrl: string } | undefined;
+        let created: { reference: string } | undefined;
         for (const step of write.steps) {
           const payload = await this.run(step);
-          if (write.creates) created = payload?.workItem;
+          sent.push(...step.sends);
+          if (!write.target) created = payload?.workItem;
         }
-        const ref = created ? parseReference(created.reference, this.config) : write.target.ref;
+        const ref = write.target?.ref ?? (created && parseReference(created.reference, this.gitlab.config));
+        if (!ref) throw new GitLabError("GitLab didn't return the Work Item it created.", "graphql");
         const after = await this.reader.fetch(ref);
-        this.reader.remember(after);
-        expected.set(after.id, after.updatedAt);
+        this.seen.remember(after);
+        own.record(write, after);
         results.push({
-          number,
-          summary: write.summary,
+          ...named(write),
           outcome: "done",
           didNotStick: didNotStick(write.expect, after),
-          ...(created ? { created: after.reference, url: after.url } : {}),
+          ...(created ? { created: after.reference, createdUrl: after.url } : {}),
         });
       } catch (error) {
         if (!(error instanceof GitLabError)) throw error;
         stopped = true;
-        results.push({ number, summary: write.summary, outcome: "failed", didNotStick: [], detail: error.message });
+        results.push({ ...named(write), outcome: "failed", didNotStick: [], detail: failure(error.message, write, sent) });
       }
     }
     const all = byNumber([...results, ...droppedResults]);
@@ -130,11 +150,11 @@ export class Writes {
   }
 
   /** Why a Write mustn't be sent now, or undefined when it may. */
-  private async changedSincePreview(write: PlannedWrite, expected: Map<string, string>): Promise<string | undefined> {
+  private async changedSincePreview(write: PlannedWrite, own: OwnChanges): Promise<string | undefined> {
     const { guard, target } = write;
-    if (guard.kind === "none") return undefined;
+    if (guard.kind === "none" || !target) return undefined;
     const now = await this.reader.fetch(target.ref);
-    if (guard.kind === "version" && now.updatedAt !== (expected.get(target.id) ?? target.updatedAt)) {
+    if (guard.kind === "version" && now.updatedAt !== own.version(target)) {
       return [
         `${target.reference} changed in GitLab since it was fetched (updated ${now.updatedAt}). Nothing was written to it. Its current state:`,
         ...stateLines(now),
@@ -142,10 +162,11 @@ export class Writes {
       ].join("\n");
     }
     if (guard.kind === "thread") {
+      const comments = own.comments(guard);
       const thread = now.threads.find((t) => t.id === guard.threadId);
-      if (!thread || thread.commentCount !== guard.comments) {
-        const added = thread ? thread.comments.slice(guard.comments) : [];
-        const unshown = (thread?.commentCount ?? 0) - guard.comments - added.length;
+      if (!thread || thread.commentCount !== comments) {
+        const added = thread ? thread.comments.slice(comments) : [];
+        const unshown = (thread?.commentCount ?? 0) - comments - added.length;
         return [
           `The Thread on ${target.reference} has new Comments since it was fetched. Nothing was written. New Comments:`,
           ...added.map((c) => `  ${c.author}: ${excerpt(c.body)}`),
@@ -158,11 +179,24 @@ export class Writes {
   }
 
   private async run(step: Step): Promise<any> {
-    const data = await this.gateway.graphql(step.operationName, step.query, { input: step.input });
+    const data = await this.gitlab.gateway.graphql(step.operationName, step.query, { input: step.input });
     const payload = data?.[step.field];
     if (payload?.errors?.length) throw new GitLabError(payload.errors.join("; "), "graphql");
     return payload;
   }
+}
+
+/** A result's naming fields: the Write's number and summary, and the URL of the Work Item it names. */
+function named(write: PlannedWrite): Pick<WriteResult, "number" | "summary" | "url"> {
+  return { number: write.number, summary: write.summary, ...(write.url ? { url: write.url } : {}) };
+}
+
+/** Why a Write failed and, when it failed part-way, which of its parts reached GitLab first. */
+function failure(message: string, write: PlannedWrite, sent: string[]): string {
+  if (sent.length === 0) return message;
+  const unsent = write.steps.flatMap((step) => step.sends).filter((part) => !sent.includes(part));
+  if (unsent.length === 0) return `It was all sent (${sent.join(", ")}), but reading it back failed: ${message}`;
+  return `GitLab refused part of it: ${message}. Sent before that: ${sent.join(", ")}. Not sent: ${unsent.join(", ")}.`;
 }
 
 function byNumber(results: WriteResult[]): WriteResult[] {

@@ -102,6 +102,25 @@ describe("listing Work Items", () => {
     expect(result.data.items).toHaveLength(1);
   });
 
+  it("filters to Wayfinder tickets: Work Items with any of wayfinder's ticket labels", async () => {
+    const wayfinder = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
+    const s = await withPages(listPage({ fullPath: "acme/app", ...LIST_DEFAULTS, or: { labelNames: wayfinder } }, [{ reference: "acme/app#7" }]));
+
+    const result = await s.call("list_work_items", { fullPath: "acme/app", wayfinderTickets: true });
+
+    expect(result.data.items.map((i: { reference: string }) => i.reference)).toEqual(["acme/app#7"]);
+  });
+
+  it("refuses Wayfinder tickets together with anyLabels, which GitLab can't combine", async () => {
+    const s = await withPages();
+
+    const result = await s.call("list_work_items", { fullPath: "acme/app", wayfinderTickets: true, anyLabels: ["p1"] });
+
+    expect(result.isError).toBe(true);
+    expect(result.text).toMatch(/anyLabels or wayfinderTickets, not both/);
+    expect(s.glabCalls().some((c) => c.body?.operationName === "ListWorkItems")).toBe(false);
+  });
+
   it("filters by parent, given the parent's Reference", async () => {
     const s = await withPages(
       resolveWorkItem("acme/app", "12", 1012),

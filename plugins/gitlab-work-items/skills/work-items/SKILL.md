@@ -33,19 +33,19 @@ The plugin is a thin bridge: its tools Fetch Work Items live from the configured
 - Turn the user's words into the tools' filters, and say how you read anything ambiguous.
 - Number the entries and keep each one's Reference, so the user can open one by its number, Reference, or title; then Fetch it and show it in full.
 - For the user to choose one in a dialog, call `pick_work_item` with the same filters: it shows them a pick-list and returns the Work Item they pick, which you show in full.
-- Lists return 20 by default. Offer more when the result says more exist, continuing with `after` or raising `limit` (200 at most).
+- Offer more when a list says more exist, continuing with `after` or a higher `limit`.
 
 ## Wayfinder tickets
 
-- A wayfinder ticket is an Issue labelled `wayfinder:research`, `wayfinder:prototype`, `wayfinder:grilling`, or `wayfinder:task`; its map is the Issue its description names on a `Part of #<map>` line, labelled `wayfinder:map`.
-- A wayfinder session claims a ticket by assigning it, so the user's active tickets are the open ones assigned to them: filter with `anyLabels` set to those four labels and `assignedToMe`.
-- At session start the plugin shows the user their claimed tickets in the repo's project, numbered; when they name one by its number, Fetch it and show it in full.
+- A Wayfinder ticket is a Work Item the wayfinder skill uses for one decision on a Wayfinder map. A wayfinder session claims one by assigning it to the dev working it.
+- The user's claimed Wayfinder tickets are the open ones assigned to them: filter with `wayfinderTickets` and `assignedToMe`.
+- At session start the plugin shows the user their claimed Wayfinder tickets in the repo's project, numbered; when they name one by its number, Fetch it and show it in full.
 
 ## Writes
 
 Every Write follows the same loop, with no exceptions:
 
-1. Call `prepare_writes` with up to 20 Writes. It changes nothing and returns a preview and a plan ID.
+1. Call `prepare_writes` with the Writes. It changes nothing and returns a preview and a plan ID.
 2. Show the user the preview exactly as returned.
 3. Wait for the user's own explicit yes. If they drop items, note the preview numbers. If they change anything, prepare a new plan.
 4. Call `apply_writes` with the plan ID (and `drop` for dropped numbers). The user confirms again in Claude Code's prompt or a dialog; their answer there is final.
