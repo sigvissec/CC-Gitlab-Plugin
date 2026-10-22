@@ -318,8 +318,8 @@
     "input": {
      "namespacePath": "acme/app",
      "workItemTypeId": "gid://gitlab/WorkItems::Type/1",
-     "title": "Created by the suite",
      "confidential": false,
+     "title": "Created by the suite",
      "descriptionWidget": {
       "description": "_Posted with Claude Code_"
      },
@@ -368,8 +368,8 @@
         "confidential": false,
         "description": "_Posted with Claude Code_",
         "webUrl": "http://localhost:8929/acme/app/-/work_items/8",
-        "createdAt": "2026-10-16T12:45:42Z",
-        "updatedAt": "2026-10-16T12:45:42Z",
+        "createdAt": "2026-10-22T18:17:33Z",
+        "updatedAt": "2026-10-22T18:17:33Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -515,8 +515,8 @@
         "confidential": false,
         "description": "_Posted with Claude Code_",
         "webUrl": "http://localhost:8929/acme/app/-/work_items/8",
-        "createdAt": "2026-10-16T12:45:42Z",
-        "updatedAt": "2026-10-16T12:45:42Z",
+        "createdAt": "2026-10-22T18:17:33Z",
+        "updatedAt": "2026-10-22T18:17:33Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -647,8 +647,8 @@
     "input": {
      "namespacePath": "acme/app",
      "workItemTypeId": "gid://gitlab/WorkItems::Type/5",
-     "title": "A Task from the suite",
      "confidential": false,
+     "title": "A Task from the suite",
      "descriptionWidget": {
       "description": "_Posted with Claude Code_"
      },
@@ -695,8 +695,8 @@
         "confidential": false,
         "description": "_Posted with Claude Code_",
         "webUrl": "http://localhost:8929/acme/app/-/work_items/9",
-        "createdAt": "2026-10-16T12:45:43Z",
-        "updatedAt": "2026-10-16T12:45:43Z",
+        "createdAt": "2026-10-22T18:17:33Z",
+        "updatedAt": "2026-10-22T18:17:33Z",
         "workItemType": {
          "name": "Task"
         },

@@ -332,6 +332,26 @@ describe("an Edit", () => {
     expect(s.glabCalls().some((c) => c.body?.operationName === "UpdateWorkItem")).toBe(false);
   });
 
+  it("says which parts of an Edit reached GitLab when a later part fails", async () => {
+    const v1 = fetchWorkItem();
+    const s = await withGitLab([
+      v1, resolveWorkItem("acme/app", "20", 1020),
+      v1,
+      mutation("UpdateWorkItem", { id: ID, title: "Renamed" }, { workItem: { id: ID } }),
+      mutation("AddLinkedItems", { id: ID, workItemsIds: ["gid://gitlab/WorkItem/1020"], linkType: "RELATED" }, { workItem: null }, ["Linked item limit reached"]),
+    ]);
+    const prepared = await s.call("prepare_writes", {
+      writes: [{ kind: "edit", reference: "acme/app#12", title: "Renamed", addLinks: [{ reference: "acme/app#20", linkType: "relates_to" }] }],
+    });
+
+    const applied = await s.call("apply_writes", { planId: prepared.data.planId });
+
+    expect(applied.data.results[0]).toMatchObject({ outcome: "failed" });
+    expect(applied.data.results[0].detail).toBe(
+      "GitLab refused part of it: Linked item limit reached. Sent before that: title. Not sent: link: relates to acme/app#20.",
+    );
+  });
+
   it("links more than 10 Work Items in batches of 10, GitLab's limit per request", async () => {
     const targets = Array.from({ length: 11 }, (_, i) => ({ iid: String(100 + i), id: 2000 + i }));
     const s = await withGitLab([
@@ -386,7 +406,7 @@ describe("a plan", () => {
     expect(prepared.structured).toBeUndefined();
     expect(prepared.text).toMatch(/labels: .* → .*p1/);
     expect(applied.structured).toBeUndefined();
-    expect(applied.text).toMatch(/1\. Edit acme\/app#12: done/);
+    expect(applied.text).toMatch(/^1\. Edit acme\/app#12 https:\/\/gitlab\.example\.com\/acme\/app\/-\/work_items\/12: done$/m);
   });
 
 

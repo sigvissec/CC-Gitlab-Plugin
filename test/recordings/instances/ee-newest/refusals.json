@@ -40,8 +40,8 @@
         "confidential": false,
         "description": null,
         "webUrl": "http://localhost:8929/acme/app/-/work_items/4",
-        "createdAt": "2026-10-16T12:45:23Z",
-        "updatedAt": "2026-10-16T12:45:46Z",
+        "createdAt": "2026-10-22T18:17:09Z",
+        "updatedAt": "2026-10-22T18:17:38Z",
         "workItemType": {
          "name": "Issue"
         },
@@ -195,8 +195,8 @@
         "confidential": false,
         "description": null,
         "webUrl": "http://localhost:8929/acme/app/-/work_items/4",
-        "createdAt": "2026-10-16T12:45:23Z",
-        "updatedAt": "2026-10-16T12:45:46Z",
+        "createdAt": "2026-10-22T18:17:09Z",
+        "updatedAt": "2026-10-22T18:17:38Z",
         "workItemType": {
          "name": "Issue"
         },

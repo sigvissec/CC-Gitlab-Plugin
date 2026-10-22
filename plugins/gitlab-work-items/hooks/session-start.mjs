@@ -27,6 +27,17 @@ function configOf(instanceUrl, token, footer) {
 
 // src/server/gateway.ts
 import { spawn } from "node:child_process";
+
+// src/server/once.ts
+function onceItWorks(check) {
+  let answer;
+  return () => answer ??= check().catch((error) => {
+    answer = void 0;
+    throw error;
+  });
+}
+
+// src/server/gateway.ts
 var REMOVED_VARIABLES = [
   "GITLAB_TOKEN",
   "GITLAB_ACCESS_TOKEN",
@@ -81,12 +92,8 @@ var Gateway = class {
     this.config = config;
   }
   config;
-  tokenSource;
-  /** Which token the server uses, decided once per session. */
-  source() {
-    this.tokenSource ??= this.chooseSource();
-    return this.tokenSource;
-  }
+  /** Which token the server uses: decided once per session, or again until one is found. */
+  source = onceItWorks(() => this.chooseSource());
   async chooseSource() {
     if (this.config.settingToken) return "plugin setting";
     const status = await run(
@@ -147,6 +154,10 @@ function atLeast(version, minimum) {
   }
   return true;
 }
+var glabSupported = (version) => atLeast(version, MINIMUM_GLAB);
+var gitlabSupported = (version) => atLeast(version, MINIMUM_GITLAB);
+var glabTooOld = (version) => `glab ${version} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`;
+var gitlabTooOld = (version) => `This Instance runs GitLab ${version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`;
 
 // src/server/instance.ts
 var PROBE = (
@@ -163,44 +174,40 @@ var Instance = class {
     this.gateway = gateway;
   }
   gateway;
-  info;
-  /** Probes the Instance once per session. */
-  probe() {
-    this.info ??= this.gateway.graphql("InstanceProbe", PROBE).then((data) => {
-      if (!data?.metadata?.version) {
-        throw new GitLabError("GitLab didn't report its version; the token may be missing or invalid.", "not-set-up");
-      }
-      if (!data.currentUser?.username) {
-        throw new GitLabError("The token isn't signed in as any user; it may be expired or revoked.", "not-set-up");
-      }
-      return {
-        version: data.metadata.version,
-        enterprise: Boolean(data.metadata.enterprise),
-        username: data.currentUser.username,
-        meetsMinimumVersion: atLeast(data.metadata.version, MINIMUM_GITLAB)
-      };
-    });
-    return this.info;
-  }
-  glabChecked;
+  /** Probes the Instance once per session, or again after a probe that failed. */
+  probe = onceItWorks(async () => {
+    const data = await this.gateway.graphql("InstanceProbe", PROBE);
+    if (!data?.metadata?.version) {
+      throw new GitLabError("GitLab didn't report its version; the token may be missing or invalid.", "not-set-up");
+    }
+    if (!data.currentUser?.username) {
+      throw new GitLabError("The token isn't signed in as any user; it may be expired or revoked.", "not-set-up");
+    }
+    return {
+      version: data.metadata.version,
+      enterprise: Boolean(data.metadata.enterprise),
+      username: data.currentUser.username,
+      meetsMinimumVersion: gitlabSupported(data.metadata.version)
+    };
+  });
+  requireGlab = onceItWorks(async () => {
+    const version = await this.gateway.glabVersion();
+    if (!glabSupported(version)) throw new GitLabError(glabTooOld(version), "not-set-up");
+  });
   /** Throws unless glab and the Instance are new enough; every tool but `status` calls this first. */
   async requireSupported() {
-    this.glabChecked ??= this.gateway.glabVersion().then((version) => {
-      if (!atLeast(version, MINIMUM_GLAB)) {
-        throw new GitLabError(`glab ${version} is installed; the plugin needs glab ${MINIMUM_GLAB} or later.`, "not-set-up");
-      }
-    });
-    await this.glabChecked;
+    await this.requireGlab();
     const info = await this.probe();
-    if (!info.meetsMinimumVersion) {
-      throw new GitLabError(
-        `This Instance runs GitLab ${info.version}; the plugin needs GitLab ${MINIMUM_GITLAB} or later.`,
-        "not-set-up"
-      );
-    }
+    if (!info.meetsMinimumVersion) throw new GitLabError(gitlabTooOld(info.version), "not-set-up");
     return info;
   }
 };
+
+// src/server/gitlab.ts
+function connect(config) {
+  const gateway = new Gateway(config);
+  return { config, gateway, instance: new Instance(gateway) };
+}
 
 // src/server/nodes.ts
 var widgetOf = (node, type) => (node?.widgets ?? []).find((w) => w.type === type);
@@ -209,10 +216,13 @@ var widgetOf = (node, type) => (node?.widgets ?? []).find((w) => w.type === type
 function notFound(what, config) {
   return new GitLabError(`${what} on ${config.baseUrl}: not found, or your token can't see it.`, "not-found");
 }
+function workItemUrl(ref, config) {
+  return `${config.baseUrl}/${ref.fullPath}/-/work_items/${ref.iid}`;
+}
 
 // src/server/wayfinder.ts
-var TICKET_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
-var MAP_LABEL = "wayfinder:map";
+var WAYFINDER_TICKET_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
+var WAYFINDER_MAP_LABEL = "wayfinder:map";
 var SHOWN = 20;
 var CLAIMED = (
   /* GraphQL */
@@ -230,44 +240,42 @@ query ClaimedWayfinderTickets($fullPath: ID!, $assignees: [String!], $ticketLabe
         }
       }
     }
-    maps: workItems(labelName: $mapLabels, first: 100) { nodes { reference(full: true) title } }
+    maps: workItems(labelName: $mapLabels, first: 100) { nodes { reference(full: true) title webUrl } }
   }
 }`
 );
-function mapReference(description, fullPath) {
+function mapOf(description, fullPath) {
   const match = /^\s*Part of\s+((?:[\w.-]+\/)*[\w.-]+)?#(\d+)\b/m.exec(description);
-  return match ? `${match[1] ?? fullPath}#${match[2]}` : void 0;
+  return match ? { fullPath: match[1] ?? fullPath, iid: match[2] } : void 0;
 }
 var Wayfinder = class {
-  constructor(config, gateway, instance) {
-    this.config = config;
-    this.gateway = gateway;
-    this.instance = instance;
+  constructor(gitlab) {
+    this.gitlab = gitlab;
   }
-  config;
-  gateway;
-  instance;
-  /** The open wayfinder tickets the signed-in user has claimed in a project, most recently updated first. */
+  gitlab;
+  /** The open Wayfinder tickets the signed-in user has claimed in a project, most recently updated first. */
   async claimedTickets(fullPath) {
-    const { username } = await this.instance.requireSupported();
-    const data = await this.gateway.graphql("ClaimedWayfinderTickets", CLAIMED, {
+    const { username } = await this.gitlab.instance.requireSupported();
+    const data = await this.gitlab.gateway.graphql("ClaimedWayfinderTickets", CLAIMED, {
       fullPath,
       assignees: [username],
-      ticketLabels: TICKET_LABELS,
-      mapLabels: [MAP_LABEL]
+      ticketLabels: WAYFINDER_TICKET_LABELS,
+      mapLabels: [WAYFINDER_MAP_LABEL]
     });
     const namespace = data?.namespace;
-    if (!namespace?.tickets) throw notFound(fullPath, this.config);
-    const mapTitles = new Map((namespace.maps?.nodes ?? []).map((m) => [m.reference, m.title]));
+    if (!namespace?.tickets) throw notFound(fullPath, this.gitlab.config);
+    const maps = new Map((namespace.maps?.nodes ?? []).map((m) => [m.reference, { title: m.title, url: m.webUrl }]));
     const tickets = (namespace.tickets.nodes ?? []).map((node) => {
       const labels = (widgetOf(node, "LABELS")?.labels?.nodes ?? []).map((l) => l.title);
-      const map = mapReference(widgetOf(node, "DESCRIPTION")?.description ?? "", fullPath);
+      const map = mapOf(widgetOf(node, "DESCRIPTION")?.description ?? "", fullPath);
+      const reference = map && `${map.fullPath}#${map.iid}`;
+      const known = reference ? maps.get(reference) : void 0;
       return {
         reference: node.reference,
         title: node.title,
-        type: (labels.find((l) => TICKET_LABELS.includes(l)) ?? "wayfinder:task").slice("wayfinder:".length),
+        type: (labels.find((l) => WAYFINDER_TICKET_LABELS.includes(l)) ?? "wayfinder:task").slice("wayfinder:".length),
         url: node.webUrl,
-        map: map ? { reference: map, ...mapTitles.has(map) ? { title: mapTitles.get(map) } : {} } : null
+        map: map && reference ? { reference, url: known?.url ?? workItemUrl(map, this.gitlab.config), ...known?.title ? { title: known.title } : {} } : null
       };
     });
     return { tickets, more: Math.max(0, (namespace.tickets.count ?? tickets.length) - tickets.length) };
@@ -321,19 +329,20 @@ function repoProject(cwd, config) {
 
 // src/hook/session-start.ts
 function entry(ticket, index) {
-  const map = ticket.map ? `on the map ${ticket.map.title ? `${ticket.map.title}, ` : ""}${ticket.map.reference}` : "";
-  return `${index + 1}. ${ticket.reference} ${ticket.title} (${[ticket.type, map].filter(Boolean).join(", ")})`;
+  const { map } = ticket;
+  const onMap = map ? `; Wayfinder map: ${map.title ? `${map.title}, ` : ""}${map.reference} ${map.url}` : "";
+  return `${index + 1}. ${ticket.reference} ${ticket.title} ${ticket.url} (${ticket.type}${onMap})`;
 }
 function report(project, claimed) {
   const entries = claimed.tickets.map(entry);
   if (claimed.more > 0) entries.push(`\u2026and ${claimed.more} more; ask Claude to list them.`);
   const shown = [
-    `Your wayfinder tickets in ${project}:`,
+    `Your Wayfinder tickets in ${project}:`,
     ...entries,
     "Say a number to open one in full, or pick one with /gitlab-work-items:open."
   ].join("\n");
   const context = [
-    `At session start, the gitlab-work-items plugin showed the user the wayfinder tickets they've claimed in ${project} (open, labelled wayfinder:<type>, assigned to them):`,
+    `At session start, the gitlab-work-items plugin showed the user the Wayfinder tickets they've claimed in ${project} (open, labelled wayfinder:<type>, assigned to them):`,
     ...entries,
     "When the user names one of these by its number, Fetch it with fetch_work_item and show it in full."
   ].join("\n");
@@ -348,13 +357,12 @@ async function run2() {
   const config = readHookConfig();
   const project = repoProject(typeof input.cwd === "string" ? input.cwd : process.cwd(), config);
   if (!project) return void 0;
-  const gateway = new Gateway(config);
   try {
-    const claimed = await new Wayfinder(config, gateway, new Instance(gateway)).claimedTickets(project);
+    const claimed = await new Wayfinder(connect(config)).claimedTickets(project);
     return claimed.tickets.length ? report(project, claimed) : void 0;
   } catch (error) {
     const reason = error instanceof GitLabError ? error.message : "something unexpected went wrong.";
-    return { systemMessage: `gitlab-work-items couldn't check your wayfinder tickets in ${project}: ${reason}` };
+    return { systemMessage: `gitlab-work-items couldn't check your Wayfinder tickets in ${project}: ${reason}` };
   }
 }
 var output = await run2().catch(() => void 0);

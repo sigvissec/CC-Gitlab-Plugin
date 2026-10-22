@@ -1,29 +1,27 @@
-// Wayfinder's tickets on GitLab: issues labelled wayfinder:<type>, each naming its map, an issue
-// labelled wayfinder:map, with "Part of #<map>" at the top of its description. A wayfinder
-// session claims a ticket by assigning it to the dev driving the map.
-import type { Config } from "./config.js";
-import type { Gateway } from "./gateway.js";
-import type { Instance } from "./instance.js";
+// Wayfinder tickets on GitLab: Work Items labelled wayfinder:<type>, each naming its Wayfinder map
+// (a Work Item labelled wayfinder:map) on a "Part of #<map>" line at the top of its description.
+// A wayfinder session claims a Wayfinder ticket by assigning it to the dev driving the map.
+import type { GitLab } from "./gitlab.js";
 import { widgetOf } from "./nodes.js";
-import { notFound } from "./references.js";
+import { notFound, workItemUrl } from "./references.js";
 
-export const TICKET_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
-const MAP_LABEL = "wayfinder:map";
+export const WAYFINDER_TICKET_LABELS = ["wayfinder:research", "wayfinder:prototype", "wayfinder:grilling", "wayfinder:task"];
+const WAYFINDER_MAP_LABEL = "wayfinder:map";
 const SHOWN = 20;
 
-export interface ClaimedTicket {
+export interface ClaimedWayfinderTicket {
   reference: string;
   title: string;
   /** The wayfinder type: research, prototype, grilling, or task. */
   type: string;
   url: string;
-  /** The map the ticket says it's part of; its title when the map is in the same project. */
-  map: { reference: string; title?: string } | null;
+  /** The Wayfinder map it says it's part of; with its title when the map is in the same project. */
+  map: { reference: string; url: string; title?: string } | null;
 }
 
-export interface ClaimedTickets {
-  tickets: ClaimedTicket[];
-  /** How many more claimed tickets there are beyond those shown. */
+export interface ClaimedWayfinderTickets {
+  tickets: ClaimedWayfinderTicket[];
+  /** How many more claimed Wayfinder tickets there are beyond those shown. */
   more: number;
 }
 
@@ -41,44 +39,45 @@ query ClaimedWayfinderTickets($fullPath: ID!, $assignees: [String!], $ticketLabe
         }
       }
     }
-    maps: workItems(labelName: $mapLabels, first: 100) { nodes { reference(full: true) title } }
+    maps: workItems(labelName: $mapLabels, first: 100) { nodes { reference(full: true) title webUrl } }
   }
 }`;
 
-/** The map a ticket's description names in its "Part of" line, as a full Reference. */
-function mapReference(description: string, fullPath: string): string | undefined {
+/** The Wayfinder map a Wayfinder ticket's description names on its "Part of" line, as a project path and IID. */
+function mapOf(description: string, fullPath: string): { fullPath: string; iid: string } | undefined {
   const match = /^\s*Part of\s+((?:[\w.-]+\/)*[\w.-]+)?#(\d+)\b/m.exec(description);
-  return match ? `${match[1] ?? fullPath}#${match[2]}` : undefined;
+  return match ? { fullPath: match[1] ?? fullPath, iid: match[2]! } : undefined;
 }
 
 export class Wayfinder {
-  constructor(
-    private readonly config: Config,
-    private readonly gateway: Gateway,
-    private readonly instance: Instance,
-  ) {}
+  constructor(private readonly gitlab: GitLab) {}
 
-  /** The open wayfinder tickets the signed-in user has claimed in a project, most recently updated first. */
-  async claimedTickets(fullPath: string): Promise<ClaimedTickets> {
-    const { username } = await this.instance.requireSupported();
-    const data = await this.gateway.graphql("ClaimedWayfinderTickets", CLAIMED, {
+  /** The open Wayfinder tickets the signed-in user has claimed in a project, most recently updated first. */
+  async claimedTickets(fullPath: string): Promise<ClaimedWayfinderTickets> {
+    const { username } = await this.gitlab.instance.requireSupported();
+    const data = await this.gitlab.gateway.graphql("ClaimedWayfinderTickets", CLAIMED, {
       fullPath,
       assignees: [username],
-      ticketLabels: TICKET_LABELS,
-      mapLabels: [MAP_LABEL],
+      ticketLabels: WAYFINDER_TICKET_LABELS,
+      mapLabels: [WAYFINDER_MAP_LABEL],
     });
     const namespace = data?.namespace;
-    if (!namespace?.tickets) throw notFound(fullPath, this.config);
-    const mapTitles = new Map<string, string>((namespace.maps?.nodes ?? []).map((m: any) => [m.reference, m.title]));
-    const tickets: ClaimedTicket[] = (namespace.tickets.nodes ?? []).map((node: any) => {
+    if (!namespace?.tickets) throw notFound(fullPath, this.gitlab.config);
+    const maps = new Map<string, { title: string; url: string }>((namespace.maps?.nodes ?? []).map((m: any) => [m.reference, { title: m.title, url: m.webUrl }]));
+    const tickets: ClaimedWayfinderTicket[] = (namespace.tickets.nodes ?? []).map((node: any) => {
       const labels: string[] = (widgetOf(node, "LABELS")?.labels?.nodes ?? []).map((l: any) => l.title);
-      const map = mapReference(widgetOf(node, "DESCRIPTION")?.description ?? "", fullPath);
+      const map = mapOf(widgetOf(node, "DESCRIPTION")?.description ?? "", fullPath);
+      const reference = map && `${map.fullPath}#${map.iid}`;
+      // A map in this project comes with GitLab's own title and URL; for one elsewhere, its URL is built.
+      const known = reference ? maps.get(reference) : undefined;
       return {
         reference: node.reference,
         title: node.title,
-        type: (labels.find((l) => TICKET_LABELS.includes(l)) ?? "wayfinder:task").slice("wayfinder:".length),
+        type: (labels.find((l) => WAYFINDER_TICKET_LABELS.includes(l)) ?? "wayfinder:task").slice("wayfinder:".length),
         url: node.webUrl,
-        map: map ? { reference: map, ...(mapTitles.has(map) ? { title: mapTitles.get(map) } : {}) } : null,
+        map: map && reference
+          ? { reference, url: known?.url ?? workItemUrl(map, this.gitlab.config), ...(known?.title ? { title: known.title } : {}) }
+          : null,
       };
     });
     return { tickets, more: Math.max(0, (namespace.tickets.count ?? tickets.length) - tickets.length) };

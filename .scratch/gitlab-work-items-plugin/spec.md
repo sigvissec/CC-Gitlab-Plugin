@@ -131,8 +131,8 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 
 77. As a team lead, I want teammates to install the same pinned plugin version, so that everyone sees the same behaviour.
 78. As a team lead, I want updates to be a deliberate `claude plugin update`, so that a new release never changes behaviour mid-sprint.
-79. As a maintainer, I want the plugin verified against real GitLab Test Instances (EE Free at 18.1 and newest, CE newest), so that releases reflect real GitLab behaviour.
-80. As a maintainer, I want fast replay tests on every push that need no GitLab, so that day-to-day changes are checked quickly.
+79. As a maintainer, I want the plugin verified against real GitLab Test Instances (EE Free and CE, each at 18.1 and newest), so that releases reflect real GitLab behaviour.
+80. As a maintainer, I want fast replay tests on every pull request and every push to `main` that need no GitLab, so that day-to-day changes are checked quickly.
 81. As a maintainer, I want a recorded-response mismatch to fail the build, so that GitLab API drift is caught rather than shipped.
 82. As a maintainer, I want the README to list behaviours that can only be confirmed in the desktop app or IDE extensions, so that the first person there knows what to watch for.
 83. As a user on my own Instance, I want a checklist for verifying Writes by hand in a throwaway project, so that I can confirm the plugin on my setup after installing it.
@@ -171,7 +171,8 @@ A Claude Code plugin named `gitlab-work-items` that brings GitLab Issues and Tas
 The server is organised as a few deep modules, each with a small interface:
 
 - **GitLab gateway.** Runs one GraphQL request through `glab api` and returns data or a typed error. It owns:
-  - Token precedence: plugin setting, then `glab`'s saved login for the configured Instance, then `GITLAB_TOKEN`. Before every call it removes token variables it didn't choose (`GITLAB_TOKEN`, `GITLAB_ACCESS_TOKEN`, `OAUTH_TOKEN`) from `glab`'s environment, and passes a setting-token for that call only, never saving it into `glab`'s config.
+  - Token precedence: plugin setting, then `glab`'s saved login for the configured Instance, then `GITLAB_TOKEN`. Before every call it removes from `glab`'s environment every variable `glab` reads to pick a credential or skip TLS checks that the plugin didn't choose (`GITLAB_TOKEN`, `GITLAB_ACCESS_TOKEN`, `OAUTH_TOKEN`, `JOB_TOKEN`, `CI_JOB_TOKEN`, `GLAB_IS_OAUTH2`, `GLAB_ENABLE_CI_AUTOLOGIN`, `GLAB_SKIP_TLS_VERIFY`, `SKIP_TLS_VERIFY`; widened from the first three after reading glab 1.123.0's source), and passes a setting-token for that call only, never saving it into `glab`'s config.
+  - The token choice, the `glab` version check, and the Instance probe are worked out once per session, but checked again after one fails, so signing `glab` in or upgrading it mid-session takes effect on the next call.
   - Errors: top-level GraphQL errors, mutation-level `errors` arrays (which `glab` reports with exit code 0), and `glab` failures (missing, not logged in, network) all map to typed errors with GitLab's text preserved.
   - Pagination by cursor, at most 100 nodes per page.
   - Its own GraphQL operation names, so Advanced Search routing never kicks in unexpectedly.
@@ -196,15 +197,16 @@ The server is organised as a few deep modules, each with a small interface:
   - A plan holds at most 20 Writes; larger requests are refused with a suggestion to split them. The user can drop Writes from the plan before confirming.
   - Plans are bound to their exact content: any change produces a new plan and a new preview.
   - Confirmation: where the client supports MCP elicitation, the applier asks the user directly with the preview. Otherwise the apply tool relies on Claude Code's approval prompt, which the write-guard hook forces every time. (Found while building: Claude Code always declares elicitation, so in practice the user approves the prompt and then confirms the preview in the dialog; where no dialog can render, as in `claude -p`, nothing is applied. The apply tool also carries Claude Code's `anthropic/requiresUserInteraction` tool flag, its documented way to prompt on every call. Run in the terminal, the dialog shows only its message's first three lines, so the message opens on the Writes and the tick box says how many it sends; it waits up to an hour, where the MCP SDK's default gave up after a minute.)
-  - Right before sending each Write: staleness check (for an Edit, the Work Item's `updatedAt` must match the Fetched value; for a reply or resolution, the Thread must have gained no new Comments). On a mismatch it stops and returns the new state.
-  - Writes apply in order; the batch stops at the first failure and reports exactly what was and wasn't done.
+  - Right before sending each Write: staleness check (for an Edit, the Work Item's `updatedAt` must match the Fetched value; for a reply or resolution, the Thread must have gained no new Comments). Changes made by the plan's own earlier Writes don't count, so a reply and a resolution of the same Thread can share a plan. On a mismatch it stops and returns the new state.
+  - Writes apply in order; the batch stops at the first failure and reports exactly what was and wasn't done, including which parts of an Edit reached GitLab before a later part failed.
+  - Previews point out lines GitLab would run as quick actions (a slash command starting a line, outside code blocks) in Comments, replies, and descriptions. (Added after checking GitLab's documentation: GitLab runs them in notes and descriptions.)
   - After each Write, the Work Item is re-read and every field that didn't stick is reported with the value GitLab kept. No automatic retry.
   - Visibility: new Comments are public unless the user asks for internal; replies follow their Thread; if internal is requested but the role can't post internal Comments (Reporter or higher needed), the user is asked to post publicly or cancel. New Work Items aren't confidential unless asked.
   - Footer "_Posted with Claude Code_" on Comments, replies, and new Work Items' descriptions, when the setting is on. Edits carry no marker.
 
 ### Tools the server exposes
 
-- Read tools: Fetch one Work Item, list Work Items, list the user's own Work Items, and status. These run without approval prompts: the plugin ships that permission itself if Claude Code allows a plugin to; otherwise the README tells users to "always allow" them once.
+- Read tools: Fetch one Work Item, list Work Items, list the user's own Work Items, pick a Work Item from a list, and status. Every Work Item a tool, a report, or the session-start hook names carries its full reference and URL. These run without approval prompts: the plugin ships that permission itself if Claude Code allows a plugin to; otherwise the README tells users to "always allow" them once.
 - Write tools are split into a read-only **prepare** step, which validates, checks permissions, and returns the preview and a plan identifier, and a single **apply** step, the only tool that changes anything, which confirms with the user (dialog or forced prompt), runs the staleness checks, applies, and reports.
 
 ### Write-guard hook
@@ -220,6 +222,7 @@ The server is organised as a few deep modules, each with a small interface:
 
 ### Work Item picker (added after the build, at the user's request)
 
+- The list tools take a `wayfinderTickets` filter, so the Wayfinder ticket labels live in one place in the plugin; the `open` Command and the conversation skill use it with "assigned to me".
 - A read-only `pick_work_item` tool takes `list_work_items`' inputs, shows the list as a single-choice MCP elicitation dialog (a titled `oneOf`, one option per Work Item: its Reference and title), and returns the picked Work Item exactly as `fetch_work_item` does. Dialogs wait up to an hour.
 - When nothing matches it says so without a dialog; when the user declines or cancels it says nothing was picked; where the client can't show a dialog it returns the list for Claude to ask from.
 
@@ -237,7 +240,7 @@ The server is organised as a few deep modules, each with a small interface:
   - `list <what you want>`: a filtered list.
   - `mine`: the user's open Work Items across the Instance.
   - `comment <reference> <what to say>`: quoted text is posted word for word; otherwise Claude drafts it. A Comment link as the Reference makes it a reply in that Thread. Preview and confirmation apply.
-  - `status`: configuration, token source, `glab` and GitLab versions, edition, signed-in user, the 18.1 check, and read-only probes.
+  - `status [project]`: configuration, token source, `glab` and GitLab versions, edition, signed-in user, the 18.1 check, and read-only probes in the project named, or else the repo's project from the Context rules. The tool itself says when it ran no probes, and how to run them.
   - `open [what to pick from]`: pick a Work Item in a dialog and see it in full; with nothing given, from the Wayfinder tickets the user has claimed in the repo's project. (Added after the build.)
 - There are no Commands for other Writes; they're asked for in conversation.
 
@@ -252,21 +255,21 @@ The server is organised as a few deep modules, each with a small interface:
 
 - **Seam 1, primary: the MCP server's tool interface.** Tests start the bundled server as a separate process and act as an MCP client: they call the read, prepare, and apply tools, answer elicitation requests themselves (accept, decline, cancel), and assert on the results. GitLab sits behind `glab`, swapped by putting a different `glab` first on the search path:
   - Real `glab` against a **Test Instance**: the full suite, which also records every request and response.
-  - A fake `glab` that replays those recordings: fast, needs no GitLab, runs on every push.
+  - A fake `glab` that replays those recordings: fast, needs no GitLab, runs on every pull request and every push to `main`.
   - The server's code has no test-only hooks; the only swap is which `glab` program it finds.
 - **Seam 2: the hooks' input and output contracts.** Tests feed the write-guard hook sample tool calls and check that it demands approval for the apply tool and lets everything else through. They start the session-start hook in throwaway git repos, with GitLab behind the same swapped `glab`, and check what it shows the user and tells Claude; the Test Instance suite records it like the tools.
 - Skills and Commands are prompt files, checked for structure only (`claude plugin validate --strict`).
 
 ### Test Instances
 
-- Throwaway GitLab Instances from GitLab's official container images: `gitlab/gitlab-ee` without a licence (Free tier) at the newest 18.1 patch and at the newest release, and `gitlab/gitlab-ce` at the newest release.
+- Throwaway GitLab Instances from GitLab's official container images: `gitlab/gitlab-ee` without a licence (Free tier) and `gitlab/gitlab-ce`, each at the newest 18.1 patch and at the newest release. (CE at 18.1 was added while building, so the minimum version is checked on both editions.)
 - Each run seeds a throwaway group and project with Issues, Tasks, Threads, Linked Items, labels, milestones, and a merge request that closes an Issue and one that mentions it.
 - One script starts a Test Instance, seeds it, runs the suite, and records; it works in GitHub Actions, in a Claude session, or on a laptop.
 
 ### Cadence
 
-- Replay tests run in GitHub Actions on every push.
-- The Test Instance suite runs on pull requests touching the server or its queries, plus weekly.
+- Replay tests run in GitHub Actions on every pull request and every push to `main`. (Not on every branch push, which would run them twice for each pull request.)
+- The Test Instance suite runs on pull requests touching the server, the hooks, or its queries, plus weekly.
 - Recordings are re-made whenever a new GitLab version is tested; a mismatch with the recording fails the build.
 
 ### Behaviours the suites must cover

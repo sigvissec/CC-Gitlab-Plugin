@@ -57,7 +57,7 @@
           "title": "Which cache to use?",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/issues/6",
-          "updatedAt": "2026-10-16T12:45:02Z",
+          "updatedAt": "2026-10-22T18:17:01Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -95,7 +95,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NTowMi42NDEwMjkwMDAgKzAwMDAiLCJpZCI6IjYifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0yMiAxODoxNzowMS41MTI0ODkwMDAgKzAwMDAiLCJpZCI6IjYifQ"
         }
        }
       }
@@ -124,8 +124,8 @@
         "confidential": false,
         "description": "Part of #5\n\n## Question\n\nWhich cache fits the read path?",
         "webUrl": "http://localhost:8929/acme/app/-/issues/6",
-        "createdAt": "2026-10-16T12:45:02Z",
-        "updatedAt": "2026-10-16T12:45:02Z",
+        "createdAt": "2026-10-22T18:17:01Z",
+        "updatedAt": "2026-10-22T18:17:01Z",
         "workItemType": {
          "name": "Issue"
         },

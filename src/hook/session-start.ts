@@ -1,11 +1,11 @@
 // The plugin's SessionStart hook. In a repo whose project is on the configured Instance, it shows
-// the user the wayfinder tickets they've claimed there, numbered, and tells Claude the same list,
+// the user the Wayfinder tickets they've claimed there, numbered, and tells Claude the same list,
 // so "open 2" works. It shows nothing elsewhere, and never stops a session from starting.
 import { readFileSync } from "node:fs";
 import { readHookConfig } from "../server/config.js";
-import { Gateway, GitLabError } from "../server/gateway.js";
-import { Instance } from "../server/instance.js";
-import { Wayfinder, type ClaimedTicket, type ClaimedTickets } from "../server/wayfinder.js";
+import { GitLabError } from "../server/gateway.js";
+import { connect } from "../server/gitlab.js";
+import { Wayfinder, type ClaimedWayfinderTicket, type ClaimedWayfinderTickets } from "../server/wayfinder.js";
 import { repoProject } from "./repo.js";
 
 interface Output {
@@ -13,21 +13,22 @@ interface Output {
   hookSpecificOutput?: { hookEventName: "SessionStart"; additionalContext: string };
 }
 
-function entry(ticket: ClaimedTicket, index: number): string {
-  const map = ticket.map ? `on the map ${ticket.map.title ? `${ticket.map.title}, ` : ""}${ticket.map.reference}` : "";
-  return `${index + 1}. ${ticket.reference} ${ticket.title} (${[ticket.type, map].filter(Boolean).join(", ")})`;
+function entry(ticket: ClaimedWayfinderTicket, index: number): string {
+  const { map } = ticket;
+  const onMap = map ? `; Wayfinder map: ${map.title ? `${map.title}, ` : ""}${map.reference} ${map.url}` : "";
+  return `${index + 1}. ${ticket.reference} ${ticket.title} ${ticket.url} (${ticket.type}${onMap})`;
 }
 
-function report(project: string, claimed: ClaimedTickets): Output {
+function report(project: string, claimed: ClaimedWayfinderTickets): Output {
   const entries = claimed.tickets.map(entry);
   if (claimed.more > 0) entries.push(`…and ${claimed.more} more; ask Claude to list them.`);
   const shown = [
-    `Your wayfinder tickets in ${project}:`,
+    `Your Wayfinder tickets in ${project}:`,
     ...entries,
     "Say a number to open one in full, or pick one with /gitlab-work-items:open.",
   ].join("\n");
   const context = [
-    `At session start, the gitlab-work-items plugin showed the user the wayfinder tickets they've claimed in ${project} (open, labelled wayfinder:<type>, assigned to them):`,
+    `At session start, the gitlab-work-items plugin showed the user the Wayfinder tickets they've claimed in ${project} (open, labelled wayfinder:<type>, assigned to them):`,
     ...entries,
     "When the user names one of these by its number, Fetch it with fetch_work_item and show it in full.",
   ].join("\n");
@@ -44,13 +45,12 @@ async function run(): Promise<Output | undefined> {
   const config = readHookConfig();
   const project = repoProject(typeof input.cwd === "string" ? input.cwd : process.cwd(), config);
   if (!project) return undefined;
-  const gateway = new Gateway(config);
   try {
-    const claimed = await new Wayfinder(config, gateway, new Instance(gateway)).claimedTickets(project);
+    const claimed = await new Wayfinder(connect(config)).claimedTickets(project);
     return claimed.tickets.length ? report(project, claimed) : undefined;
   } catch (error) {
     const reason = error instanceof GitLabError ? error.message : "something unexpected went wrong.";
-    return { systemMessage: `gitlab-work-items couldn't check your wayfinder tickets in ${project}: ${reason}` };
+    return { systemMessage: `gitlab-work-items couldn't check your Wayfinder tickets in ${project}: ${reason}` };
   }
 }
 

@@ -179,4 +179,30 @@ describe("resolving a Thread", () => {
     expect(prepared.isError).toBe(true);
     expect(prepared.text).toMatch(message);
   });
+
+  it("follows a reply in the same plan, so the plan's own reply doesn't count as a new Comment", async () => {
+    const replied = {
+      threads: [THREADS.threads[0]!, { id: "d2", notes: [...THREADS.threads[1]!.notes, { id: 457, author: "alice", body: `Firefox 130${FOOTER}` }] }],
+      updatedAt: "2026-10-03T00:00:00Z",
+    };
+    const s = await withGitLab([
+      fetchWorkItem(THREADS), // prepare the reply
+      fetchWorkItem(THREADS), // prepare the resolution
+      fetchWorkItem(THREADS), // right before the reply
+      mutation("CreateNote", { noteableId: ID, discussionId: "gid://gitlab/Discussion/d2", body: `Firefox 130${FOOTER}` }, { note: { id: "gid://gitlab/Note/457" } }),
+      fetchWorkItem(replied), // re-read after the reply
+      fetchWorkItem(replied), // right before the resolution
+      mutation("ResolveThread", { id: "gid://gitlab/Discussion/d2", resolve: true }, { discussion: { id: "gid://gitlab/Discussion/d2", resolved: true } }),
+    ]);
+    const prepared = await s.call("prepare_writes", {
+      writes: [
+        { kind: "reply", reference: "acme/app#12", thread: "d2", body: "Firefox 130" },
+        { kind: "resolve", reference: "acme/app#12", thread: "d2" },
+      ],
+    });
+
+    const applied = await s.call("apply_writes", { planId: prepared.data.planId });
+
+    expect(applied.data.results.map((r: { outcome: string }) => r.outcome), applied.text).toEqual(["done", "done"]);
+  });
 });

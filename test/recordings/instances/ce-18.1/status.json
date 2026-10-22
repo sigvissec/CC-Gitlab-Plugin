@@ -467,7 +467,7 @@
           "title": "Measure cache hit rates",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/issues/7",
-          "updatedAt": "2026-10-16T12:44:09Z",
+          "updatedAt": "2026-10-22T18:15:07Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -501,7 +501,7 @@
         ],
         "pageInfo": {
          "hasNextPage": true,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NDowOS4zNzg2NDYwMDAgKzAwMDAiLCJpZCI6IjcifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0yMiAxODoxNTowNy44NTIyMjIwMDAgKzAwMDAiLCJpZCI6IjcifQ"
         }
        }
       }
@@ -530,8 +530,8 @@
         "confidential": false,
         "description": "Part of #5",
         "webUrl": "http://localhost:8929/acme/app/-/issues/7",
-        "createdAt": "2026-10-16T12:44:09Z",
-        "updatedAt": "2026-10-16T12:44:09Z",
+        "createdAt": "2026-10-22T18:15:07Z",
+        "updatedAt": "2026-10-22T18:15:07Z",
         "workItemType": {
          "name": "Issue"
         },

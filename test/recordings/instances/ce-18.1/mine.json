@@ -47,7 +47,7 @@
           "title": "Which cache to use?",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/issues/6",
-          "updatedAt": "2026-10-16T12:44:08Z",
+          "updatedAt": "2026-10-22T18:15:07Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -88,7 +88,7 @@
           "title": "Session cookie expires early",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/issues/3",
-          "updatedAt": "2026-10-16T12:44:07Z",
+          "updatedAt": "2026-10-22T18:15:06Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -122,7 +122,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NDowNy4yMDg0MDMwMDAgKzAwMDAiLCJpZCI6IjMifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0yMiAxODoxNTowNi41NzU1NzUwMDAgKzAwMDAiLCJpZCI6IjMifQ"
         }
        }
       }
@@ -162,7 +162,7 @@
           "title": "Session cookie expires early",
           "state": "OPEN",
           "webUrl": "http://localhost:8929/acme/app/-/issues/3",
-          "updatedAt": "2026-10-16T12:44:07Z",
+          "updatedAt": "2026-10-22T18:15:06Z",
           "workItemType": {
            "name": "Issue"
           },
@@ -196,7 +196,7 @@
         ],
         "pageInfo": {
          "hasNextPage": false,
-         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0xNiAxMjo0NDowNy4yMDg0MDMwMDAgKzAwMDAiLCJpZCI6IjMifQ"
+         "endCursor": "eyJ1cGRhdGVkX2F0IjoiMjAyNi0xMC0yMiAxODoxNTowNi41NzU1NzUwMDAgKzAwMDAiLCJpZCI6IjMifQ"
         }
        }
       }

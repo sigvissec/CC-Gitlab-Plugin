@@ -69,6 +69,14 @@ describe("status", () => {
     expect(result.text).toMatch(/glab isn't installed/);
   });
 
+  it("says it ran no read-only probes without a project, and how to run them", async () => {
+    session = await start({ cassette: cassette({ auth: loggedIn(), interactions: [instanceProbe()] }) });
+
+    const result = await session.call("status");
+
+    expect(result.text).toContain("Read-only probes: not run. Name a project to run them in, for example /gitlab-work-items:status acme/app.");
+  });
+
   it("runs read-only probes against a project when given one", async () => {
     session = await start({
       cassette: cassette({
@@ -87,8 +95,8 @@ describe("status", () => {
     expect(result.isError).toBe(false);
     expect(result.data.probes).toEqual([
       { probe: "Work Item Types", ok: true, detail: "Issue and Task available" },
-      { probe: "List query", ok: true, detail: "acme/app#12" },
-      { probe: "Fetch with merge requests", ok: true, detail: "acme/app#12: 1 associated merge request" },
+      { probe: "List query", ok: true, detail: "acme/app#12 https://gitlab.example.com/acme/app/-/work_items/12" },
+      { probe: "Fetch with merge requests", ok: true, detail: "acme/app#12 https://gitlab.example.com/acme/app/-/work_items/12: 1 associated merge request" },
     ]);
   });
 
@@ -112,5 +120,26 @@ describe("status", () => {
 
     expect(result.isError).toBe(false);
     expect(result.data.probes[1]).toEqual({ probe: "List query", ok: false, detail: "Field 'workItems' doesn't exist on type 'Namespace'" });
+  });
+
+  it.each([
+    ["the token after the user signs glab in", cassette({ interactions: [instanceProbe()] }), /No GitLab token/],
+    ["glab after the user upgrades it", cassette({ glabVersion: "1.40.0", auth: loggedIn(), interactions: [instanceProbe()] }), /glab 1\.40\.0 is installed/],
+    [
+      "the Instance after its token works again",
+      cassette({ auth: loggedIn(), interactions: [{ operationName: "InstanceProbe", response: { body: { data: { metadata: null, currentUser: null } } } }] }),
+      /didn't report its version/,
+    ],
+  ])("checks %s, on the next call", async (_, broken, problem) => {
+    session = await start({ cassette: broken });
+    const before = await session.call("fetch_work_item", { reference: "acme/app#12" });
+    expect(before.isError).toBe(true);
+    expect(before.text).toMatch(problem);
+
+    session.setCassette(cassette({ auth: loggedIn(), interactions: [instanceProbe(), fetchWorkItem()] }));
+    const after = await session.call("fetch_work_item", { reference: "acme/app#12" });
+
+    expect(after.isError, after.text).toBe(false);
+    expect(after.data).toMatchObject({ reference: "acme/app#12" });
   });
 });

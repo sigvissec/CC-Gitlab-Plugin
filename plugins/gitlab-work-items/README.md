@@ -43,7 +43,7 @@ Talk normally: "what's left on acme/app#12?", "list open issues in acme labelled
 
 Lists are short, numbered summaries. To read one in Claude Code, say its number, reference, or title ("open 3"): Claude shows it in full, with its fields, description, and every Comment. To choose from a list with the arrow keys instead, use `/gitlab-work-items:open`. Links in Claude's answers open GitLab in your browser instead, because Claude Code hands a clicked link to your system's browser.
 
-If you plan with the wayfinder skill on GitLab, starting Claude Code in a repo whose project is on your Instance lists the wayfinder tickets you've claimed there: the open ones labelled `wayfinder:research`, `wayfinder:prototype`, `wayfinder:grilling`, or `wayfinder:task` and assigned to you, each with its map. Say a number to open one, or pick one with `/gitlab-work-items:open`. The project comes from the repo's `origin` remote, or its only other remote on your Instance. This costs one GitLab lookup as a session starts; outside such a repo it does nothing, and with no claimed tickets it shows nothing.
+If you plan with the wayfinder skill on GitLab, starting Claude Code in a repo whose project is on your Instance lists the Wayfinder tickets you've claimed there: the open Work Items labelled `wayfinder:research`, `wayfinder:prototype`, `wayfinder:grilling`, or `wayfinder:task` and assigned to you, each with its URL and its Wayfinder map. Say a number to open one, or pick one with `/gitlab-work-items:open`. The project comes from the repo's `origin` remote, or its only other remote on your Instance. As a session starts, this checks glab's sign-in and makes two quick GitLab queries; outside such a repo it does nothing, and with no claimed Wayfinder tickets it shows nothing.
 
 Commands, to drive the plugin directly:
 
@@ -53,8 +53,8 @@ Commands, to drive the plugin directly:
 | `/gitlab-work-items:list <what you want>` | A filtered list, described in plain words |
 | `/gitlab-work-items:mine` | Your open Work Items across the Instance |
 | `/gitlab-work-items:comment <reference> <what to say>` | Comment, or reply in a Thread when given a Comment link; quoted text is posted word for word, except lines GitLab runs as quick actions (such as `/close`), which the preview points out |
-| `/gitlab-work-items:open [what to pick from]` | Pick a Work Item from a list in a dialog and see it in full; with nothing given, from your claimed wayfinder tickets in this repo's project |
-| `/gitlab-work-items:status [project]` | Setup check, plus read-only probes in a project |
+| `/gitlab-work-items:open [what to pick from]` | Pick a Work Item from a list in a dialog and see it in full; with nothing given, from your claimed Wayfinder tickets in this repo's project |
+| `/gitlab-work-items:status [project]` | Setup check, plus read-only probes in the project named, or else in this repo's project |
 
 ## How Writes stay safe
 
@@ -68,7 +68,7 @@ Commands, to drive the plugin directly:
 
 These behaviours couldn't be checked when the plugin was built, so watch for them:
 
-- **The desktop app's Linux beta and the IDE extensions:** whether the confirmation and pick-list dialogs render there (if the confirmation doesn't, nothing is sent), and whether the desktop app finds `glab` on your `PATH` when started from your application launcher.
+- **The desktop app's Linux beta and the IDE extensions:** whether the confirmation and pick-list dialogs render there (if the confirmation doesn't, nothing is sent), whether the desktop app asks for the plugin's settings when you enable it (if not, set them with `/plugin configure`), and whether it finds `glab` on your `PATH` when started from your application launcher.
 - **Premium and your own Instance:** reads were checked against gitlab.com, and every Write runs in CI against throwaway Instances (GitLab 18.1 and the newest release, each as EE and CE, all on Free). Premium-only Writes (weight, "blocks" links) haven't run against real GitLab yet. Before relying on Writes, try them on a scratch project on your Instance:
   1. `/gitlab-work-items:status <project>`: every probe passes.
   2. Fetch an Issue, then ask Claude to retitle it, add a label, and set a due date. Confirm, and check the result in GitLab.

@@ -1,6 +1,7 @@
 // What Claude may ask to write, as the schemas prepare_writes accepts. The request types the
 // planner works with are derived from them, so the two can't drift apart.
 import { z } from "zod";
+import { SUPPORTED_TYPES } from "../references.js";
 
 export const MAX_WRITES = 20;
 
@@ -43,7 +44,7 @@ const REPLY = z.object({
 
 const CREATE = z.object({
   kind: z.literal("create"),
-  type: z.enum(["Issue", "Task"]),
+  type: z.enum(SUPPORTED_TYPES),
   project: z.string().optional().describe("For an Issue: the project's full path"),
   parent: z.string().optional().describe("For a Task: the parent Issue's Reference"),
   title: z.string().min(1),
